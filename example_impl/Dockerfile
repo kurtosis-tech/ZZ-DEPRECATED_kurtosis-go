@@ -12,4 +12,5 @@ COPY . .
 RUN go build -o kurtosis-go-example example_impl/main.go
 
 CMD set -euo pipefail && ./kurtosis-go-example \
-    --test-suite-container-id=${TEST_SUITE_CONTAINER_ID}
+    --test-names-filepath=${TEST_NAMES_FILEPATH}
+    --test=${TEST}
