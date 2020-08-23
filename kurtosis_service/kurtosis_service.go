@@ -32,7 +32,7 @@ func (service KurtosisService) AddService(
 		startCmdArgs []string,
 		envVariables map[string]string,
 		testVolumeMountLocation string) (string, string, error) {
-	client := jsonrpc2.NewHTTPClient(fmt.Sprintf("%v:%v", service.ipAddr, kurtosisApiPort))
+	client := getJsonRpcClient(service.ipAddr)
 	defer client.Close()
 
 	// TODO allow non-TCP protocols
@@ -60,7 +60,7 @@ func (service KurtosisService) AddService(
 Stops the container with the given service ID, and removes it from the network.
 */
 func (service KurtosisService) RemoveService(containerId string, containerStopTimeoutSeconds int) error {
-	client := jsonrpc2.NewHTTPClient(fmt.Sprintf("%v:%v", service.ipAddr, kurtosisApiPort))
+	client := getJsonRpcClient(service.ipAddr)
 	defer client.Close()
 
 	logrus.Debugf("Removing service with container ID %v...", containerId)
@@ -71,10 +71,15 @@ func (service KurtosisService) RemoveService(containerId string, containerStopTi
 	}
 
 	var reply struct{}
-	if err := client.Call(addServiceMethod, args, &reply); err != nil {
+	if err := client.Call(removeServiceMethod, args, &reply); err != nil {
 		return stacktrace.Propagate(err, "An error occurred making the call to remove a service using the Kurtosis API")
 	}
 	logrus.Debugf("Successfully removed service with container ID %v", containerId)
 
 	return nil
+}
+
+// ================================= Private helper function ============================================
+func getJsonRpcClient(ipAddr string) *jsonrpc2.Client {
+	return jsonrpc2.NewHTTPClient(fmt.Sprintf("http://%v:%v", ipAddr, kurtosisApiPort))
 }
