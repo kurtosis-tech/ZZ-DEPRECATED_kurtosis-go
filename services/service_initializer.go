@@ -1,16 +1,16 @@
 package services
 
 import (
-	"context"
 	"fmt"
-	"github.com/docker/distribution/uuid"
-	"github.com/kurtosis-tech/kurtosis/commons/docker"
+	"github.com/google/uuid"
+	"github.com/kurtosis-tech/kurtosis-go/kurtosis_service"
 	"github.com/palantir/stacktrace"
 	"net"
 	"os"
 	"path/filepath"
 )
 
+// TODO We MIGHT be able to remove this struct entirely
 /*
 A struct that wraps a user-defined ServiceInitializerCore, which will instruct the initializer how to launch a new instance
 	of the user's service.
@@ -19,12 +19,8 @@ type ServiceInitializer struct {
 	// The user-defined instructions for how to initialize their service
 	core ServiceInitializerCore
 
-	// The ID of the Docker network that the new service should be added to
-	networkId string
-
-	// The path to the directory where the test volume is mounted on the CONTROLLER Docker image. We need to know this
-	// 	because this is where this initializer will create the files required by the service being initialized.
-	testVolumeControllerDirpath string
+	// The handle to manipulating the test environment
+	kurtosisService *kurtosis_service.KurtosisService
 }
 
 /*
@@ -35,11 +31,9 @@ Args:
 	networkName: The name of the Docker network that the service will be added to
 	testVolumeControllerDirpath: The dirpath where the test Docker volume is mounted on the test controller Docker container
  */
-func NewServiceInitializer(core ServiceInitializerCore, networkId string, testVolumeControllerDirpath string) *ServiceInitializer {
+func NewServiceInitializer(core ServiceInitializerCore) *ServiceInitializer {
 	return &ServiceInitializer{
 		core: core,
-		networkId: networkId,
-		testVolumeControllerDirpath: testVolumeControllerDirpath,
 	}
 }
 
@@ -48,11 +42,10 @@ func NewServiceInitializer(core ServiceInitializerCore, networkId string, testVo
 Creates a service with the given parameters
 
 Args:
-	context: Context that the creation of the service is running in (used for cancellation)
-	testVolumeName: The name of the test Docker volume that will be mounted on the Docker container running the service
 	dockerImage: The name of the Docker image that the new service will be started with
-	staticIp: The IP the new service will be given
-	manager: The DockerManager used to launch the container running the service
+	ipPlaceholder: Since the user won't know the IP address of the service being created in advance, this is the
+		placeholder string that will be used instead (and which will be swapped with the actual IP before service
+		launch)
 	dependencies: The services that the service-to-be-started depends on
 
 Returns:
@@ -61,16 +54,13 @@ Returns:
 	string: The ID of the Docker container the service is running in
  */
 func (initializer ServiceInitializer) CreateService(
-			context context.Context,
-			testVolumeName string,
 			dockerImage string,
-			staticIp net.IP,
-			manager *docker.DockerManager,
+			ipPlaceholder string,
 			dependencies []Service) (Service, string, error) {
 	initializerCore := initializer.core
 	usedPorts := initializerCore.GetUsedPorts()
 
-	serviceDirname := fmt.Sprintf("service-%v", uuid.Generate().String())
+	serviceDirname := fmt.Sprintf("service-%v", uuid.New().String())
 	controllerServiceDirpath := filepath.Join(initializer.testVolumeControllerDirpath, serviceDirname)
 	err := os.Mkdir(controllerServiceDirpath, os.ModeDir)
 	if err != nil {
@@ -82,7 +72,7 @@ func (initializer ServiceInitializer) CreateService(
 	osFiles := make(map[string]*os.File)
 	mountFilepaths := make(map[string]string)
 	for fileId, _ := range requestedFiles {
-		filename := uuid.Generate().String()
+		filename := uuid.New().String()
 		hostFilepath := filepath.Join(controllerServiceDirpath, filename)
 		fp, err := os.Create(hostFilepath)
 		if err != nil {
@@ -93,27 +83,20 @@ func (initializer ServiceInitializer) CreateService(
 		mountFilepaths[fileId] = filepath.Join(mountServiceDirpath, filename)
 	}
 	err = initializerCore.InitializeMountedFiles(osFiles, dependencies)
-	startCmdArgs, err := initializerCore.GetStartCommand(mountFilepaths, staticIp, dependencies)
+	startCmdArgs, err := initializerCore.GetStartCommand(mountFilepaths, ipPlaceholder, dependencies)
 	if err != nil {
 		return nil, "", stacktrace.Propagate(err, "Failed to create start command.")
 	}
 
-	volumeMounts := map[string]string{
-		testVolumeName: initializerCore.GetTestVolumeMountpoint(),
-	}
-
-	containerId, err := manager.CreateAndStartContainer(
-			context,
-			dockerImage,
-			initializer.networkId,
-			staticIp,
-			usedPorts,
-			startCmdArgs,
-			make(map[string]string),
-			make(map[string]string),
-			volumeMounts)
+	ipAddr, err := initializer.kurtosisService.AddService(
+		dockerImage,
+		usedPorts,
+		ipPlaceholder,
+		startCmdArgs,
+		make(map[string]string),
+		initializerCore.GetTestVolumeMountpoint())
 	if err != nil {
-		return nil, "", stacktrace.Propagate(err, "Could not start docker service for image %v", dockerImage)
+		return nil, "", stacktrace.Propagate(err, "Could not add service for Docker image %v", dockerImage)
 	}
 	return initializer.core.GetServiceFromIp(staticIp.String()), containerId, nil
 }

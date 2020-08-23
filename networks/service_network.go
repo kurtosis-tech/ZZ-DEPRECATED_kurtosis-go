@@ -3,8 +3,8 @@ package networks
 import (
 	"context"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis/commons/docker"
-	"github.com/kurtosis-tech/kurtosis/commons/services"
+	"github.com/kurtosis-tech/kurtosis-go/kurtosis_service"
+	"github.com/kurtosis-tech/kurtosis-go/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"net"
@@ -55,8 +55,8 @@ type ServiceNetwork struct {
 	// The tracker used for doling out new IPs within the subnet being used for this particular test network
 	freeIpTracker *FreeIpAddrTracker
 
-	// The Docker manager used for interacting with the Docker engine during test network manipulation
-	dockerManager *docker.DockerManager
+	// The Kurtosis service used for interacting with the Docker engine during test network manipulation
+	kurtosisService *kurtosis_service.KurtosisService
 
 	// The ID of the Docker network that this test network is running on
 	dockerNetworkId string
@@ -81,7 +81,7 @@ Creates a new ServiceNetwork object with the given parameters.
 
 Args:
 	freeIpTracker: The IP tracker that will be used to provide IPs for new nodes added to the network.
-	dockerManager: The Docker manager that will be used for manipulating the Docker engine during test network modification.
+	kurtosisService: The Docker manager that will be used for manipulating the Docker engine during test network modification.
 	dockerNetworkName: The name of the Docker network this test network is running on.
 	configurations: The configurations that are available for spinning up new nodes in the network.
 	testVolume: The name of the Docker volume that will be mounted on all the nodes in the network.
@@ -90,14 +90,14 @@ Args:
  */
 func NewServiceNetwork(
 			freeIpTracker *FreeIpAddrTracker,
-			dockerManager *docker.DockerManager,
+			kurtosisService *kurtosis_service.KurtosisService,
 			dockerNetworkId string,
 			configurations map[ConfigurationID]serviceConfig,
 			testVolume string,
 			testVolumeControllerDirpath string) *ServiceNetwork {
 	return &ServiceNetwork{
 		freeIpTracker:               freeIpTracker,
-		dockerManager:               dockerManager,
+		kurtosisService:             kurtosisService,
 		dockerNetworkId:             dockerNetworkId,
 		serviceNodes:                make(map[ServiceID]ServiceNode),
 		configurations:              configurations,
@@ -159,11 +159,9 @@ func (network *ServiceNetwork) AddService(configurationId ConfigurationID, servi
 
 	initializer := services.NewServiceInitializer(config.initializerCore, network.dockerNetworkId, network.testVolumeControllerDirpath)
 	service, containerId, err := initializer.CreateService(
-			parentCtx,
-			network.testVolume,
 			config.dockerImage,
 			staticIp,
-			network.dockerManager,
+			network.kurtosisService,
 			dependencyServices)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred creating service %v from configuration %v", serviceId, configurationId)
@@ -208,7 +206,7 @@ func (network *ServiceNetwork) RemoveService(serviceId ServiceID, containerStopT
 	delete(network.serviceNodes, serviceId)
 
 	// Make a best-effort attempt to stop the container
-	err := network.dockerManager.StopContainer(parentCtx, nodeInfo.ContainerId, &containerStopTimeout)
+	err := network.kurtosisService.StopContainer(parentCtx, nodeInfo.ContainerId, &containerStopTimeout)
 	if err != nil {
 		logrus.Errorf(
 			"The following error occurred stopping service ID %v with container ID %v; proceeding to stop other containers:",

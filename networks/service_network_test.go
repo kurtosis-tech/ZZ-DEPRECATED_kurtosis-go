@@ -2,7 +2,7 @@ package networks
 
 import (
 	"github.com/docker/go-connections/nat"
-	"github.com/kurtosis-tech/kurtosis/commons/services"
+	"github.com/kurtosis-tech/kurtosis-go/services"
 	"net"
 	"os"
 	"testing"

@@ -1,7 +1,7 @@
 package testsuite
 
 import (
-	"github.com/kurtosis-tech/kurtosis/commons/networks"
+	"github.com/kurtosis-tech/kurtosis-go/networks"
 	"time"
 )
 

@@ -1,8 +1,6 @@
 package services
 
 import (
-	"github.com/docker/go-connections/nat"
-	"net"
 	"os"
 )
 
@@ -72,18 +70,24 @@ type ServiceInitializerCore interface {
 	/*
 	Uses the given arguments to build the command that the Docker container running this service will be launched with.
 
+	NOTE: Because the IP address of the container is an implementation detail, any references to the IP address of the
+		container should use the placeholder "SERVICEIP" instead. This will get replaced at launch time with the service's
+		actual IP.
+
 	Args:
 		mountedFileFilepaths: Mapping of developer_key -> initialized_file_filepath where developer_key corresponds to the keys returned
 			in the `GetFilesToMount` function, and initialized_file_filepath is the path *on the Docker container* of where the
 			file has been mounted. The files will have already been initialized via the `InitializeMountedFiles` function.
-		publicIpAddr: The IP address of the Docker image running the service
+		ipPlaceholder: Because the IP address of the container is an implementation detail, any references to the IP
+			address of the container should use this placeholder string when they want the IP. This will get replaced at
+			service launch time with the actual IP.
 		dependencies: The services that this service depends on (for use in case the command line to the service changes based on dependencies)
 
 	Returns:
 		The command fragments which will be used to construct the run command which will be used to launch the Docker container
 			running the service
 	 */
-	GetStartCommand(mountedFileFilepaths map[string]string, publicIpAddr net.IP, dependencies []Service) ([]string, error)
+	GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string, dependencies []Service) ([]string, error)
 
 }
 

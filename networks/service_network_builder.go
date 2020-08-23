@@ -1,8 +1,9 @@
 package networks
 
 import (
-	"github.com/kurtosis-tech/kurtosis/commons/docker"
-	"github.com/kurtosis-tech/kurtosis/commons/services"
+	"github.com/kurtosis-tech/kurtosis-go/docker"
+	"github.com/kurtosis-tech/kurtosis-go/kurtosis_service"
+	"github.com/kurtosis-tech/kurtosis-go/services"
 	"github.com/palantir/stacktrace"
 )
 
@@ -13,8 +14,8 @@ type ConfigurationID string
 A builder for configuring & constructing a test ServiceNetwork.
  */
 type ServiceNetworkBuilder struct {
-	// The Docker manager that will be used for manipulating the Docker engine during the test
-	dockerManager *docker.DockerManager
+	// The Kurtosis service that will be used for manipulating the Docker engine during the test
+	kurtosisService *kurtosis_service.KurtosisService
 
 	// The ID of the Docker network that the test network runs in
 	dockerNetworkId string
@@ -36,7 +37,7 @@ type ServiceNetworkBuilder struct {
 Creates a new builder for configuring a ServiceNetwork.
 
 Args:
-	dockerManager: Docker manager that will be used to manipulate the Docker engine when adding services
+	kurtosisService: Docker manager that will be used to manipulate the Docker engine when adding services
 	dockerNetworkName: Name of the Docker network that the test network is running in
 	freeIpTracker: IP tracker for doling out IPs to new services that will be added to the network
 	testVolume: Name of the Docker volume mounted on the controller, that will be mounted on every service
@@ -44,14 +45,14 @@ Args:
 		will be executing)
  */
 func NewServiceNetworkBuilder(
-			dockerManager *docker.DockerManager,
+			kurtosisService *kurtosis_service.KurtosisService,
 			dockerNetworkId string,
 			freeIpTracker *FreeIpAddrTracker,
 			testVolume string,
 			testVolumeContrllerDirpath string) *ServiceNetworkBuilder {
 	configurations := make(map[ConfigurationID]serviceConfig)
 	return &ServiceNetworkBuilder{
-		dockerManager:               dockerManager,
+		kurtosisService:             kurtosisService,
 		dockerNetworkId:             dockerNetworkId,
 		freeIpTracker:               freeIpTracker,
 		configurations:              configurations,
@@ -100,7 +101,7 @@ func (builder ServiceNetworkBuilder) Build() *ServiceNetwork {
 	}
 	return NewServiceNetwork(
 		builder.freeIpTracker,
-		builder.dockerManager,
+		builder.kurtosisService,
 		builder.dockerNetworkId,
 		configurationsCopy,
 		builder.testVolume,
