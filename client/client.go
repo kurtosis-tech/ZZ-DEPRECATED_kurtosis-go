@@ -1,11 +1,15 @@
 package client
 
 import (
+	"github.com/kurtosis-tech/kurtosis-go/kurtosis_service"
 	"github.com/palantir/stacktrace"
+	"github.com/sirupsen/logrus"
+	"os"
 	"strings"
+	"time"
 )
 
-func Run(testNamesFilepath string, test string) error {
+func Run(testNamesFilepath string, test string, kurtosisApiIp string) error {
 	testNamesFilepath = strings.TrimSpace(testNamesFilepath)
 	test = strings.TrimSpace(test)
 
@@ -17,8 +21,8 @@ func Run(testNamesFilepath string, test string) error {
 		return stacktrace.NewError("Exactly one of test-names-filepath and the test-name-to-run should be set")
 	}
 
-	/*
 	if !isTestNamesFilepathEmpty {
+		logrus.Debugf("Printing tests to file '%v'...", testNamesFilepath)
 		fp, err := os.OpenFile(testNamesFilepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			logrus.Errorf("No file exists at %v", testNamesFilepath)
@@ -34,8 +38,28 @@ func Run(testNamesFilepath string, test string) error {
 		for _, line := range testNames {
 			fp.WriteString(line + "\n")
 		}
+	} else if !isTestEmpty {
+		// TODO replace this with actual test-running logic
+		kurtosisService := kurtosis_service.NewKurtosisService(kurtosisApiIp)
+		_, containerId, err := kurtosisService.AddService(
+			"nginxdemos/hello",
+			map[int]bool{
+				80: true,
+			},
+			"BLAHBLAH",
+			[]string{},
+			map[string]string{},
+			"/nothing-yet")
+		if err != nil {
+			return stacktrace.Propagate(err, "An error occurred adding a new service")
+		}
+
+		time.Sleep(5 * time.Second)
+
+		if err := kurtosisService.RemoveService(containerId, 30); err != nil {
+			return stacktrace.Propagate(err, "An error occurred removing the new service")
+		}
 	}
-	 */
 
 	return nil
 }

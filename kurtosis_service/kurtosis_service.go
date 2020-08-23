@@ -8,17 +8,17 @@ import (
 )
 
 const (
+	kurtosisApiPort = 7443
 	addServiceMethod = "KurtosisAPI.AddService"
 	removeServiceMethod = "KurtosisAPI.RemoveService"
 )
 
 type KurtosisService struct {
 	ipAddr string
-	port string // TODO change this type
 }
 
-func NewKurtosisService(ipAddr string, port string) *KurtosisService {
-	return &KurtosisService{ipAddr: ipAddr, port: port}
+func NewKurtosisService(ipAddr string) *KurtosisService {
+	return &KurtosisService{ipAddr: ipAddr}
 }
 
 /*
@@ -32,7 +32,7 @@ func (service KurtosisService) AddService(
 		startCmdArgs []string,
 		envVariables map[string]string,
 		testVolumeMountLocation string) (string, string, error) {
-	client := jsonrpc2.NewHTTPClient(fmt.Sprintf("%v:%v", service.ipAddr, service.port))
+	client := jsonrpc2.NewHTTPClient(fmt.Sprintf("%v:%v", service.ipAddr, kurtosisApiPort))
 	defer client.Close()
 
 	// TODO allow non-TCP protocols
@@ -60,7 +60,7 @@ func (service KurtosisService) AddService(
 Stops the container with the given service ID, and removes it from the network.
 */
 func (service KurtosisService) RemoveService(containerId string, containerStopTimeoutSeconds int) error {
-	client := jsonrpc2.NewHTTPClient(fmt.Sprintf("%v:%v", service.ipAddr, service.port))
+	client := jsonrpc2.NewHTTPClient(fmt.Sprintf("%v:%v", service.ipAddr, kurtosisApiPort))
 	defer client.Close()
 
 	logrus.Debugf("Removing service with container ID %v...", containerId)
