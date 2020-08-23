@@ -2,8 +2,6 @@ package client
 
 import (
 	"github.com/palantir/stacktrace"
-	"github.com/sirupsen/logrus"
-	"os"
 	"strings"
 )
 
@@ -19,6 +17,7 @@ func Run(testNamesFilepath string, test string) error {
 		return stacktrace.NewError("Exactly one of test-names-filepath and the test-name-to-run should be set")
 	}
 
+	/*
 	if !isTestNamesFilepathEmpty {
 		fp, err := os.OpenFile(testNamesFilepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
@@ -36,4 +35,7 @@ func Run(testNamesFilepath string, test string) error {
 			fp.WriteString(line + "\n")
 		}
 	}
+	 */
+
+	return nil
 }

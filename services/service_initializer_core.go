@@ -11,7 +11,7 @@ Tells Kurtosis how to create a Docker container representing a user-defined serv
  */
 type ServiceInitializerCore interface {
 	// Gets the "set" of ports that the Docker container running the service will listen on
-	GetUsedPorts() map[nat.Port]bool
+	GetUsedPorts() map[int]bool
 
 	// GENERICS TOOD: When Go has generics, make this return type be parameterized
 	/*

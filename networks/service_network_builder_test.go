@@ -1,7 +1,7 @@
 package networks
 
 import (
-	"gotest.tools/v3/assert"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -11,7 +11,7 @@ const (
 )
 
 func TestDisallowingSameIds(t *testing.T) {
-	builder := NewServiceNetworkBuilder(nil, "test-network", nil, "test", "/foo/bar")
+	builder := NewServiceNetworkBuilder(nil, "/foo/bar")
 	err := builder.AddConfiguration(testConfigurationId0, "test", getTestInitializerCore(), getTestCheckerCore())
 	if err != nil {
 		t.Fatal("Adding a configuration shouldn't fail here")
@@ -24,7 +24,7 @@ func TestDisallowingSameIds(t *testing.T) {
 }
 
 func TestDefensiveCopies(t *testing.T) {
-	builder := NewServiceNetworkBuilder(nil, "test-network", nil, "test", "/foo/bar")
+	builder := NewServiceNetworkBuilder(nil, "/foo/bar")
 	err := builder.AddConfiguration(testConfigurationId0, "test", getTestInitializerCore(), getTestCheckerCore())
 	if err != nil {
 		t.Fatal("Adding a configuration shouldn't fail here")

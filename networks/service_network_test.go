@@ -1,9 +1,7 @@
 package networks
 
 import (
-	"github.com/docker/go-connections/nat"
 	"github.com/kurtosis-tech/kurtosis-go/services"
-	"net"
 	"os"
 	"testing"
 	"time"
@@ -19,8 +17,8 @@ type TestService struct {}
 
 // ======================== Test Initializer Core ========================
 type TestInitializerCore struct {}
-func (t TestInitializerCore) GetUsedPorts() map[nat.Port]bool {
-	return make(map[nat.Port]bool)
+func (t TestInitializerCore) GetUsedPorts() map[int]bool {
+	return make(map[int]bool)
 }
 
 func (t TestInitializerCore) GetServiceFromIp(ipAddr string) services.Service {
@@ -36,7 +34,7 @@ func (t TestInitializerCore) InitializeMountedFiles(filepathsToMount map[string]
 	return nil
 }
 
-func (t TestInitializerCore) GetStartCommand(mountedFileFilepaths map[string]string, publicIpAddr net.IP, dependencies []services.Service) ([]string, error) {
+func (t TestInitializerCore) GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string, dependencies []services.Service) ([]string, error) {
 	return make([]string, 0), nil
 }
 
@@ -63,7 +61,7 @@ func getTestCheckerCore() services.ServiceAvailabilityCheckerCore {
 
 // ======================== Tests ========================
 func TestDisallowingNonexistentConfigs(t *testing.T) {
-	builder := NewServiceNetworkBuilder(nil, testNetworkName, nil, "test", "/foo/bar")
+	builder := NewServiceNetworkBuilder(nil, "/foo/bar")
 	network := builder.Build()
 	_, err := network.AddService(testConfiguration, testServiceName, make(map[ServiceID]bool))
 	if err == nil {
@@ -73,7 +71,7 @@ func TestDisallowingNonexistentConfigs(t *testing.T) {
 
 func TestDisallowingNonexistentDependencies(t *testing.T) {
 	var configId ConfigurationID = testConfiguration
-	builder := NewServiceNetworkBuilder(nil, testNetworkName, nil, "test", "/foo/bar")
+	builder := NewServiceNetworkBuilder(nil, "/foo/bar")
 	err := builder.AddConfiguration(configId, "test", getTestInitializerCore(), getTestCheckerCore())
 	if err != nil {
 		t.Fatal("Adding a configuration shouldn't fail")

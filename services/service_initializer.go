@@ -10,6 +10,10 @@ import (
 	"path/filepath"
 )
 
+const (
+	ipPlaceholder = "KURTOSISSERVICEIP"
+)
+
 // TODO We MIGHT be able to remove this struct entirely
 /*
 A struct that wraps a user-defined ServiceInitializerCore, which will instruct the initializer how to launch a new instance
@@ -18,6 +22,9 @@ A struct that wraps a user-defined ServiceInitializerCore, which will instruct t
 type ServiceInitializer struct {
 	// The user-defined instructions for how to initialize their service
 	core ServiceInitializerCore
+
+	// The location where the test volume is mounted *on the test suite container*
+	testVolumeDirpath string
 
 	// The handle to manipulating the test environment
 	kurtosisService *kurtosis_service.KurtosisService
@@ -28,12 +35,12 @@ Creates a new service initializer that will initialize services using the user-d
 
 Args:
 	core: The user-defined logic for instantiating their particular service
-	networkName: The name of the Docker network that the service will be added to
-	testVolumeControllerDirpath: The dirpath where the test Docker volume is mounted on the test controller Docker container
+	testVolumeDirpath: The dirpath where the test Docker volume is mounted on the test suite Docker container
  */
-func NewServiceInitializer(core ServiceInitializerCore) *ServiceInitializer {
+func NewServiceInitializer(core ServiceInitializerCore, testVolumeDirpath string) *ServiceInitializer {
 	return &ServiceInitializer{
 		core: core,
+		testVolumeDirpath: testVolumeDirpath,
 	}
 }
 
@@ -51,20 +58,20 @@ Args:
 Returns:
 	Service: The interface which should be used to access the newly-created service (which, because Go doesn't have generics,
 		will need to be casted to the appropriate type)
-	string: The ID of the Docker container the service is running in
+	string: The ID of the service as returned by the Kurtosis API
  */
 func (initializer ServiceInitializer) CreateService(
 			dockerImage string,
-			ipPlaceholder string,
 			dependencies []Service) (Service, string, error) {
 	initializerCore := initializer.core
 	usedPorts := initializerCore.GetUsedPorts()
 
 	serviceDirname := fmt.Sprintf("service-%v", uuid.New().String())
-	controllerServiceDirpath := filepath.Join(initializer.testVolumeControllerDirpath, serviceDirname)
-	err := os.Mkdir(controllerServiceDirpath, os.ModeDir)
+	// TODO figure out a better way to do this; the testsuite might collide with the Kurtosis API!!!
+	serviceDirpath := filepath.Join(initializer.testVolumeDirpath, serviceDirname)
+	err := os.Mkdir(serviceDirpath, os.ModeDir)
 	if err != nil {
-		return nil, "", stacktrace.Propagate(err, "An error occurred creating the new service's directory in the volume at filepath '%v'", controllerServiceDirpath)
+		return nil, "", stacktrace.Propagate(err, "An error occurred creating the new service's directory in the volume at filepath '%v'", serviceDirpath)
 	}
 	mountServiceDirpath := filepath.Join(initializerCore.GetTestVolumeMountpoint(), serviceDirname)
 
@@ -73,7 +80,7 @@ func (initializer ServiceInitializer) CreateService(
 	mountFilepaths := make(map[string]string)
 	for fileId, _ := range requestedFiles {
 		filename := uuid.New().String()
-		hostFilepath := filepath.Join(controllerServiceDirpath, filename)
+		hostFilepath := filepath.Join(serviceDirpath, filename)
 		fp, err := os.Create(hostFilepath)
 		if err != nil {
 			return nil, "", stacktrace.Propagate(err, "Could not create new file for requested file ID '%v'", fileId)
@@ -88,7 +95,7 @@ func (initializer ServiceInitializer) CreateService(
 		return nil, "", stacktrace.Propagate(err, "Failed to create start command.")
 	}
 
-	ipAddr, err := initializer.kurtosisService.AddService(
+	ipAddr, containerId, err := initializer.kurtosisService.AddService(
 		dockerImage,
 		usedPorts,
 		ipPlaceholder,
@@ -98,7 +105,7 @@ func (initializer ServiceInitializer) CreateService(
 	if err != nil {
 		return nil, "", stacktrace.Propagate(err, "Could not add service for Docker image %v", dockerImage)
 	}
-	return initializer.core.GetServiceFromIp(staticIp.String()), containerId, nil
+	return initializer.core.GetServiceFromIp(ipAddr), containerId, nil
 }
 
 /*

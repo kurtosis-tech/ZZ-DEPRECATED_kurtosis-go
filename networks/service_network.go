@@ -7,10 +7,9 @@ import (
 	"github.com/kurtosis-tech/kurtosis-go/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
-	"net"
-	"time"
 )
 
+// TODO Rename this to ServiceTag
 /*
 The identifier used for services with the network.
  */
@@ -20,15 +19,12 @@ type ServiceID string
 A package object containing the details that the ServiceNetwork is tracking about a node.
  */
 type ServiceNode struct {
-	// The node's IP address within the test's Docker network
-	IpAddr net.IP
-
 	// The user-defined interface for interacting with the node.
 	// NOTE: this will need to be casted to the appropriate interface becaus Go doesn't yet have generics!
 	Service services.Service
 
-	// The Docker container ID of the container running the node
-	ContainerId string
+	// The Docker container ID running a given service
+	ContainerID string
 }
 
 /*
@@ -52,28 +48,17 @@ A struct representing a network of services that will be used for a single test 
 	struct is the low-level access point for modifying the test network.
  */
 type ServiceNetwork struct {
-	// The tracker used for doling out new IPs within the subnet being used for this particular test network
-	freeIpTracker *FreeIpAddrTracker
-
 	// The Kurtosis service used for interacting with the Docker engine during test network manipulation
 	kurtosisService *kurtosis_service.KurtosisService
 
-	// The ID of the Docker network that this test network is running on
-	dockerNetworkId string
-
-	// A mapping of service ID -> information about a node
+	// A mapping of human-readable Service ID -> information about a node
 	serviceNodes map[ServiceID]ServiceNode
 
 	// A mapping of configuration ID -> configuration details
 	configurations map[ConfigurationID]serviceConfig
 
-	// The name of the Docker volume that will be mounted on:
-	// 	a) every single Docker image launched on this network
-	//  b) the test controller running logic against this test network
-	testVolume string
-
-	// The dirpath where the test volume is mounted on the controller (which is where this code will be running in)
-	testVolumeControllerDirpath string
+	// The dirpath where the test volume is mounted on *the test suite container* (which is where this code will be running)
+	testVolumeDirpath string
 }
 
 /*
@@ -85,24 +70,18 @@ Args:
 	dockerNetworkName: The name of the Docker network this test network is running on.
 	configurations: The configurations that are available for spinning up new nodes in the network.
 	testVolume: The name of the Docker volume that will be mounted on all the nodes in the network.
-	testVolumeControllerDirpath: The dirpath that the test Docker volume is mounted on in the controller image (which will
+	testVolumeDirpath: The dirpath that the test Docker volume is mounted on in the controller image (which will
 		be running all the code here).
  */
 func NewServiceNetwork(
-			freeIpTracker *FreeIpAddrTracker,
 			kurtosisService *kurtosis_service.KurtosisService,
-			dockerNetworkId string,
 			configurations map[ConfigurationID]serviceConfig,
-			testVolume string,
-			testVolumeControllerDirpath string) *ServiceNetwork {
+			testVolumeDirpath string) *ServiceNetwork {
 	return &ServiceNetwork{
-		freeIpTracker:               freeIpTracker,
-		kurtosisService:             kurtosisService,
-		dockerNetworkId:             dockerNetworkId,
-		serviceNodes:                make(map[ServiceID]ServiceNode),
-		configurations:              configurations,
-		testVolume:                  testVolume,
-		testVolumeControllerDirpath: testVolumeControllerDirpath,
+		kurtosisService:   kurtosisService,
+		serviceNodes:      make(map[ServiceID]ServiceNode),
+		configurations:    configurations,
+		testVolumeDirpath: testVolumeDirpath,
 	}
 }
 
@@ -152,25 +131,18 @@ func (network *ServiceNetwork) AddService(configurationId ConfigurationID, servi
 		dependencyServices = append(dependencyServices, dependencyNode.Service)
 	}
 
-	staticIp, err := network.freeIpTracker.GetFreeIpAddr()
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "Failed to allocate static IP for service %s", serviceId)
-	}
 
-	initializer := services.NewServiceInitializer(config.initializerCore, network.dockerNetworkId, network.testVolumeControllerDirpath)
+	initializer := services.NewServiceInitializer(config.initializerCore, network.testVolumeDirpath)
 	service, containerId, err := initializer.CreateService(
 			config.dockerImage,
-			staticIp,
-			network.kurtosisService,
 			dependencyServices)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred creating service %v from configuration %v", serviceId, configurationId)
 	}
 
 	network.serviceNodes[serviceId] = ServiceNode{
-		IpAddr:      staticIp,
 		Service:     service,
-		ContainerId: containerId,
+		ContainerID: containerId,
 	}
 
 	availabilityChecker := services.NewServiceAvailabilityChecker(parentCtx, config.availabilityCheckerCore, service, dependencyServices)
@@ -192,11 +164,7 @@ func (network *ServiceNetwork) GetService(serviceId ServiceID) (ServiceNode, err
 /*
 Stops the container with the given service ID, and removes it from the network.
  */
-func (network *ServiceNetwork) RemoveService(serviceId ServiceID, containerStopTimeout time.Duration) error {
-	// Maybe one day we'll store this on the ServiceNetwork itself, to represent the test context that the ServiceNetwork
-	//  was created in
-	parentCtx := context.Background()
-
+func (network *ServiceNetwork) RemoveService(serviceId ServiceID, containerStopTimeoutSeconds int) error {
 	nodeInfo, found := network.serviceNodes[serviceId]
 	if !found {
 		return stacktrace.NewError("No service with ID %v found", serviceId)
@@ -206,12 +174,12 @@ func (network *ServiceNetwork) RemoveService(serviceId ServiceID, containerStopT
 	delete(network.serviceNodes, serviceId)
 
 	// Make a best-effort attempt to stop the container
-	err := network.kurtosisService.StopContainer(parentCtx, nodeInfo.ContainerId, &containerStopTimeout)
+	err := network.kurtosisService.RemoveService(nodeInfo.ContainerID, containerStopTimeoutSeconds)
 	if err != nil {
 		logrus.Errorf(
 			"The following error occurred stopping service ID %v with container ID %v; proceeding to stop other containers:",
 			serviceId,
-			nodeInfo.ContainerId)
+			nodeInfo.ContainerID)
 		fmt.Fprintln(logrus.StandardLogger().Out, err)
 	}
 	logrus.Debugf("Successfully removed service ID %v", serviceId)
@@ -223,11 +191,11 @@ Makes a best-effort attempt to remove all the containers in the network, waiting
 	an error if the timeout is reached.
 
 Args:
-	containerStopTimeout: How long to wait for each container to stop before force-killing it
+	containerStopTimeoutSeconds: How long to wait, in seconds, for each container to stop before force-killing it
 */
-func (network *ServiceNetwork) RemoveAll(containerStopTimeout time.Duration) error {
+func (network *ServiceNetwork) RemoveAll(containerStopTimeoutSeconds int) error {
 	for serviceId, _ := range network.serviceNodes {
-		network.RemoveService(serviceId, containerStopTimeout)
+		network.RemoveService(serviceId, containerStopTimeoutSeconds)
 	}
 	return nil
 }

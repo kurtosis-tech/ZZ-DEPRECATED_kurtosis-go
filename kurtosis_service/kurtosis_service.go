@@ -1,12 +1,10 @@
 package kurtosis_service
 
 import (
-	"context"
 	"fmt"
 	"github.com/palantir/stacktrace"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 const (
@@ -23,20 +21,22 @@ func NewKurtosisService(ipAddr string, port string) *KurtosisService {
 	return &KurtosisService{ipAddr: ipAddr, port: port}
 }
 
+/*
+Calls the Kurtosis API container to add a service to the network
+ */
 func (service KurtosisService) AddService(
 		dockerImage string,
-		// TODO change type of this
-		usedPorts map[string]bool,
+		// TODO change type of this to be an actual Port type
+		usedPorts map[int]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (string, error) {
-
-	// TODO reuse clients?
+		testVolumeMountLocation string) (string, string, error) {
 	client := jsonrpc2.NewHTTPClient(fmt.Sprintf("%v:%v", service.ipAddr, service.port))
 	defer client.Close()
 
-	usedPortsList := []string{}
+	// TODO allow non-TCP protocols
+	usedPortsList := []int{}
 	for port, _ := range usedPorts {
 		usedPortsList = append(usedPortsList, port)
 	}
@@ -50,31 +50,31 @@ func (service KurtosisService) AddService(
 	}
 	var reply AddServiceResponse
 	if err := client.Call(addServiceMethod, args, &reply); err != nil {
-		return "", stacktrace.Propagate(err, "An error occurred making the call to add a service using the Kurtosis API")
+		return "", "", stacktrace.Propagate(err, "An error occurred making the call to add a service using the Kurtosis API")
 	}
 
-	return reply.IPAddress, nil
+	return reply.IPAddress, reply.ContainerID, nil
 }
 
 /*
 Stops the container with the given service ID, and removes it from the network.
 */
-func (api KurtosisService) RemoveService(serviceId ServiceID) error {
-	// TODO reuse clients?
+func (service KurtosisService) RemoveService(containerId string, containerStopTimeoutSeconds int) error {
 	client := jsonrpc2.NewHTTPClient(fmt.Sprintf("%v:%v", service.ipAddr, service.port))
 	defer client.Close()
 
-	logrus.Debugf("Removing service with ID %v...", serviceId)
+	logrus.Debugf("Removing service with container ID %v...", containerId)
 
 	args := RemoveServiceArgs{
-		ServiceID: serviceId,
+		ContainerID: containerId,
+		ContainerStopTimeoutSeconds: containerStopTimeoutSeconds,
 	}
 
 	var reply struct{}
 	if err := client.Call(addServiceMethod, args, &reply); err != nil {
 		return stacktrace.Propagate(err, "An error occurred making the call to remove a service using the Kurtosis API")
 	}
-	logrus.Debugf("Successfully removed service with ID %v", serviceId)
+	logrus.Debugf("Successfully removed service with container ID %v", containerId)
 
 	return nil
 }
