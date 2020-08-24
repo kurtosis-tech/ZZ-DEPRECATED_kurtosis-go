@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
 	"github.com/palantir/stacktrace"
-	"net"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 )
@@ -37,10 +37,14 @@ Args:
 	core: The user-defined logic for instantiating their particular service
 	testVolumeDirpath: The dirpath where the test Docker volume is mounted on the test suite Docker container
  */
-func NewServiceInitializer(core ServiceInitializerCore, testVolumeDirpath string) *ServiceInitializer {
+func NewServiceInitializer(
+		core ServiceInitializerCore,
+		testVolumeDirpath string,
+		kurtosisService *kurtosis_service.KurtosisService) *ServiceInitializer {
 	return &ServiceInitializer{
 		core: core,
 		testVolumeDirpath: testVolumeDirpath,
+		kurtosisService: kurtosisService,
 	}
 }
 
@@ -66,6 +70,7 @@ func (initializer ServiceInitializer) CreateService(
 	initializerCore := initializer.core
 	usedPorts := initializerCore.GetUsedPorts()
 
+	logrus.Trace("Creating directory within test volume for service...")
 	serviceDirname := fmt.Sprintf("service-%v", uuid.New().String())
 	// TODO figure out a better way to do this; the testsuite might collide with the Kurtosis API!!!
 	serviceDirpath := filepath.Join(initializer.testVolumeDirpath, serviceDirname)
@@ -74,7 +79,9 @@ func (initializer ServiceInitializer) CreateService(
 		return nil, "", stacktrace.Propagate(err, "An error occurred creating the new service's directory in the volume at filepath '%v'", serviceDirpath)
 	}
 	mountServiceDirpath := filepath.Join(initializerCore.GetTestVolumeMountpoint(), serviceDirname)
+	logrus.Trace("Successfully created directory within test volume for service")
 
+	logrus.Trace("Initializing files needed for service...")
 	requestedFiles := initializerCore.GetFilesToMount()
 	osFiles := make(map[string]*os.File)
 	mountFilepaths := make(map[string]string)
@@ -90,11 +97,16 @@ func (initializer ServiceInitializer) CreateService(
 		mountFilepaths[fileId] = filepath.Join(mountServiceDirpath, filename)
 	}
 	err = initializerCore.InitializeMountedFiles(osFiles, dependencies)
+	logrus.Tracef("Successfully initialized files needed for service")
+
+	logrus.Tracef("Creating start command for service...")
 	startCmdArgs, err := initializerCore.GetStartCommand(mountFilepaths, ipPlaceholder, dependencies)
 	if err != nil {
 		return nil, "", stacktrace.Propagate(err, "Failed to create start command.")
 	}
+	logrus.Tracef("Successfully created start command for service")
 
+	logrus.Tracef("Calling to Kurtosis API to create service...")
 	ipAddr, containerId, err := initializer.kurtosisService.AddService(
 		dockerImage,
 		usedPorts,
@@ -105,13 +117,11 @@ func (initializer ServiceInitializer) CreateService(
 	if err != nil {
 		return nil, "", stacktrace.Propagate(err, "Could not add service for Docker image %v", dockerImage)
 	}
-	return initializer.core.GetServiceFromIp(ipAddr), containerId, nil
-}
+	logrus.Tracef("Kurtosis API returned IP for new service: %v", ipAddr)
 
-/*
-Calls down to the initializer core to get an instance of the user-defined interface that is used for interacting with
-	the user's service. The core will do the instantiation of the actual interface implementation.
- */
-func (initializer ServiceInitializer) GetServiceFromIp(ipAddr net.IP) Service {
-	return initializer.core.GetServiceFromIp(ipAddr.String())
+	logrus.Tracef("Getting service from IP...")
+	service := initializer.core.GetServiceFromIp(ipAddr)
+	logrus.Tracef("Successfully got service from IP")
+
+	return service, containerId, nil
 }

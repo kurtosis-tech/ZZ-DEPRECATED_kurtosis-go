@@ -27,7 +27,14 @@ func (network *ExampleNetwork) AddTheNode() error {
 		return stacktrace.NewError("The node is already added")
 	}
 	// TODO add example with dependencies
-	network.rawNetwork.AddService(vanillaConfigId, theNodeServiceId, map[networks.ServiceID]bool{})
+	availabilityChecker, err := network.rawNetwork.AddService(vanillaConfigId, theNodeServiceId, map[networks.ServiceID]bool{})
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred adding the node")
+	}
+	if err := availabilityChecker.WaitForStartup(); err != nil {
+		return stacktrace.Propagate(err, "An error occurred waiting for the node to come up")
+	}
+	network.theNodeAdded = true
 	return nil
 }
 
@@ -35,6 +42,9 @@ func (network *ExampleNetwork) RemoveTheNode() error {
 	if !network.theNodeAdded {
 		return stacktrace.NewError("The node hasn't been added yet")
 	}
-	network.rawNetwork.RemoveService(theNodeServiceId, theNodeStopTimeoutSeconds)
+	if err := network.rawNetwork.RemoveService(theNodeServiceId, theNodeStopTimeoutSeconds); err != nil {
+		return stacktrace.NewError("An error occurred removing the node from the network")
+	}
+	network.theNodeAdded = false
 	return nil
 }

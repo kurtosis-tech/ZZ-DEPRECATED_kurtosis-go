@@ -132,13 +132,16 @@ func (network *ServiceNetwork) AddService(configurationId ConfigurationID, servi
 	}
 
 
-	initializer := services.NewServiceInitializer(config.initializerCore, network.testVolumeDirpath)
+	initializer := services.NewServiceInitializer(config.initializerCore, network.testVolumeDirpath, network.kurtosisService)
+
+	logrus.Tracef("Creating new service with Docker image '%v'...", config.dockerImage)
 	service, containerId, err := initializer.CreateService(
 			config.dockerImage,
 			dependencyServices)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred creating service %v from configuration %v", serviceId, configurationId)
 	}
+	logrus.Tracef("Successfully created new service with Docker image '%v'", config.dockerImage)
 
 	network.serviceNodes[serviceId] = ServiceNode{
 		Service:     service,

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/kurtosis-tech/kurtosis-go/example_impl/testsuite"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client"
+	"github.com/sirupsen/logrus"
 	"os"
 )
 
@@ -21,6 +22,9 @@ func main() {
 		"",
 		"IP address of the Kurtosis API endpoint")
 	flag.Parse()
+
+	// TODO Make this parameterized
+	logrus.SetLevel(logrus.TraceLevel)
 
 	testSuite := testsuite.ExampleTestsuite{}
 

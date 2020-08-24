@@ -33,7 +33,7 @@ func Run(testSuite testsuite.TestSuite, testNamesFilepath string, testName strin
 	}
 
 	if !isTestNamesFilepathEmpty {
-		if err := printTestsToFile(testNamesFilepath); err != nil {
+		if err := printTestsToFile(testSuite, testNamesFilepath); err != nil {
 			logrus.Errorf("An error occurred printing tests to file '%v':", testNamesFilepath)
 			fmt.Fprintln(logrus.StandardLogger().Out, err)
 			return errorExitCode
@@ -49,7 +49,7 @@ func Run(testSuite testsuite.TestSuite, testNamesFilepath string, testName strin
 }
 
 // =========================================== Private helper functions ========================================
-func printTestsToFile(testNamesFilepath string) error {
+func printTestsToFile(testSuite testsuite.TestSuite, testNamesFilepath string) error {
 	logrus.Debugf("Printing tests to file '%v'...", testNamesFilepath)
 	fp, err := os.OpenFile(testNamesFilepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -57,13 +57,8 @@ func printTestsToFile(testNamesFilepath string) error {
 	}
 	defer fp.Close()
 
-	testNames := []string{
-		"test1",
-		"test2",
-		"test3",
-	}
-	for _, line := range testNames {
-		fp.WriteString(line + "\n")
+	for testName, _ := range testSuite.GetTests() {
+		fp.WriteString(testName + "\n")
 	}
 
 	return nil
@@ -155,7 +150,7 @@ func runTest(testSuite testsuite.TestSuite, testName string, kurtosisApiIp strin
 	if timedOut {
 		return stacktrace.NewError("Timed out after %v waiting for test to complete", testTimeout)
 	}
-	logrus.Info("Executed test '%v'", testName)
+	logrus.Infof("Executed test '%v'", testName)
 
 	if testResultErr != nil {
 		return stacktrace.Propagate(testResultErr, "An error occurred when running the test")

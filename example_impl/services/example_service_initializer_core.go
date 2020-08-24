@@ -6,7 +6,6 @@ import (
 )
 
 const (
-	exampleServicePort = 80
 	exampleServiceTestVolumeMountpoint = "/shared"
 )
 
@@ -19,10 +18,7 @@ func (e ExampleServiceInitializerCore) GetUsedPorts() map[int]bool {
 }
 
 func (e ExampleServiceInitializerCore) GetServiceFromIp(ipAddr string) services.Service {
-	return Socket{
-		IPAddr: ipAddr,
-		Port:   exampleServicePort,
-	}
+	return ExampleServiceImpl{IPAddr: ipAddr}
 }
 
 func (e ExampleServiceInitializerCore) GetFilesToMount() map[string]bool {

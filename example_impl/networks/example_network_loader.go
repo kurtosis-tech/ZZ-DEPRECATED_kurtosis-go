@@ -28,6 +28,7 @@ func (e ExampleNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork
 }
 
 func (e ExampleNetworkLoader) WrapNetwork(network *networks.ServiceNetwork) (networks.Network, error) {
-	return NewExampleNetwork(network), nil
+	// TODO change the return type of WrapNetwork to be *Network???
+	return *NewExampleNetwork(network), nil
 }
 
