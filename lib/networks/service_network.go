@@ -3,8 +3,8 @@ package networks
 import (
 	"context"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/kurtosis_service"
-	"github.com/kurtosis-tech/kurtosis-go/services"
+	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
+	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 )

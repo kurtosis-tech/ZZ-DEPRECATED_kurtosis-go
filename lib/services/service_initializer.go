@@ -3,7 +3,7 @@ package services
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/kurtosis-tech/kurtosis-go/kurtosis_service"
+	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
 	"github.com/palantir/stacktrace"
 	"net"
 	"os"
