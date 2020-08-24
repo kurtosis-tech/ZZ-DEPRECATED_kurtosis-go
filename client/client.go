@@ -22,43 +22,65 @@ func Run(testNamesFilepath string, test string, kurtosisApiIp string) error {
 	}
 
 	if !isTestNamesFilepathEmpty {
-		logrus.Debugf("Printing tests to file '%v'...", testNamesFilepath)
-		fp, err := os.OpenFile(testNamesFilepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			logrus.Errorf("No file exists at %v", testNamesFilepath)
-			os.Exit(1)
-		}
-		defer fp.Close()
-
-		testNames := []string{
-			"test1",
-			"test2",
-			"test3",
-		}
-		for _, line := range testNames {
-			fp.WriteString(line + "\n")
+		if err := printTestsToFile(testNamesFilepath); err != nil {
+			return stacktrace.Propagate(err, "An error occurred printing tests to file '%v'", testNamesFilepath)
 		}
 	} else if !isTestEmpty {
-		// TODO replace this with actual test-running logic
-		kurtosisService := kurtosis_service.NewKurtosisService(kurtosisApiIp)
-		_, containerId, err := kurtosisService.AddService(
-			"nginxdemos/hello",
-			map[int]bool{
-				80: true,
-			},
-			"BLAHBLAH",
-			[]string{},
-			map[string]string{},
-			"/nothing-yet")
-		if err != nil {
-			return stacktrace.Propagate(err, "An error occurred adding a new service")
+		// TODO parameterize
+		if err := runTest(test, kurtosisApiIp); err != nil {
+			return stacktrace.Propagate(err, "An error occurred running test '%v'", test)
 		}
+	}
 
-		time.Sleep(5 * time.Second)
+	return nil
+}
 
-		if err := kurtosisService.RemoveService(containerId, 30); err != nil {
-			return stacktrace.Propagate(err, "An error occurred removing the new service")
-		}
+// =========================================== Private helper functions ========================================
+func printTestsToFile(testNamesFilepath string) error {
+	logrus.Debugf("Printing tests to file '%v'...", testNamesFilepath)
+	fp, err := os.OpenFile(testNamesFilepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return stacktrace.Propagate(err, "No file exists at %v", testNamesFilepath)
+	}
+	defer fp.Close()
+
+	testNames := []string{
+		"test1",
+		"test2",
+		"test3",
+	}
+	for _, line := range testNames {
+		fp.WriteString(line + "\n")
+	}
+
+	return nil
+}
+
+func runTest(test string, kurtosisApiIp string) error {
+	kurtosisService := kurtosis_service.NewKurtosisService(kurtosisApiIp)
+
+	// TODO replace with parameterized test execution
+	if err := kurtosisService.RegisterTestExecution(60); err != nil {
+		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
+	}
+
+	_, containerId, err := kurtosisService.AddService(
+		"nginxdemos/hello",
+		map[int]bool{
+			80: true,
+		},
+		"BLAHBLAH",
+		[]string{},
+		map[string]string{},
+		"/nothing-yet")
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred adding a new service")
+	}
+
+	time.Sleep(10 * time.Second)
+
+	if err := kurtosisService.RemoveService(containerId, 30); err != nil {
+		return stacktrace.Propagate(err, "An error occurred removing the new service")
 	}
 
 	return nil

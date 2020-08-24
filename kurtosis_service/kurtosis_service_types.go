@@ -19,3 +19,7 @@ type RemoveServiceArgs struct {
 	ContainerStopTimeoutSeconds int `json:"containerStopTimeoutSeconds"`
 }
 
+type RegisterTestExecutionArgs struct {
+	TestTimeoutSeconds int
+}
+
