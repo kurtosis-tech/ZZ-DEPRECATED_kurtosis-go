@@ -11,12 +11,18 @@ import (
 type ExampleTest struct {}
 
 func (e ExampleTest) Run(network networks.Network, context testsuite.TestContext) {
+	// TODO Debugging
+	time.Sleep(30 * time.Second)
+
 	logrus.Info("Adding the node...")
 	castedNetwork := network.(networks2.ExampleNetwork)
 	if err := castedNetwork.AddTheNode(); err != nil {
 		context.Fatal(err)
 	}
 	logrus.Info("Successfully added the test node")
+
+	// TODO Debugging
+	time.Sleep(30 * time.Second)
 
 	logrus.Info("Removing the node...")
 	if err := castedNetwork.RemoveTheNode(); err != nil {
