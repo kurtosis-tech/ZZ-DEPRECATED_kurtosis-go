@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	// TODO make this parameterized
 	errorExitCode = 1
 	successExitCode = 0
-	testVolumeMountLocation = "/shared"
+
+	// TODO parameterize this!!
+	testVolumeMountLocation = "/test-volume"
 )
 
 func Run(testSuite testsuite.TestSuite, testNamesFilepath string, testName string, kurtosisApiIp string) int {
