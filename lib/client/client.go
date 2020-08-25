@@ -82,7 +82,7 @@ func runTest(testSuite testsuite.TestSuite, testName string, kurtosisApiIp strin
 
 	// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
 	hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupBuffer()
-	hardTestTimeoutSeconds := int(hardTestTimeout.Seconds()) + 1
+	hardTestTimeoutSeconds := int(hardTestTimeout.Seconds())
 	if err := kurtosisService.RegisterTestExecution(hardTestTimeoutSeconds); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
