@@ -9,8 +9,11 @@ import (
 
 const (
 	kurtosisApiPort = 7443
-	addServiceMethod = "KurtosisAPI.AddService"
-	removeServiceMethod = "KurtosisAPI.RemoveService"
+
+	kurtosisServiceStruct = "KurtosisService"
+	addServiceMethod = kurtosisServiceStruct + ".AddService"
+	removeServiceMethod = kurtosisServiceStruct + ".RemoveService"
+	registerTestExecutionMethod = kurtosisServiceStruct + ".RegisterTestExecution"
 )
 
 type KurtosisService struct {
@@ -77,6 +80,24 @@ func (service KurtosisService) RemoveService(containerId string, containerStopTi
 	logrus.Debugf("Successfully removed service with container ID %v", containerId)
 
 	return nil
+}
+
+func (service KurtosisService) RegisterTestExecution(testTimeoutSeconds int) error {
+	client := getJsonRpcClient(service.ipAddr)
+	defer client.Close()
+
+	logrus.Debugf("Registering a test execution with a timeout of %v seconds...", testTimeoutSeconds)
+
+	args := RegisterTestExecutionArgs{TestTimeoutSeconds: testTimeoutSeconds}
+
+	var reply struct{}
+	if err := client.Call(registerTestExecutionMethod, args, &reply); err != nil {
+		return stacktrace.Propagate(err, "An error occurred making the call to register a test execution using the Kurtosis API")
+	}
+	logrus.Debugf("Successfully registered a test execution with timeout of %v seconds", testTimeoutSeconds)
+
+	return nil
+
 }
 
 // ================================= Private helper function ============================================
