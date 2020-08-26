@@ -1,7 +1,7 @@
 package networks
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/services"
+	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 )
 
 /*
@@ -27,6 +27,7 @@ type NetworkLoader interface {
 	 */
 	InitializeNetwork(network *ServiceNetwork) (map[ServiceID]services.ServiceAvailabilityChecker, error)
 
+	// TODO change return type to be *Network???
 	// GENERICS TOOD: When Go has generics, make the input and output types parameterized
 	/*
 	Gives the developer the opportunity to wrap the ServiceNetwork with a custom struct of their own creation, so that

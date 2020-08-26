@@ -1,7 +1,7 @@
 package networks
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/services"
+	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"os"
 	"testing"
 	"time"

@@ -2,6 +2,7 @@ package kurtosis_service
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/palantir/stacktrace"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/sirupsen/logrus"
@@ -102,5 +103,8 @@ func (service KurtosisService) RegisterTestExecution(testTimeoutSeconds int) err
 
 // ================================= Private helper function ============================================
 func getJsonRpcClient(ipAddr string) *jsonrpc2.Client {
-	return jsonrpc2.NewHTTPClient(fmt.Sprintf("http://%v:%v", ipAddr, kurtosisApiPort))
+	kurtosisUrl := fmt.Sprintf("http://%v:%v", ipAddr, kurtosisApiPort)
+	retryingClient := retryablehttp.NewClient()
+	// TODO change backoff so it's not so long
+	return jsonrpc2.NewCustomHTTPClient(kurtosisUrl, retryingClient.StandardClient())
 }

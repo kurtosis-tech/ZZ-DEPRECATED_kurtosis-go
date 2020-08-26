@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/kurtosis-tech/kurtosis-go/client"
+	"github.com/kurtosis-tech/kurtosis-go/example_impl/testsuite"
+	"github.com/kurtosis-tech/kurtosis-go/lib/client"
 	"github.com/sirupsen/logrus"
 	"os"
 )
@@ -22,10 +23,11 @@ func main() {
 		"IP address of the Kurtosis API endpoint")
 	flag.Parse()
 
-	err := client.Run(*testNamesFilepathArg, *testArg, *kurtosisApiIp)
-	if err != nil {
-		logrus.Errorf("An error occurred running the client: %v", err)
-		os.Exit(1)
-	}
-	os.Exit(0)
+	// TODO Make this parameterized
+	logrus.SetLevel(logrus.TraceLevel)
+
+	testSuite := testsuite.ExampleTestsuite{}
+
+	exitCode := client.Run(testSuite, *testNamesFilepathArg, *testArg, *kurtosisApiIp)
+	os.Exit(exitCode)
 }
