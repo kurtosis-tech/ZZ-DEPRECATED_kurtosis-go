@@ -1,4 +1,4 @@
-package services
+package example_services
 
 import (
 	"fmt"

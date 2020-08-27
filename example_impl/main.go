@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/kurtosis-tech/kurtosis-go/example_impl/testsuite"
+	"github.com/kurtosis-tech/kurtosis-go/example_impl/example_testsuite"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -31,7 +31,7 @@ func main() {
 	// TODO Make this parameterized
 	logrus.SetLevel(logrus.TraceLevel)
 
-	testSuite := testsuite.ExampleTestsuite{}
+	testSuite := example_testsuite.ExampleTestsuite{}
 
 	exitCode := client.Run(testSuite, *testNamesFilepathArg, *testArg, *kurtosisApiIp)
 	os.Exit(exitCode)
