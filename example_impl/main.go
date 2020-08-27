@@ -9,6 +9,11 @@ import (
 )
 
 func main() {
+	logrus.SetFormatter(&logrus.TextFormatter{
+		ForceColors:   true,
+		FullTimestamp: true,
+	})
+
 	testNamesFilepathArg := flag.String(
 		"test-names-filepath",
 		"",
