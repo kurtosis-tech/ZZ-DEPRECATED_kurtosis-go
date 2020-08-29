@@ -16,9 +16,9 @@ import (
 	"time"
 )
 
-type ExampleTest1 struct {}
+type SingleNodeExampleTest struct {}
 
-func (e ExampleTest1) Run(network networks.Network, context testsuite.TestContext) {
+func (e SingleNodeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
 	castedNetwork := network.(single_node_example_network.SingleNodeExampleNetwork)
 
@@ -44,15 +44,15 @@ func (e ExampleTest1) Run(network networks.Network, context testsuite.TestContex
 	logrus.Info("Successfully removed the test node")
 }
 
-func (e ExampleTest1) GetNetworkLoader() (networks.NetworkLoader, error) {
+func (e SingleNodeExampleTest) GetNetworkLoader() (networks.NetworkLoader, error) {
 	return single_node_example_network.SingleNodeExampleNetworkLoader{}, nil
 }
 
-func (e ExampleTest1) GetExecutionTimeout() time.Duration {
+func (e SingleNodeExampleTest) GetExecutionTimeout() time.Duration {
 	return 30 * time.Second
 }
 
-func (e ExampleTest1) GetSetupBuffer() time.Duration {
+func (e SingleNodeExampleTest) GetSetupBuffer() time.Duration {
 	return 30 * time.Second
 }
 

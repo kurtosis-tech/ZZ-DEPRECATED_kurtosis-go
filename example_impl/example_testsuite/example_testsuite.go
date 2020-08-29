@@ -14,8 +14,8 @@ type ExampleTestsuite struct {}
 
 func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 	return map[string]testsuite.Test{
-		"exampleTest1": ExampleTest1{},
-		"exampleTest2": ExampleTest2{},
+		"singleNodeExampleTest": SingleNodeExampleTest{},
+		"fixedSizeExampleTest": FixedSizeExampleTest{},
 	}
 }
 
