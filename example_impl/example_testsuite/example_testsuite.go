@@ -7,10 +7,15 @@ import (
 // TODO example of parameterizing your image
 type ExampleTestsuite struct {}
 
-func (e ExampleTestsuite) GetTests() map[string]testsuite.Test {
+func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 	return map[string]testsuite.Test{
 		"exampleTest1": ExampleTest1{},
 		"exampleTest2": ExampleTest2{},
 	}
 }
+
+func (suite ExampleTestsuite) GetNetworkWidthBits() uint32 {
+	return 8
+}
+
 

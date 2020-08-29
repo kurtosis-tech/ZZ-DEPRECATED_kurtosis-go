@@ -14,10 +14,10 @@ func main() {
 		FullTimestamp: true,
 	})
 
-	testNamesFilepathArg := flag.String(
-		"test-names-filepath",
+	metadataFilepath := flag.String(
+		"metadata-filepath",
 		"",
-		"The filepath of the file in which the names of all the tests should be written")
+		"The filepath of the file in which the test suite metadata should be written")
 	testArg := flag.String(
 		"test",
 		"",
@@ -33,6 +33,6 @@ func main() {
 
 	testSuite := example_testsuite.ExampleTestsuite{}
 
-	exitCode := client.Run(testSuite, *testNamesFilepathArg, *testArg, *kurtosisApiIp)
+	exitCode := client.Run(testSuite, *metadataFilepath, *testArg, *kurtosisApiIp)
 	os.Exit(exitCode)
 }
