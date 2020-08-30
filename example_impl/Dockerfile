@@ -11,8 +11,10 @@ COPY . .
 # Build the application
 RUN go build -o kurtosis-go-example example_impl/main.go
 
+# Note how we use a variable custom to this particular test suite, GO_EXAMPLE_SERVICE_IMAGE
 CMD set -euo pipefail && ./kurtosis-go-example \
     --metadata-filepath=${METADATA_FILEPATH} \
+    --service-image=${GO_EXAMPLE_SERVICE_IMAGE} \
     --test=${TEST} \
     --log-level=${LOG_LEVEL} \
     --kurtosis-api-ip=${KURTOSIS_API_IP} 2>&1 | tee ${LOG_FILEPATH}

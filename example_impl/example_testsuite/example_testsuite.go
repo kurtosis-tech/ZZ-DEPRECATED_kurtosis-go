@@ -9,13 +9,19 @@ import (
 	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
 )
 
-// TODO example of parameterizing your image
-type ExampleTestsuite struct {}
+type ExampleTestsuite struct {
+	serviceImage string
+}
+
+func NewExampleTestsuite(serviceImage string) *ExampleTestsuite {
+	return &ExampleTestsuite{serviceImage: serviceImage}
+}
+
 
 func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 	return map[string]testsuite.Test{
-		"singleNodeExampleTest": SingleNodeExampleTest{},
-		"fixedSizeExampleTest": FixedSizeExampleTest{},
+		"singleNodeExampleTest": SingleNodeExampleTest{ServiceImage: suite.serviceImage},
+		"fixedSizeExampleTest": FixedSizeExampleTest{ServiceImage: suite.serviceImage},
 	}
 }
 
