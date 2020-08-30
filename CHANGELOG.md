@@ -7,3 +7,4 @@
 * Renamed tests to have more descriptive names
 * When asked about test suite data, send back a JSON of test suite metadata (rather than just a list of test names)
 * Made log level configurable
+* Add CircleCI
