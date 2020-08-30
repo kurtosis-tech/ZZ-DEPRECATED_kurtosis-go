@@ -12,6 +12,7 @@ COPY . .
 RUN go build -o kurtosis-go-example example_impl/main.go
 
 CMD set -euo pipefail && ./kurtosis-go-example \
-    --test-names-filepath=${TEST_NAMES_FILEPATH} \
+    --metadata-filepath=${METADATA_FILEPATH} \
     --test=${TEST} \
+    --log-level=${LOG_LEVEL} \
     --kurtosis-api-ip=${KURTOSIS_API_IP} 2>&1 | tee ${LOG_FILEPATH}

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 - present Kurtosis Technologies LLC.
+ * All Rights Reserved.
+ */
+
 package services
 
 import (
@@ -14,7 +19,6 @@ const (
 	ipPlaceholder = "KURTOSISSERVICEIP"
 )
 
-// TODO We MIGHT be able to remove this struct entirely
 /*
 A struct that wraps a user-defined ServiceInitializerCore, which will instruct the initializer how to launch a new instance
 	of the user's service.
@@ -71,6 +75,8 @@ func (initializer ServiceInitializer) CreateService(
 	usedPorts := initializerCore.GetUsedPorts()
 
 	logrus.Trace("Creating directory within test volume for service...")
+	// TODO take in the service ID and use it here so the volume will be human-readable
+	// TODO Include the date that the service was created, in case we have multiple service instances with same ID (possible)
 	serviceDirname := fmt.Sprintf("service-%v", uuid.New().String())
 	// TODO figure out a better way to do this; the testsuite might collide with the Kurtosis API!!!
 	serviceDirpath := filepath.Join(initializer.testVolumeDirpath, serviceDirname)
@@ -86,7 +92,7 @@ func (initializer ServiceInitializer) CreateService(
 	osFiles := make(map[string]*os.File)
 	mountFilepaths := make(map[string]string)
 	for fileId, _ := range requestedFiles {
-		filename := uuid.New().String()
+		filename := fmt.Sprintf("%v-%v", fileId, uuid.New().String())
 		hostFilepath := filepath.Join(serviceDirpath, filename)
 		fp, err := os.Create(hostFilepath)
 		if err != nil {
