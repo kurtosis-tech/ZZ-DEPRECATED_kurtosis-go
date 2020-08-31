@@ -20,9 +20,11 @@ const (
 	numNodes = 5
 )
 
-type FixedSizeExampleTest struct {}
+type FixedSizeExampleTest struct {
+	ServiceImage string
+}
 
-func (e FixedSizeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
+func (test FixedSizeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
 	castedNetwork := network.(fixed_size_example_network.FixedSizeExampleNetwork)
 
@@ -41,15 +43,15 @@ func (e FixedSizeExampleTest) Run(network networks.Network, context testsuite.Te
 	}
 }
 
-func (e FixedSizeExampleTest) GetNetworkLoader() (networks.NetworkLoader, error) {
-	return fixed_size_example_network.NewFixedSizeExampleNetworkLoader(numNodes), nil
+func (test FixedSizeExampleTest) GetNetworkLoader() (networks.NetworkLoader, error) {
+	return fixed_size_example_network.NewFixedSizeExampleNetworkLoader(numNodes, test.ServiceImage), nil
 }
 
-func (e FixedSizeExampleTest) GetExecutionTimeout() time.Duration {
+func (test FixedSizeExampleTest) GetExecutionTimeout() time.Duration {
 	return 30 * time.Second
 }
 
-func (e FixedSizeExampleTest) GetSetupBuffer() time.Duration {
+func (test FixedSizeExampleTest) GetSetupBuffer() time.Duration {
 	return 30 * time.Second
 }
 
