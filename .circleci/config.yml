@@ -10,10 +10,9 @@ executors:
 jobs:
   build:
     executor: ubuntu_vm
-    environment:
-      CIRCLE_BASE_REVISION: "<< pipeline.git.base_revision >>"
     steps:
       - checkout
+      - run: "echo << pipeline.git.base_revision >>"
 
       # TODO Add caching like in https://circleci.com/docs/2.0/language-go/
       

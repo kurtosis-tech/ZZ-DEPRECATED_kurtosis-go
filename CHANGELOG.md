@@ -8,3 +8,4 @@
 * When asked about test suite data, send back a JSON of test suite metadata (rather than just a list of test names)
 * Made log level configurable
 * Add CircleCI
+* Build a Docker image on each merge to the develop branch
