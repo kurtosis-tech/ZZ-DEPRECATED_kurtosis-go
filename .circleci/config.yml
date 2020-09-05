@@ -7,22 +7,24 @@ executors:
       # DO NOT USE THIS YET! This costs 200 credits *per job run* so is extremely expensive for the free plan, but we can turn it on one day if we get more credits
       # docker_layer_caching: true
 
+# NOTE: Because CircleCI jobs run on separate machines from each other, we duplicate steps (like checkout) between jobs. This is because doing the "correct" DRY
+#  refactoring of, "one job for checkout, one job for build Docker image, etc." would require a) persisting files between jobs and b) persisting Docker images between
+#  jobs. Both are annoying (saving/loading workspaces require re-downloading the workspace over the network, and there doesn't seem to be a good way to do Docker
+#  images), so we run everything inside a single job.
+# See also: https://discuss.circleci.com/t/can-docker-images-be-preserved-between-jobs-in-a-workflow-without-a-manual-load-save/23388/12
 jobs:
-  check_for_changelog:
-    executor: ubuntu_vm
-    steps:
-      - run: "bash .circleci/check_for_changelog_in_diff.sh << pipeline.git.base_revision >> ${CIRCLE_BRANCH}"
-  build:
+  validate_pr:
     executor: ubuntu_vm
     steps:
       - checkout
-
-      # TODO Add caching like in https://circleci.com/docs/2.0/language-go/
-      
+      - run: "bash .circleci/check_for_changelog_in_diff.sh << pipeline.git.base_revision >> ${CIRCLE_BRANCH}"
       - run: scripts/build.sh
+
   push_docker_image:
     executor: ubuntu_vm
     steps:
+      - checkout
+      - run: scripts/build.sh
       - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
       # TODO change the image name to be parameterized - it's hardcoded right now
       - run: "docker push kurtosistech/kurtosis-go-example:<< pipeline.git.branch >>"
@@ -31,10 +33,7 @@ workflows:
   pr_validation:
     when: "$CIRCLE_PULL_REQUEST"
     jobs:
-      - check_for_changelog
-      - build:
-          requires:
-            - check_for_changelog
+      - validate_pr
 
   push_stable_images:
     when:
@@ -42,7 +41,4 @@ workflows:
         - equal: [ "develop", "<< pipeline.git.branch >>" ]
         - equal: [ "master", "<< pipeline.git.branch >>" ]
     jobs:
-      - build
-      - push_docker_image:
-          requires:
-            - build
+      - push_docker_image
