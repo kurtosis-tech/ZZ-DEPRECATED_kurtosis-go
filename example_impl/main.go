@@ -37,6 +37,10 @@ func main() {
 		"",
 		"String corresponding to Logrus log level that the test suite will output with",
 		)
+	serviceImageArg := flag.String(
+		"service-image",
+		"",
+		"Name of Docker image that will be used to launch service containers")
 	flag.Parse()
 
 	level, err := logrus.ParseLevel(*logLevelArg)
@@ -46,8 +50,7 @@ func main() {
 	}
 	logrus.SetLevel(level)
 
-	testSuite := example_testsuite.ExampleTestsuite{}
-
+	testSuite := example_testsuite.NewExampleTestsuite(*serviceImageArg)
 	exitCode := client.Run(testSuite, *metadataFilepath, *testArg, *kurtosisApiIpArg)
 	os.Exit(exitCode)
 }
