@@ -8,15 +8,17 @@ executors:
       # docker_layer_caching: true
 
 jobs:
+  check_for_changelog:
+    executor: ubuntu_vm
+    steps:
+      - run: "bash .circleci/check_for_changelog_in_diff.sh << pipeline.git.base_revision >> ${CIRCLE_BRANCH}"
   build:
     executor: ubuntu_vm
     steps:
       - checkout
-      - run: "echo << pipeline.git.base_revision >>"
 
       # TODO Add caching like in https://circleci.com/docs/2.0/language-go/
       
-      - run: "bash .circleci/check_for_changelog_in_diff.sh << pipeline.git.base_revision >> ${CIRCLE_BRANCH}"
       - run: scripts/build.sh
   push_docker_image:
     executor: ubuntu_vm
@@ -26,16 +28,21 @@ jobs:
       - run: "docker push kurtosistech/kurtosis-go-example:<< pipeline.git.branch >>"
 
 workflows:
-  main:
-    # We only want to run the workflow when we have a pull request!
-    when: "<< pipeline.git.base_revision >>"
+  pr_validation:
+    when: "$CIRCLE_PULL_REQUEST"
+    jobs:
+      - check_for_changelog
+      - build:
+          requires:
+            - check_for_changelog
+
+  push_stable_images:
+    when:
+      or:
+        - equal: [ "develop", "<< pipeline.git.branch >>" ]
+        - equal: [ "master", "<< pipeline.git.branch >>" ]
     jobs:
       - build
       - push_docker_image:
           requires:
             - build
-          filters:
-            branches:
-              only:
-                - develop
-                - master
