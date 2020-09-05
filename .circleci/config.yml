@@ -22,7 +22,8 @@ jobs:
   push_docker_image:
     executor: ubuntu_vm
     steps:
-      # TODO change this to be parameterized - it's hardcoded right now
+      run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+      # TODO change the image name to be parameterized - it's hardcoded right now
       run: "docker push kurtosistech/kurtosis-go-example:<< pipeline.git.branch >>"
 
 workflows:
