@@ -9,3 +9,4 @@
 * Made log level configurable
 * Add CircleCI
 * Upgraded example Go implementation to show the use of custom environment variables
+* Accept a new Docker parameter, `SERVICES_RELATIVE_DIRPATH`, for the location (relative to the suite execution volume root) where file IO for the services created during test execution
