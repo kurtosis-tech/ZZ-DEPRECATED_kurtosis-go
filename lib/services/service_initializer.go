@@ -83,7 +83,7 @@ func (initializer ServiceInitializer) CreateService(
 		return nil, "", stacktrace.Propagate(err, "An error occurred creating the new service's directory in the volume at filepath '%v'", serviceDirpath)
 	}
 	mountServiceDirpath := filepath.Join(initializerCore.GetTestVolumeMountpoint(), serviceDirname)
-	logrus.Tracef("Successfully created directory for service: ", serviceDirpath)
+	logrus.Tracef("Successfully created directory for service: %v", serviceDirpath)
 
 	logrus.Trace("Initializing files needed for service...")
 	requestedFiles := initializerCore.GetFilesToMount()
