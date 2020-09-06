@@ -9,3 +9,4 @@
 * Made log level configurable
 * Add CircleCI
 * Upgraded example Go implementation to show the use of custom environment variables
+* Build a Docker image on each merge to the develop branch
