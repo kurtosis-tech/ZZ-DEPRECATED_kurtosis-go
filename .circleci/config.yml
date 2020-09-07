@@ -26,7 +26,8 @@ jobs:
       - checkout
 
       # TODO Circle has no way of getting the PR base branch, so we hardcode develop :(
-      - run: ! git diff --name-only develop...HEAD
+      # The --exit-code command will return 0 on no changes, 1 on changes
+      - run: ! git diff --exit-code develop...HEAD CHANGELOG.md
       
       - run: scripts/build_and_run.sh
 
