@@ -8,7 +8,7 @@ if [ -z "${base_revision}" ]; then
     exit 1
 fi
 
-git diff ${base_revision}...HEAD
+git diff --name-only ${base_revision}...HEAD
 
 # A 0 exit code means no changes
 if git diff --exit-code ${base_revision}...HEAD CHANGELOG.md; then
