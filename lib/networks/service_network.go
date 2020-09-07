@@ -62,8 +62,8 @@ type ServiceNetwork struct {
 	// A mapping of configuration ID -> configuration details
 	configurations map[ConfigurationID]serviceConfig
 
-	// The dirpath where the test volume is mounted on *the test suite container* (which is where this code will be running)
-	testVolumeDirpath string
+	// The dirpath where directories for each new service will be created to store file IO
+	servicesDirpath string
 }
 
 /*
@@ -75,18 +75,17 @@ Args:
 	dockerNetworkName: The name of the Docker network this test network is running on.
 	configurations: The configurations that are available for spinning up new nodes in the network.
 	testVolume: The name of the Docker volume that will be mounted on all the nodes in the network.
-	testVolumeDirpath: The dirpath that the test Docker volume is mounted on in the controller image (which will
-		be running all the code here).
+	servicesDirpath: The dirpath where directories for each new serivce will be created to store file IO
  */
 func NewServiceNetwork(
 			kurtosisService *kurtosis_service.KurtosisService,
 			configurations map[ConfigurationID]serviceConfig,
-			testVolumeDirpath string) *ServiceNetwork {
+			servicesDirpath string) *ServiceNetwork {
 	return &ServiceNetwork{
-		kurtosisService:   kurtosisService,
-		serviceNodes:      make(map[ServiceID]ServiceNode),
-		configurations:    configurations,
-		testVolumeDirpath: testVolumeDirpath,
+		kurtosisService: kurtosisService,
+		serviceNodes:    make(map[ServiceID]ServiceNode),
+		configurations:  configurations,
+		servicesDirpath: servicesDirpath,
 	}
 }
 
@@ -137,7 +136,7 @@ func (network *ServiceNetwork) AddService(configurationId ConfigurationID, servi
 	}
 
 
-	initializer := services.NewServiceInitializer(config.initializerCore, network.testVolumeDirpath, network.kurtosisService)
+	initializer := services.NewServiceInitializer(config.initializerCore, network.servicesDirpath, network.kurtosisService)
 
 	logrus.Tracef("Creating new service with Docker image '%v'...", config.dockerImage)
 	service, containerId, err := initializer.CreateService(

@@ -41,6 +41,10 @@ func main() {
 		"service-image",
 		"",
 		"Name of Docker image that will be used to launch service containers")
+	servicesDirpathArg := flag.String(
+		"services-relative-dirpath",
+		"",
+		"Dirpath, relative to the root of the suite execution volume, where directories for each service should be created")
 	flag.Parse()
 
 	level, err := logrus.ParseLevel(*logLevelArg)
@@ -51,6 +55,6 @@ func main() {
 	logrus.SetLevel(level)
 
 	testSuite := example_testsuite.NewExampleTestsuite(*serviceImageArg)
-	exitCode := client.Run(testSuite, *metadataFilepath, *testArg, *kurtosisApiIpArg)
+	exitCode := client.Run(testSuite, *metadataFilepath, *servicesDirpathArg, *testArg, *kurtosisApiIpArg)
 	os.Exit(exitCode)
 }

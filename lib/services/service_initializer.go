@@ -27,8 +27,8 @@ type ServiceInitializer struct {
 	// The user-defined instructions for how to initialize their service
 	core ServiceInitializerCore
 
-	// The location where the test volume is mounted *on the test suite container*
-	testVolumeDirpath string
+	// The dirpath ON THE SUITE CONTAINER where directories, one per service, should be created to store service file IO
+	servicesDirpath string
 
 	// The handle to manipulating the test environment
 	kurtosisService *kurtosis_service.KurtosisService
@@ -39,15 +39,15 @@ Creates a new service initializer that will initialize services using the user-d
 
 Args:
 	core: The user-defined logic for instantiating their particular service
-	testVolumeDirpath: The dirpath where the test Docker volume is mounted on the test suite Docker container
+	servicesDirpath: The dirpath ON THE SUITE CONTAINER where directories, one per service, should be created to store service file IO
  */
 func NewServiceInitializer(
 		core ServiceInitializerCore,
-		testVolumeDirpath string,
+		servicesDirpath string,
 		kurtosisService *kurtosis_service.KurtosisService) *ServiceInitializer {
 	return &ServiceInitializer{
-		core: core,
-		testVolumeDirpath: testVolumeDirpath,
+		core:            core,
+		servicesDirpath: servicesDirpath,
 		kurtosisService: kurtosisService,
 	}
 }
@@ -75,17 +75,15 @@ func (initializer ServiceInitializer) CreateService(
 	usedPorts := initializerCore.GetUsedPorts()
 
 	logrus.Trace("Creating directory within test volume for service...")
-	// TODO take in the service ID and use it here so the volume will be human-readable
-	// TODO Include the date that the service was created, in case we have multiple service instances with same ID (possible)
+	// TODO also take in the service ID and use it here so the volume will be human-readable
 	serviceDirname := fmt.Sprintf("service-%v", uuid.New().String())
-	// TODO figure out a better way to do this; the testsuite might collide with the Kurtosis API!!!
-	serviceDirpath := filepath.Join(initializer.testVolumeDirpath, serviceDirname)
+	serviceDirpath := filepath.Join(initializer.servicesDirpath, serviceDirname)
 	err := os.Mkdir(serviceDirpath, os.ModeDir)
 	if err != nil {
 		return nil, "", stacktrace.Propagate(err, "An error occurred creating the new service's directory in the volume at filepath '%v'", serviceDirpath)
 	}
 	mountServiceDirpath := filepath.Join(initializerCore.GetTestVolumeMountpoint(), serviceDirname)
-	logrus.Trace("Successfully created directory within test volume for service")
+	logrus.Tracef("Successfully created directory for service: %v", serviceDirpath)
 
 	logrus.Trace("Initializing files needed for service...")
 	requestedFiles := initializerCore.GetFilesToMount()
