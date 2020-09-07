@@ -8,9 +8,10 @@ if [ -z "${base_revision}" ]; then
 fi
 
 # TODO Debugging
-echo "GIT DIFF"
+echo "=========="
+git rev-parse HEAD
 git diff --name-only ${base_revision}...HEAD
-echo "END GIT DIFF"
+echo "=========="
 
 if ! git diff --name-only ${base_revision}...HEAD | grep CHANGELOG.md; then
     echo "PR has no CHANGELOG entry. Please update the CHANGELOG!"
