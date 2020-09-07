@@ -22,11 +22,12 @@ const (
 	errorExitCode = 1
 	successExitCode = 0
 
-	// TODO parameterize this!!
-	testVolumeMountLocation = "/test-volume"
+	// NOTE: right now this is hardcoded in the initializer as part of the contract between Kurtosis & a test suite image -
+	//  all test suite images MUST have this path available for mounting
+	suiteExecutionVolumeMountDirpath = "/suite-execution"
 )
 
-func Run(testSuite testsuite.TestSuite, metadataFilepath string, testName string, kurtosisApiIp string) int {
+func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativeDirpath string, testName string, kurtosisApiIp string) int {
 	metadataFilepath = strings.TrimSpace(metadataFilepath)
 	testName = strings.TrimSpace(testName)
 
@@ -46,7 +47,7 @@ func Run(testSuite testsuite.TestSuite, metadataFilepath string, testName string
 			return errorExitCode
 		}
 	} else if !isTestEmpty {
-		if err := runTest(testSuite, testName, kurtosisApiIp); err != nil {
+		if err := runTest(servicesRelativeDirpath, testSuite, testName, kurtosisApiIp); err != nil {
 			logrus.Errorf("An error occurred running test '%v':", testName)
 			fmt.Fprintln(logrus.StandardLogger().Out, err)
 			return errorExitCode
@@ -92,7 +93,7 @@ Returns:
 	setupErr: Indicates an error setting up the test that prevented the test from running
 	testErr: Indicates an error in the test itself, indicating a test failure
 */
-func runTest(testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
+func runTest(servicesDirpath string, testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
 	kurtosisService := kurtosis_service.NewKurtosisService(kurtosisApiIp)
 
 	tests := testSuite.GetTests()
@@ -111,7 +112,7 @@ func runTest(testSuite testsuite.TestSuite, testName string, kurtosisApiIp strin
 	logrus.Info("Configuring test network...")
 	builder := networks.NewServiceNetworkBuilder(
 		kurtosisService,
-		testVolumeMountLocation)
+		suiteExecutionVolumeMountDirpath)
 	networkLoader, err := test.GetNetworkLoader()
 	if err != nil {
 		return stacktrace.Propagate(err, "Could not get network loader")
