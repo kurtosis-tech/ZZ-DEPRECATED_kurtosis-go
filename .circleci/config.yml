@@ -13,38 +13,43 @@ executors:
 #  images), so we run everything inside a single job.
 # See also: https://discuss.circleci.com/t/can-docker-images-be-preserved-between-jobs-in-a-workflow-without-a-manual-load-save/23388/12
 jobs:
-  validate_pr:
+  validate:
     executor: ubuntu_vm
     steps:
-      # Frustratingly, CircleCI doesn't have a pipeline value indicating pull requests so we can't use a "when" condition to make sure we don't even run this
-      #  job since the "when" condition is evaluated at configuration time and the environment variables like CIRCLE_PULL_REQUEST are only injected at runtime
-      #  after spinning up the VM (meaning for all non-PR commits, we're going to waste time spinning up the VM only to abort)
-      - run: |
-          if [ -z "$CIRCLE_PULL_REQUEST"]; then
-              circleci step halt
-          fi
+      # NOTE: Commented out this hacky way of preventing builds if not a PR because it might be premature optimization
+      # # Frustratingly, CircleCI doesn't have a pipeline value indicating pull requests so we can't use a "when" condition to make sure we don't even run this
+      # #  job since the "when" condition is evaluated at configuration time and the environment variables like CIRCLE_PULL_REQUEST are only injected at runtime
+      # #  after spinning up the VM (meaning for all non-PR commits, we're going to waste time spinning up the VM only to abort)
+      # - run: |
+      #     if [ -z "$CIRCLE_PULL_REQUEST"]; then
+      #         circleci step halt
+      #     fi
       - checkout
-      - run: "bash .circleci/check_for_changelog_in_diff.sh << pipeline.git.base_revision >> ${CIRCLE_BRANCH}"
-      - run: scripts/build.sh
+
+      # TODO Circle has no way of getting the PR base branch, so we hardcode develop :(
+      # The --exit-code command will return 0 on no changes, 1 on changes
+      - run: ! git diff --exit-code develop...HEAD CHANGELOG.md
+      
+      - run: scripts/build_and_run.sh
 
   push_docker_image:
     executor: ubuntu_vm
     steps:
       - checkout
-      - run: scripts/build.sh
+      - run: scripts/build_and_run.sh -b
       - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
       # TODO change the image name to be parameterized - it's hardcoded right now
       - run: "docker push kurtosistech/kurtosis-go-example:<< pipeline.git.branch >>"
 
 workflows:
-  pr_validation:
+  validation:
     when:
       not:
         or: 
         - equal: [ "develop", "<< pipeline.git.branch >>" ]
         - equal: [ "master", "<< pipeline.git.branch >>" ]
     jobs:
-      - validate_pr
+      - validate
 
   push_stable_images:
     when:
