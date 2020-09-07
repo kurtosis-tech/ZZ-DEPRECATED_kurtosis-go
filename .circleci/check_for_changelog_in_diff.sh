@@ -1,3 +1,4 @@
+set -x
 set -euo pipefail
 
 base_revision="${1:-}"
