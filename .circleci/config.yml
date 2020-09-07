@@ -25,13 +25,13 @@ jobs:
           fi
       - checkout
       - run: "bash .circleci/check_for_changelog_in_diff.sh << pipeline.git.base_revision >> ${CIRCLE_BRANCH}"
-      - run: scripts/build.sh
+      - run: scripts/build_and_run.sh
 
   push_docker_image:
     executor: ubuntu_vm
     steps:
       - checkout
-      - run: scripts/build.sh
+      - run: scripts/build_and_run.sh -b
       - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
       # TODO change the image name to be parameterized - it's hardcoded right now
       - run: "docker push kurtosistech/kurtosis-go-example:<< pipeline.git.branch >>"

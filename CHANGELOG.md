@@ -10,3 +10,4 @@
 * Add CircleCI
 * Upgraded example Go implementation to show the use of custom environment variables
 * Build a Docker image on each merge to the develop branch
+* Consolidate all the scripts into `build_and_run.sh` which will actually run the test suite for testing purposes
