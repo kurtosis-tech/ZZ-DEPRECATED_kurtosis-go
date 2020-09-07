@@ -4,7 +4,9 @@ script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 # ====================== CONSTANTS =======================================================
 DOCKER_ORG="kurtosistech"
 EXAMPLE_IMAGE="kurtosis-go-example"
-INITIALIZER_IMAGE="kurtosistech/kurtosis-core_initializer:develop"  # Parameterize the tag?
+KURTOSIS_CORE_CHANNEL="develop"
+INITIALIZER_IMAGE="kurtosistech/kurtosis-core_initializer:${KURTOSIS_CORE_CHANNEL}"
+API_IMAGE="kurtosistech/kurtosis-core_api:${KURTOSIS_CORE_CHANNEL}"
 
 # ====================== ARG PARSING =======================================================
 show_help() {
@@ -63,6 +65,7 @@ if "${do_run}"; then
         --env 'CUSTOM_ENV_VARS_JSON={"GO_EXAMPLE_SERVICE_IMAGE":"nginxdemos/hello"}' \
         --env "TEST_SUITE_IMAGE=${DOCKER_ORG}/${EXAMPLE_IMAGE}:${docker_tag}" \
         --env "SUITE_EXECUTION_VOLUME=${go_suite_execution_volume}" \
+        --env "KURTOSIS_API_IMAGE=${API_IMAGE}" \
         ${extra_docker_args} \
         "${INITIALIZER_IMAGE}"
 fi
