@@ -12,3 +12,4 @@
 * Build a Docker image on each merge to the develop branch
 * Accept a new Docker parameter, `SERVICES_RELATIVE_DIRPATH`, for the location (relative to the suite execution volume root) where file IO for the services created during test execution
 * Consolidate all the scripts into `build_and_run.sh` which will actually run the test suite for testing purposes
+* Switch to `master` release track from Kurtosis core

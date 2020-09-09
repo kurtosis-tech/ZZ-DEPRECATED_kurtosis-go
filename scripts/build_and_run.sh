@@ -4,7 +4,7 @@ script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 # ====================== CONSTANTS =======================================================
 DOCKER_ORG="kurtosistech"
 EXAMPLE_IMAGE="kurtosis-go-example"
-KURTOSIS_CORE_CHANNEL="develop"
+KURTOSIS_CORE_CHANNEL="master"
 INITIALIZER_IMAGE="kurtosistech/kurtosis-core_initializer:${KURTOSIS_CORE_CHANNEL}"
 API_IMAGE="kurtosistech/kurtosis-core_api:${KURTOSIS_CORE_CHANNEL}"
 
