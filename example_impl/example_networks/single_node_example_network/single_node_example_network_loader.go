@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 - present Kurtosis Technologies LLC.
+ * All Rights Reserved.
+ */
+
 package single_node_example_network
 
 import (
@@ -9,7 +14,6 @@ import (
 
 const (
 	vanillaConfigId    networks.ConfigurationID = "vanilla"
-	vanillaDockerImage                          = "nginxdemos/hello"
 
 	theNodeServiceId          networks.ServiceID = "the-node"
 	theNodeStopTimeoutSeconds                    = 30
@@ -62,22 +66,29 @@ func (network *SingleNodeExampleNetwork) RemoveTheNode() error {
 }
 
 // =================================== NETWORK LOADER ===================================
-type SingleNodeExampleNetworkLoader struct {}
+type SingleNodeExampleNetworkLoader struct {
+	serviceImage string
+}
 
-func (e SingleNodeExampleNetworkLoader) ConfigureNetwork(builder *networks.ServiceNetworkBuilder) error {
+func NewSingleNodeExampleNetworkLoader(serviceImage string) *SingleNodeExampleNetworkLoader {
+	return &SingleNodeExampleNetworkLoader{serviceImage: serviceImage}
+}
+
+
+func (loader SingleNodeExampleNetworkLoader) ConfigureNetwork(builder *networks.ServiceNetworkBuilder) error {
 	builder.AddConfiguration(
 		vanillaConfigId,
-		vanillaDockerImage,
+		loader.serviceImage,
 		example_services.ExampleServiceInitializerCore{},
 		example_services.ExampleAvailabilityCheckerCore{})
 	return nil
 }
 
-func (e SingleNodeExampleNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.ServiceAvailabilityChecker, error) {
+func (loader SingleNodeExampleNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.ServiceAvailabilityChecker, error) {
 	return map[networks.ServiceID]services.ServiceAvailabilityChecker{}, nil
 }
 
-func (e SingleNodeExampleNetworkLoader) WrapNetwork(network *networks.ServiceNetwork) (networks.Network, error) {
+func (loader SingleNodeExampleNetworkLoader) WrapNetwork(network *networks.ServiceNetwork) (networks.Network, error) {
 	return *NewSingleNodeExampleNetwork(network), nil
 }
 

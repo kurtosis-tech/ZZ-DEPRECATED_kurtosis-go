@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 - present Kurtosis Technologies LLC.
+ * All Rights Reserved.
+ */
+
 package example_testsuite
 
 import (
@@ -11,9 +16,11 @@ import (
 	"time"
 )
 
-type ExampleTest1 struct {}
+type SingleNodeExampleTest struct {
+	ServiceImage string
+}
 
-func (e ExampleTest1) Run(network networks.Network, context testsuite.TestContext) {
+func (test SingleNodeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
 	castedNetwork := network.(single_node_example_network.SingleNodeExampleNetwork)
 
@@ -39,15 +46,15 @@ func (e ExampleTest1) Run(network networks.Network, context testsuite.TestContex
 	logrus.Info("Successfully removed the test node")
 }
 
-func (e ExampleTest1) GetNetworkLoader() (networks.NetworkLoader, error) {
-	return single_node_example_network.SingleNodeExampleNetworkLoader{}, nil
+func (test SingleNodeExampleTest) GetNetworkLoader() (networks.NetworkLoader, error) {
+	return single_node_example_network.NewSingleNodeExampleNetworkLoader(test.ServiceImage), nil
 }
 
-func (e ExampleTest1) GetExecutionTimeout() time.Duration {
+func (test SingleNodeExampleTest) GetExecutionTimeout() time.Duration {
 	return 30 * time.Second
 }
 
-func (e ExampleTest1) GetSetupBuffer() time.Duration {
+func (test SingleNodeExampleTest) GetSetupBuffer() time.Duration {
 	return 30 * time.Second
 }
 

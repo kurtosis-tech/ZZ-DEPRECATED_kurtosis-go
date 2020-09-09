@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 - present Kurtosis Technologies LLC.
+ * All Rights Reserved.
+ */
+
 package fixed_size_example_network
 
 import (
@@ -10,7 +15,6 @@ import (
 
 const (
 	vanillaConfigId    networks.ConfigurationID = "vanilla"
-	vanillaDockerImage                          = "nginxdemos/hello"
 	serviceIdPrefix = "service-"
 )
 
@@ -40,16 +44,20 @@ func (network *FixedSizeExampleNetwork) GetService(idInt int) (example_services.
 // ======================================== NETWORK LOADER ==============================================
 type FixedSizeExampleNetworkLoader struct {
 	numNodes int
+	serviceImage string
 }
 
-func NewFixedSizeExampleNetworkLoader(numNodes int) *FixedSizeExampleNetworkLoader {
-	return &FixedSizeExampleNetworkLoader{numNodes: numNodes}
+func NewFixedSizeExampleNetworkLoader(numNodes int, serviceImage string) *FixedSizeExampleNetworkLoader {
+	return &FixedSizeExampleNetworkLoader{
+		numNodes: numNodes,
+		serviceImage: serviceImage,
+	}
 }
 
 func (loader FixedSizeExampleNetworkLoader) ConfigureNetwork(builder *networks.ServiceNetworkBuilder) error {
 	builder.AddConfiguration(
 		vanillaConfigId,
-		vanillaDockerImage,
+		loader.serviceImage,
 		example_services.ExampleServiceInitializerCore{},
 		example_services.ExampleAvailabilityCheckerCore{})
 	return nil

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 - present Kurtosis Technologies LLC.
+ * All Rights Reserved.
+ */
+
 package example_testsuite
 
 import (
@@ -15,9 +20,11 @@ const (
 	numNodes = 5
 )
 
-type ExampleTest2 struct {}
+type FixedSizeExampleTest struct {
+	ServiceImage string
+}
 
-func (e ExampleTest2) Run(network networks.Network, context testsuite.TestContext) {
+func (test FixedSizeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
 	castedNetwork := network.(fixed_size_example_network.FixedSizeExampleNetwork)
 
@@ -36,15 +43,15 @@ func (e ExampleTest2) Run(network networks.Network, context testsuite.TestContex
 	}
 }
 
-func (e ExampleTest2) GetNetworkLoader() (networks.NetworkLoader, error) {
-	return fixed_size_example_network.NewFixedSizeExampleNetworkLoader(numNodes), nil
+func (test FixedSizeExampleTest) GetNetworkLoader() (networks.NetworkLoader, error) {
+	return fixed_size_example_network.NewFixedSizeExampleNetworkLoader(numNodes, test.ServiceImage), nil
 }
 
-func (e ExampleTest2) GetExecutionTimeout() time.Duration {
+func (test FixedSizeExampleTest) GetExecutionTimeout() time.Duration {
 	return 30 * time.Second
 }
 
-func (e ExampleTest2) GetSetupBuffer() time.Duration {
+func (test FixedSizeExampleTest) GetSetupBuffer() time.Duration {
 	return 30 * time.Second
 }
 

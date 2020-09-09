@@ -1,6 +1,12 @@
+/*
+ * Copyright (c) 2020 - present Kurtosis Technologies LLC.
+ * All Rights Reserved.
+ */
+
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
 	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
@@ -16,31 +22,32 @@ const (
 	errorExitCode = 1
 	successExitCode = 0
 
-	// TODO parameterize this!!
-	testVolumeMountLocation = "/test-volume"
+	// NOTE: right now this is hardcoded in the initializer as part of the contract between Kurtosis & a test suite image -
+	//  all test suite images MUST have this path available for mounting
+	suiteExecutionVolumeMountDirpath = "/suite-execution"
 )
 
-func Run(testSuite testsuite.TestSuite, testNamesFilepath string, testName string, kurtosisApiIp string) int {
-	testNamesFilepath = strings.TrimSpace(testNamesFilepath)
+func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativeDirpath string, testName string, kurtosisApiIp string) int {
+	metadataFilepath = strings.TrimSpace(metadataFilepath)
 	testName = strings.TrimSpace(testName)
 
-	isTestNamesFilepathEmpty := len(testNamesFilepath) == 0
+	isMetadataFilepathEmpty := len(metadataFilepath) == 0
 	isTestEmpty := len(testName) == 0
 
 	// Only one of these should be set; if both are set then it's an error
-	if isTestNamesFilepathEmpty == isTestEmpty {
-		logrus.Error("Exactly one of test-names-filepath and the test-name-to-run should be set")
+	if isMetadataFilepathEmpty == isTestEmpty {
+		logrus.Error("Exactly one of 'metadata filepath' or 'test name to run'  should be set")
 		return errorExitCode
 	}
 
-	if !isTestNamesFilepathEmpty {
-		if err := printTestsToFile(testSuite, testNamesFilepath); err != nil {
-			logrus.Errorf("An error occurred printing tests to file '%v':", testNamesFilepath)
+	if !isMetadataFilepathEmpty {
+		if err := printSuiteMetadataToFile(testSuite, metadataFilepath); err != nil {
+			logrus.Errorf("An error occurred writing test suite metadata to file '%v':", metadataFilepath)
 			fmt.Fprintln(logrus.StandardLogger().Out, err)
 			return errorExitCode
 		}
 	} else if !isTestEmpty {
-		if err := runTest(testSuite, testName, kurtosisApiIp); err != nil {
+		if err := runTest(servicesRelativeDirpath, testSuite, testName, kurtosisApiIp); err != nil {
 			logrus.Errorf("An error occurred running test '%v':", testName)
 			fmt.Fprintln(logrus.StandardLogger().Out, err)
 			return errorExitCode
@@ -50,16 +57,30 @@ func Run(testSuite testsuite.TestSuite, testNamesFilepath string, testName strin
 }
 
 // =========================================== Private helper functions ========================================
-func printTestsToFile(testSuite testsuite.TestSuite, testNamesFilepath string) error {
-	logrus.Debugf("Printing tests to file '%v'...", testNamesFilepath)
-	fp, err := os.OpenFile(testNamesFilepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+func printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) error {
+	logrus.Debugf("Printing test suite metadata to file '%v'...", filepath)
+	fp, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return stacktrace.Propagate(err, "No file exists at %v", testNamesFilepath)
+		return stacktrace.Propagate(err, "No file exists at %v", filepath)
 	}
 	defer fp.Close()
 
+	testNames := map[string]bool{}
 	for testName, _ := range testSuite.GetTests() {
-		fp.WriteString(testName + "\n")
+		testNames[testName] = true
+	}
+	suiteMetadata := TestSuiteMetadata{
+		TestNames:        testNames,
+		NetworkWidthBits: testSuite.GetNetworkWidthBits(),
+	}
+
+	bytes, err := json.Marshal(suiteMetadata)
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred serializing test suite metadata to JSON")
+	}
+
+	if _, err := fp.Write(bytes); err != nil {
+		return stacktrace.Propagate(err, "An error occurred writing the JSON string to file")
 	}
 
 	return nil
@@ -72,7 +93,7 @@ Returns:
 	setupErr: Indicates an error setting up the test that prevented the test from running
 	testErr: Indicates an error in the test itself, indicating a test failure
 */
-func runTest(testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
+func runTest(servicesDirpath string, testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
 	kurtosisService := kurtosis_service.NewKurtosisService(kurtosisApiIp)
 
 	tests := testSuite.GetTests()
@@ -91,7 +112,7 @@ func runTest(testSuite testsuite.TestSuite, testName string, kurtosisApiIp strin
 	logrus.Info("Configuring test network...")
 	builder := networks.NewServiceNetworkBuilder(
 		kurtosisService,
-		testVolumeMountLocation)
+		suiteExecutionVolumeMountDirpath)
 	networkLoader, err := test.GetNetworkLoader()
 	if err != nil {
 		return stacktrace.Propagate(err, "Could not get network loader")

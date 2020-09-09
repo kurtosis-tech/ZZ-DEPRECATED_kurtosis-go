@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 - present Kurtosis Technologies LLC.
+ * All Rights Reserved.
+ */
+
 package networks
 
 import (
@@ -19,8 +24,8 @@ type ServiceNetworkBuilder struct {
 	// Mapping of configuration ID -> factories used to construct new nodes
 	configurations map[ConfigurationID]serviceConfig
 
-	// Directory path where the test Docker volume is mounted on the test suite image
-	testVolumeDirpath string
+	// Directory where the test suite ought to write file IO for the services it's using
+	servicesDirpath string
 }
 
 /*
@@ -28,14 +33,13 @@ Creates a new builder for configuring a ServiceNetwork.
 
 Args:
 	kurtosisService: Docker manager that will be used to manipulate the Docker engine when adding services
-	testVolumeDirpath: The dirpath where the test volume is mounted on the controller (which is where this code
-		will be executing)
+	servicesDirpath: The dirpath where new directories will be created, one per service
  */
-func NewServiceNetworkBuilder(kurtosisService *kurtosis_service.KurtosisService, testVolumeDirpath string) *ServiceNetworkBuilder {
+func NewServiceNetworkBuilder(kurtosisService *kurtosis_service.KurtosisService, servicesDirpath string) *ServiceNetworkBuilder {
 	return &ServiceNetworkBuilder{
-		kurtosisService:   kurtosisService,
-		configurations:    map[ConfigurationID]serviceConfig{},
-		testVolumeDirpath: testVolumeDirpath,
+		kurtosisService: kurtosisService,
+		configurations:  map[ConfigurationID]serviceConfig{},
+		servicesDirpath: servicesDirpath,
 	}
 }
 
@@ -80,5 +84,5 @@ func (builder ServiceNetworkBuilder) Build() *ServiceNetwork {
 	return NewServiceNetwork(
 		builder.kurtosisService,
 		configurationsCopy,
-		builder.testVolumeDirpath)
+		builder.servicesDirpath)
 }
