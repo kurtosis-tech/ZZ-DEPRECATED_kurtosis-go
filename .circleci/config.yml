@@ -26,7 +26,10 @@ jobs:
       #     fi
       - checkout
 
+      # TODO Debugging
       - run: git --version
+      - run: git rev-parse HEAD
+      - run: git diff develop...HEAD
 
       # TODO Circle has no way of getting the PR base branch, so we hardcode develop :(
       # The --exit-code command will return 0 on no changes, 1 on changes
