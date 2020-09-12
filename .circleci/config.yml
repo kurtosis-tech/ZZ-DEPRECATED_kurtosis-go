@@ -26,14 +26,12 @@ jobs:
       #     fi
       - checkout
 
-      # TODO Debugging
-      - run: git --version
-      - run: git rev-parse HEAD
-      - run: git --no-pager diff --name-only origin/develop...HEAD
-
-      # TODO Circle has no way of getting the PR base branch, so we hardcode develop :(
-      # The --exit-code command will return 0 on no changes, 1 on changes
-      - run: "if git --no-pager diff --exit-code origin/develop...HEAD CHANGELOG.md; then echo 'No changelog entry!'; exit 1; else echo 'Changelog modified'; exit 0; fi"
+      # Gotchas I discovered when writing this:
+      # - Without the '--no-pager' flag, Git will print "WARNING: Terminal is not fully functional" and not display any output
+      # - Circle has no way of getting the PR base branch, so we have to hardcode develop :( See: https://ideas.circleci.com/cloud-feature-requests/p/provide-env-variable-for-branch-name-targeted-by-pull-request
+      # - The --exit-code flag to git-diff returns 0 on no changes, 1 on changes
+      # - We have to use 'origin/develop' rather than 'develop' because Circle does a shallow checkout, and 'develop' gets set to something weird and wrong that makes the check buggy
+      - run: "! git --no-pager diff --exit-code origin/develop...HEAD CHANGELOG.md"
       
       - run: scripts/build_and_run.sh
 
@@ -43,7 +41,6 @@ jobs:
       - checkout
       - run: scripts/build_and_run.sh -b
       - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-      # TODO change the image name to be parameterized - it's hardcoded right now
       - run: "docker push kurtosistech/kurtosis-go-example:<< pipeline.git.branch >>"
 
 workflows:
