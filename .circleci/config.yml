@@ -29,11 +29,11 @@ jobs:
       # TODO Debugging
       - run: git --version
       - run: git rev-parse HEAD
-      - run: git diff --name-only develop...HEAD
+      - run: git --no-pager diff --name-only develop...HEAD
 
       # TODO Circle has no way of getting the PR base branch, so we hardcode develop :(
       # The --exit-code command will return 0 on no changes, 1 on changes
-      - run: "if git diff --exit-code develop...HEAD CHANGELOG.md; then echo 'No changelog entry!'; exit 1; else echo 'Changelog modified'; exit 0; fi"
+      - run: "if git --no-pager diff --exit-code develop...HEAD CHANGELOG.md; then echo 'No changelog entry!'; exit 1; else echo 'Changelog modified'; exit 0; fi"
       
       - run: scripts/build_and_run.sh
 
