@@ -26,6 +26,8 @@ jobs:
       #     fi
       - checkout
 
+      - run: git --version
+
       # TODO Circle has no way of getting the PR base branch, so we hardcode develop :(
       # The --exit-code command will return 0 on no changes, 1 on changes
       - run: "if git diff --exit-code develop...HEAD CHANGELOG.md; then echo 'No changelog entry!'; exit 1; else echo 'Changelog modified'; exit 0; fi"
