@@ -14,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// TODO Rename this to ServiceTag
+// TODO Rename this to ServiceTag, rather than ServiceID (the old name)
 /*
 The identifier used for services with the network.
  */
