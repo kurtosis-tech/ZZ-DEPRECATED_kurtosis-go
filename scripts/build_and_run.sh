@@ -88,6 +88,6 @@ if "${do_run}"; then
         --env "SUITE_EXECUTION_VOLUME=${suite_execution_volume}" \
         --env "KURTOSIS_API_IMAGE=${API_IMAGE}" \
         --env "PARALLELISM=${PARALLELISM}" \
-        "${@}" \
+        ${1+"${@}"} \
         "${INITIALIZER_IMAGE}"
 fi
