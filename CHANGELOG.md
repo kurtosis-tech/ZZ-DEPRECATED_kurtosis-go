@@ -1,6 +1,7 @@
 ## TBD
 * Add Apache license
-* Fix changelog check in CircleCI 
+* Fix changelog check in CircleCI
+* Cleaning TODOs 
 
 ## 1.0.0
 * Created example test suite to validate that the client library work
