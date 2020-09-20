@@ -78,8 +78,9 @@ if "${do_run}"; then
     suite_execution_volume="go-example-suite_${docker_tag}_$(date +%s)"
     docker volume create "${suite_execution_volume}"
 
-    # NOTE: spaces here will confuse Docker!
+    # Docker only allows you to have spaces in the variable if you escape them or use a Docker env file
     custom_env_vars_json_flag="CUSTOM_ENV_VARS_JSON={\"GO_EXAMPLE_SERVICE_IMAGE\":\"nginxdemos/hello\"}"
+
     docker run \
         --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock" \
         --mount "type=volume,source=${suite_execution_volume},target=/suite-execution" \
@@ -88,6 +89,8 @@ if "${do_run}"; then
         --env "SUITE_EXECUTION_VOLUME=${suite_execution_volume}" \
         --env "KURTOSIS_API_IMAGE=${API_IMAGE}" \
         --env "PARALLELISM=${PARALLELISM}" \
+        `# In Bash, this is how you feed arguments exactly as-is to a child script (since ${*} loses quoting and ${@} trips set -e if no arguments are passed)` \
+        `# It basically says, "if and only if ${1} exists, evaluate ${@}"` \
         ${1+"${@}"} \
         "${INITIALIZER_IMAGE}"
 fi
