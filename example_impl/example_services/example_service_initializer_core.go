@@ -41,6 +41,9 @@ func (e ExampleServiceInitializerCore) GetTestVolumeMountpoint() string {
 }
 
 func (e ExampleServiceInitializerCore) GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string, dependencies []services.Service) ([]string, error) {
-	// TODO Explain why this is nil, or maybe make entrypoints/environment-variable-flavored launches more obvious?
+	// If there was a specific start command that we wanted Docker to run, we'd return the string array here. By
+	//	returning nil, we tell Kurtosis to run the image with whatever CMD or ENTRYPOINT is specified in the
+	//	Dockerfile will be used instead. This prevents the Kurtosis code from needing to know specifics about
+	//	the Docker image (e.g. what filepath the binary to run is located at)
 	return nil, nil
 }
