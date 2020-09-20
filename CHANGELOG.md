@@ -1,6 +1,7 @@
 ## TBD
 * Add Apache license
 * Fix changelog check in CircleCI 
+* Cleaning TODOs 
 * Cleaned up `build_and_run.sh` with lessons learned from upgrading the Avalanche test suite to Kurtosis 1.0
 
 ## 1.0.0
