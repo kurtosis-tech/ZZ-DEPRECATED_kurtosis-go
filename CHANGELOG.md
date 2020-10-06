@@ -1,8 +1,9 @@
 ## TBD
 * Add Apache license
-* Fix changelog check in CircleCI
+* Fix changelog check in CircleCI 
 * Cleaning TODOs 
 * Added a README pointing users to the main Kurtosis docs
+* Cleaned up `build_and_run.sh` with lessons learned from upgrading the Avalanche test suite to Kurtosis 1.0
 
 ## 1.0.0
 * Created example test suite to validate that the client library work
