@@ -20,6 +20,7 @@ func main() {
 		FullTimestamp: true,
 	})
 
+	// ------------------- Kurtosis-internal params -------------------------------
 	metadataFilepath := flag.String(
 		"metadata-filepath",
 		"",
@@ -37,14 +38,18 @@ func main() {
 		"",
 		"String corresponding to Logrus log level that the test suite will output with",
 		)
-	serviceImageArg := flag.String(
-		"service-image",
-		"",
-		"Name of Docker image that will be used to launch service containers")
 	servicesDirpathArg := flag.String(
 		"services-relative-dirpath",
 		"",
 		"Dirpath, relative to the root of the suite execution volume, where directories for each service should be created")
+
+	// -------------------- Testsuite-custom params ----------------------------------
+	serviceImageArg := flag.String(
+		"service-image",
+		"",
+		"Name of Docker image that will be used to launch service containers")
+
+
 	flag.Parse()
 
 	level, err := logrus.ParseLevel(*logLevelArg)
