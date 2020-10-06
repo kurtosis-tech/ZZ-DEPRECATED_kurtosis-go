@@ -39,7 +39,7 @@ jobs:
     executor: ubuntu_vm
     steps:
       - checkout
-      - run: scripts/build_and_run.sh -b
+      - run: scripts/build_and_run.sh all
       - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
       - run: "docker push kurtosistech/kurtosis-go-example:<< pipeline.git.branch >>"
 
