@@ -2,6 +2,7 @@
 * Add Apache license
 * Fix changelog check in CircleCI
 * Cleaning TODOs 
+* Added a README pointing users to the main Kurtosis docs
 * Explain nil start command for the example impl
 
 ## 1.0.0
