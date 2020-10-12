@@ -25,11 +25,11 @@ find "${root_dirpath}" \
 
 cp "${script_dirpath}/README.md" "${root_dirpath}/"
 
-# Replace module names
+# Replace module names (we need the "-i '' " argument because Mac sed requires it)
 existing_module_name="$(grep "module" "${root_dirpath}/go.mod" | awk '{print $2}')"
-sed -i'' "s,${existing_module_name},${new_module_name},g" go.mod
+sed -i '' "s,${existing_module_name},${new_module_name},g" go.mod
 # We search for old_module_name/example_impl because we don't want the old_module_name/lib entries to get renamed
-sed -i'' "s,${existing_module_name}/${EXAMPLE_IMPL_DIRNAME},${new_module_name}/${EXAMPLE_IMPL_DIRNAME},g" $(find "${root_dirpath}" -type f)
+sed -i '' "s,${existing_module_name}/${EXAMPLE_IMPL_DIRNAME},${new_module_name}/${EXAMPLE_IMPL_DIRNAME},g" $(find "${root_dirpath}" -type f)
 
 rm -rf "${script_dirpath}"
 echo "Bootstrap complete; view the README.md in ${root_dirpath} for next steps"
