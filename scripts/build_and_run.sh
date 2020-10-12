@@ -6,6 +6,7 @@ SUITE_IMAGE="kurtosistech/kurtosis-go-example"
 KURTOSIS_CORE_CHANNEL="master"
 INITIALIZER_IMAGE="kurtosistech/kurtosis-core_initializer:${KURTOSIS_CORE_CHANNEL}"
 API_IMAGE="kurtosistech/kurtosis-core_api:${KURTOSIS_CORE_CHANNEL}"
+PARALLELISM=3
 
 BUILD_ACTION="build"
 RUN_ACTION="run"
