@@ -21,8 +21,8 @@ if [ "$(grep "${GO_MOD_MODULE_KEYWORD}" "${go_mod_filepath}" | wc -l)" -ne 1 ]; 
     echo "Validation failed: Could not find exactly one line in ${GO_MOD_FILENAME} with keyword '${GO_MOD_MODULE_KEYWORD}' for use when replacing with the user's module name" >&2
     exit 1
 fi
-if [ "$(grep "${DOCKER_IMAGE_VAR_KEYWORD}" "${buildscript_filepath}" | wc -l)" -ne 1 ]; then
-    echo "Validation failed: Could not find exactly one line in ${buildscript_filepath} with keyword '${DOCKER_IMAGE_VAR_KEYWORD}' for use when replacing with the user's Docker image name" >&2
+if [ "$(grep "^${DOCKER_IMAGE_VAR_KEYWORD}" "${buildscript_filepath}" | wc -l)" -ne 1 ]; then
+    echo "Validation failed: Could not find exactly one line in ${buildscript_filepath} starting with keyword '${DOCKER_IMAGE_VAR_KEYWORD}' for use when replacing with the user's Docker image name" >&2
     exit 1
 fi
 
@@ -58,7 +58,7 @@ sed -i '' "s,${existing_module_name},${new_module_name},g" ${go_mod_filepath}
 sed -i '' "s,${existing_module_name}/${EXAMPLE_IMPL_DIRNAME},${new_module_name}/${EXAMPLE_IMPL_DIRNAME},g" $(find "${root_dirpath}" -type f)
 
 # Replace Docker image name
-sed -i '' "s,${DOCKER_IMAGE_VAR_KEYWORD}.*,${DOCKER_IMAGE_VAR_KEYWORD}\"${docker_image_name}\"," "${buildscript_filepath}"
+sed -i '' "s,^${DOCKER_IMAGE_VAR_KEYWORD}.*,${DOCKER_IMAGE_VAR_KEYWORD}\"${docker_image_name}\"," "${buildscript_filepath}"
 
 rm -rf "${script_dirpath}"
 echo "Bootstrap complete; view the README.md in ${root_dirpath} for next steps"
