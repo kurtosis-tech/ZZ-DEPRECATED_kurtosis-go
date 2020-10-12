@@ -51,13 +51,13 @@ find "${root_dirpath}" \
 
 cp "${script_dirpath}/README.md" "${root_dirpath}/"
 
-# Replace module names (we need the "-i '' " argument because Mac sed requires it)
+# Replace module names in code (we need the "-i '' " argument because Mac sed requires it)
 existing_module_name="$(grep "module" "${go_mod_filepath}" | awk '{print $2}')"
 sed -i '' "s,${existing_module_name},${new_module_name},g" ${go_mod_filepath}
 # We search for old_module_name/example_impl because we don't want the old_module_name/lib entries to get renamed
 sed -i '' "s,${existing_module_name}/${EXAMPLE_IMPL_DIRNAME},${new_module_name}/${EXAMPLE_IMPL_DIRNAME},g" $(find "${root_dirpath}" -type f)
 
-# Replace Docker image name
+# Replace Docker image name in buildscript
 sed -i '' "s,^${DOCKER_IMAGE_VAR_KEYWORD}.*,${DOCKER_IMAGE_VAR_KEYWORD}\"${docker_image_name}\"," "${buildscript_filepath}"
 
 rm -rf "${script_dirpath}"
