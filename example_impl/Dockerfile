@@ -9,11 +9,11 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o kurtosis-go-example example_impl/main.go
+RUN go build -o testsuite example_impl/main.go
 
 # TODO Get rid of tee/LOG_FILEPATH in favor of using a Docker logging driver in the initializer
 # Note how we use a variable custom to this particular test suite, GO_EXAMPLE_SERVICE_IMAGE
-CMD set -euo pipefail && ./kurtosis-go-example \
+CMD set -euo pipefail && ./testsuite \
     --metadata-filepath=${METADATA_FILEPATH} \
     --service-image=${GO_EXAMPLE_SERVICE_IMAGE} \
     --test=${TEST} \
