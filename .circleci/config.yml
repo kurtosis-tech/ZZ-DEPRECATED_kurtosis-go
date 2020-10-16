@@ -16,6 +16,7 @@ jobs:
   validate:
     executor: ubuntu_vm
     steps:
+      - run: echo "Test: ${DOCKER_USERNAME}"
       # NOTE: Commented out this hacky way of preventing builds if not a PR because it might be premature optimization
       # # Frustratingly, CircleCI doesn't have a pipeline value indicating pull requests so we can't use a "when" condition to make sure we don't even run this
       # #  job since the "when" condition is evaluated at configuration time and the environment variables like CIRCLE_PULL_REQUEST are only injected at runtime
