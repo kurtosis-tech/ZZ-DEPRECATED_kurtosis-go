@@ -13,11 +13,10 @@ RUN go build -o testsuite example_impl/main.go
 
 # TODO Get rid of tee/LOG_FILEPATH in favor of using a Docker logging driver in the initializer
 CMD set -euo pipefail && ./testsuite \
-    `# Custom variable particular to this test suite` \
+    `# ------------- Custom variable particular to this test suite -----------------` \
     --service-image=${EXAMPLE_SERVICE_IMAGE} \
-
-    `# Kurtosis-specific environment variables, from:` \
-    `#  https://github.com/kurtosis-tech/kurtosis-docs/blob/master/testsuite-details.md` \
+    `# ------------------Kurtosis-specific environment variables -------------------` \
+    `# See: https://github.com/kurtosis-tech/kurtosis-docs/blob/master/testsuite-details.md` \
     --kurtosis-api-ip=${KURTOSIS_API_IP} \
     --log-level=${LOG_LEVEL} \
     --metadata-filepath=${METADATA_FILEPATH} \

@@ -108,32 +108,32 @@ if "${do_run}"; then
         `# The Kurtosis initializer runs inside a Docker container, but needs to access to the Docker engine; this is how to do it` \
         `# For more info, see the bottom of: http://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/` \
         --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock" \
-
-        `# Because the Kurtosis initializer runs inside Docker but needs to persist & read files on the host filesystem between execution,`
-        `#  the container expects the Kurtosis directory to be bind-mounted at the special "/kurtosis" path`
+        \
+        `# Because the Kurtosis initializer runs inside Docker but needs to persist & read files on the host filesystem between execution,` \
+        `#  the container expects the Kurtosis directory to be bind-mounted at the special "/kurtosis" path` \
         --mount "type=bind,source=${KURTOSIS_DIRPATH},target=/kurtosis" \
-
+        \
         `# The Kurtosis initializer image requires the volume for storing suite execution data to be mounted at the special "/suite-execution" path` \
         --mount "type=volume,source=${suite_execution_volume},target=/suite-execution" \
-
+        \
         `# A JSON map of custom environment variable bindings that should be set when running the testsuite container` \
         `# IMPORTANT: Docker only allows spaces here if they're backslash-escaped!` \
         --env "${custom_env_vars_json_flag}" \
-
+        \
         `# Tell the initializer which test suite image to use` \
         --env "TEST_SUITE_IMAGE=${SUITE_IMAGE}:${docker_tag}" \
-
+        \
         `# Tell the initializer the name of the volume to store data in, so it can mount it on new Docker containers it creates` \
         --env "SUITE_EXECUTION_VOLUME=${suite_execution_volume}" \
-
+        \
         `# The initializer needs a special Kurtosis API image to operate` \
         `# The release channel here should match the release channel of the initializer itself` \
         --env "KURTOSIS_API_IMAGE=${API_IMAGE}" \
-
+        \
         `# Extra Docker arguments that will be passed as-is to 'docker run'` \
         `# In Bash, this is how you feed arguments exactly as-is to a child script (since ${*} loses quoting and ${@} trips set -e if no arguments are passed)` \
         `# It basically says, "if and only if ${1} exists, evaluate ${@}"` \
         ${1+"${@}"} \
-
+        \
         "${INITIALIZER_IMAGE}"
 fi
