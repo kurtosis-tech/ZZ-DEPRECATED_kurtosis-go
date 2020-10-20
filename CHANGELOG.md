@@ -6,6 +6,7 @@
 * Cleaned up `build_and_run.sh` with lessons learned from upgrading the Avalanche test suite to Kurtosis 1.0
 * Explain nil start command for the example impl
 * Added a new bootstrapping process for creating Kurtosis Go testsuites from scratch
+* Add [the comment-run Github Action](https://github.com/nwtgck/actions-comment-run/tree/20297f070391450752be7ac1ebd454fb53f62795#pr-merge-preview) to the repository in order to set up [a workaround for Github not passing secrets to untrusted PRs](https://github.community/t/secrets-for-prs-who-are-not-collaborators/17712), which would prevent auth'd Kurtosis from running
 
 ## 1.0.0
 * Created example test suite to validate that the client library work
