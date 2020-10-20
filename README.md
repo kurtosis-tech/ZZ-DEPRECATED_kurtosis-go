@@ -1,4 +1,4 @@
-Kurtosis Go Client
+Kurtosis Go Client!
 ==================
 This repo contains:
 
