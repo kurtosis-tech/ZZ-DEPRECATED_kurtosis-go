@@ -16,45 +16,63 @@ jobs:
   validate:
     executor: ubuntu_vm
     steps:
-      # NOTE: Commented out this hacky way of preventing builds if not a PR because it might be premature optimization
-      # # Frustratingly, CircleCI doesn't have a pipeline value indicating pull requests so we can't use a "when" condition to make sure we don't even run this
-      # #  job since the "when" condition is evaluated at configuration time and the environment variables like CIRCLE_PULL_REQUEST are only injected at runtime
-      # #  after spinning up the VM (meaning for all non-PR commits, we're going to waste time spinning up the VM only to abort)
-      # - run: |
-      #     if [ -z "$CIRCLE_PULL_REQUEST"]; then
-      #         circleci step halt
-      #     fi
       - checkout
 
-      # TODO Circle has no way of getting the PR base branch, so we hardcode develop :(
-      # The --exit-code command will return 0 on no changes, 1 on changes
-      - run: ! git diff --exit-code develop...HEAD CHANGELOG.md
+      # Gotchas I discovered when writing this:
+      # - Without the '--no-pager' flag, Git will print "WARNING: Terminal is not fully functional" and not display any output
+      # - Circle has no way of getting the PR base branch, so we have to hardcode develop :( See: https://ideas.circleci.com/cloud-feature-requests/p/provide-env-variable-for-branch-name-targeted-by-pull-request
+      # - The --exit-code flag to git-diff returns 0 on no changes, 1 on changes
+      # - We have to use 'origin/develop' rather than 'develop' because Circle does a shallow checkout, and 'develop' gets set to something weird and wrong that makes the check buggy
+      - run: "! git --no-pager diff --exit-code origin/develop...HEAD CHANGELOG.md"
       
-      - run: scripts/build_and_run.sh
+      # Docker is restricting anonymous image pulls, so we log in before we do any pulling
+      - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+
+      # As of 2020-08-30, the VMs we build on only have 2 cores so we set parallelism to 2
+      - run: scripts/build_and_run.sh all --env PARALLELISM=2 --env CLIENT_ID=${KURTOSIS_INTERNAL_CLIENT_ID} --env CLIENT_SECRET=${KURTOSIS_INTERNAL_CLIENT_SECRET}
 
   push_docker_image:
+    environment:
+      IMAGE_REPO: "kurtosistech/kurtosis-go-example"
     executor: ubuntu_vm
     steps:
       - checkout
-      - run: scripts/build_and_run.sh -b
+      # Docker is restricting anonymous image pulls, so we log in before we do any pulling
       - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-      # TODO change the image name to be parameterized - it's hardcoded right now
-      - run: "docker push kurtosistech/kurtosis-go-example:<< pipeline.git.branch >>"
+      - run: scripts/build_and_run.sh build
+      - when:
+          condition: "<<pipeline.git.tag>>"
+          steps:
+            - run: echo 'export TAG_NAME=<<pipeline.git.tag>>' >> ${BASH_ENV}
+
+            # When we run as the result of a tag build, the built image gets a tag called "HEAD" so we need to re-tag to the X.Y.Z name
+            - run: "docker tag ${IMAGE_REPO}:HEAD ${IMAGE_REPO}:<<pipeline.git.tag>>"
+      - unless:
+          condition: "<<pipeline.git.tag>>"
+          steps:
+            - run: echo 'export TAG_NAME=<<pipeline.git.branch>>' >> ${BASH_ENV}
+      - run: "docker push ${IMAGE_REPO}:${TAG_NAME}"
 
 workflows:
-  validation:
-    when:
-      not:
-        or: 
-        - equal: [ "develop", "<< pipeline.git.branch >>" ]
-        - equal: [ "master", "<< pipeline.git.branch >>" ]
+  build:
     jobs:
-      - validate
-
-  push_stable_images:
-    when:
-      or:
-        - equal: [ "develop", "<< pipeline.git.branch >>" ]
-        - equal: [ "master", "<< pipeline.git.branch >>" ]
-    jobs:
-      - push_docker_image
+      - validate:
+          context:
+            - docker-user
+            - kurtosis-user
+          filters:
+            branches:
+              ignore:
+                - develop
+                - master
+      - push_docker_image:
+          context:
+            - docker-user
+            - kurtosis-user
+          filters:
+            branches:
+              only:
+                - develop
+                - master
+            tags: 
+              only: /^[0-9]+\.[0-9]+\.[0-9]+$/

@@ -90,7 +90,8 @@ type ServiceInitializerCore interface {
 
 	Returns:
 		The command fragments which will be used to construct the run command which will be used to launch the Docker container
-			running the service
+			running the service. If this is nil, then no explicit command will be specified and whatever command the Dockerfile
+			specifies will be run instead.
 	 */
 	GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string, dependencies []Service) ([]string, error)
 

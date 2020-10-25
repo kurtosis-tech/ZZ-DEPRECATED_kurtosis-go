@@ -75,7 +75,7 @@ func (initializer ServiceInitializer) CreateService(
 	usedPorts := initializerCore.GetUsedPorts()
 
 	logrus.Trace("Creating directory within test volume for service...")
-	// TODO also take in the service ID and use it here so the volume will be human-readable
+	// TODO also take in the service ID and use it here so the service directory will be human-readable
 	serviceDirname := fmt.Sprintf("service-%v", uuid.New().String())
 	serviceDirpath := filepath.Join(initializer.servicesDirpath, serviceDirname)
 	err := os.Mkdir(serviceDirpath, os.ModeDir)
