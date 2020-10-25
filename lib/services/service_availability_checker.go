@@ -16,6 +16,8 @@ const (
 	TIME_BETWEEN_STARTUP_POLLS = 1 * time.Second
 )
 
+// TODO fuse this with the ServiceInitializer, call it ServiceLoader (consistency), and then fuse the two
+//   initializer/availability checker cores become ServiceLoaderCore?????
 /*
 Contains the logic wrapping a ServiceAvailabilityCheckerCore, which is used to make requests against a service and verify
 	if it's actually available (because a Docker container running doesn't necessarily mean that the service is running).

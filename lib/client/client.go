@@ -28,15 +28,24 @@ const (
 )
 
 func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativeDirpath string, testName string, kurtosisApiIp string) int {
-	metadataFilepath = strings.TrimSpace(metadataFilepath)
-	testName = strings.TrimSpace(testName)
-
-	isMetadataFilepathEmpty := len(metadataFilepath) == 0
-	isTestEmpty := len(testName) == 0
+	servicesRelativeDirpath = strings.TrimSpace(servicesRelativeDirpath)
+	if len(servicesRelativeDirpath) == 0 {
+		logrus.Error("Services relative dirpath argument was empty")
+		return errorExitCode
+	}
+	kurtosisApiIp = strings.TrimSpace(kurtosisApiIp)
+	if len(kurtosisApiIp) == 0 {
+		logrus.Error("Kurtosis API container IP argument was empty")
+		return errorExitCode
+	}
 
 	// Only one of these should be set; if both are set then it's an error
+	metadataFilepath = strings.TrimSpace(metadataFilepath)
+	testName = strings.TrimSpace(testName)
+	isMetadataFilepathEmpty := len(metadataFilepath) == 0
+	isTestEmpty := len(testName) == 0
 	if isMetadataFilepathEmpty == isTestEmpty {
-		logrus.Error("Exactly one of 'metadata filepath' or 'test name to run'  should be set")
+		logrus.Error("Exactly one of 'metadata filepath' or 'test name to run' should be set")
 		return errorExitCode
 	}
 
