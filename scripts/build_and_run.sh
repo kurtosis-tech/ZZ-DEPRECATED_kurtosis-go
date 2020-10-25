@@ -42,7 +42,7 @@ show_help() {
 
 if [ "${#}" -eq 0 ]; then
     show_help
-    exit 0
+    exit 1
 fi
 
 action="${1:-}"
