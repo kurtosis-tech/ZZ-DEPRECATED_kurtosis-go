@@ -58,7 +58,7 @@ workflows:
     jobs:
       # If we start using too many CircleCI credits, we can exclude develop and master from validation
       - validate
-      - push_docker_images:
+      - push_docker_image:
           filters:
             branches:
               only:
