@@ -9,6 +9,7 @@
 * Add [the comment-run Github Action](https://github.com/nwtgck/actions-comment-run/tree/20297f070391450752be7ac1ebd454fb53f62795#pr-merge-preview) to the repository in order to set up [a workaround for Github not passing secrets to untrusted PRs](https://github.community/t/secrets-for-prs-who-are-not-collaborators/17712), which would prevent auth'd Kurtosis from running
 * Simplified the bootstrapping process quite a bit
 * In addition to building `develop` and `master` images, build `X.Y.Z` tag images
+* In CircleCI config, don't run the `validate` workflow on `develop` and `master` (because they should already be validated by PR merge)
 
 ## 1.0.0
 * Created example test suite to validate that the client library work
