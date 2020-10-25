@@ -1,4 +1,4 @@
-## TBD
+## 1.1.0
 * Add Apache license
 * Fix changelog check in CircleCI 
 * Cleaning TODOs 
