@@ -42,7 +42,7 @@ show_help() {
 
 if [ "${#}" -eq 0 ]; then
     show_help
-    exit 1
+    exit 1     # Exit with error code so we dont't get spurious CI passes
 fi
 
 action="${1:-}"
