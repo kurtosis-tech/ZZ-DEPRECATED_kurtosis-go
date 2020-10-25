@@ -10,6 +10,7 @@
 * Simplified the bootstrapping process quite a bit
 * In addition to building `develop` and `master` images, build `X.Y.Z` tag images
 * Cleaned up an over-aggressive check that was causing testsuite log-listing to fail
+* When no arguments are provided to `build_and_run.sh`, the script errors
 
 ## 1.0.0
 * Created example test suite to validate that the client library work
