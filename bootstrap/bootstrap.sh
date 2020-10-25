@@ -35,8 +35,11 @@ while [ -z "${new_module_name}" ]; do
 done
 docker_image_name=""
 while [ -z "${docker_image_name}" ]; do
-    read -p "Name to call the Docker image containing testsuite: " docker_image_name
+    echo "Name for the Docker image that this repo will build, which must conform to the Docker image naming rules:"
+    echo "  https://docs.docker.com/engine/reference/commandline/tag/#extended-description"
+    read -p "Image name: " docker_image_name
 done
+
 
 # ============== Main Code =================================================================
 find "${root_dirpath}" \
