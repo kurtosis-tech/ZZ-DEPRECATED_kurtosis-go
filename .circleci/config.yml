@@ -57,12 +57,18 @@ workflows:
   build:
     jobs:
       - validate:
+          context:
+            - docker-user
+            - kurtosis-user
           filters:
             branches:
               ignore:
                 - develop
                 - master
       - push_docker_image:
+          context:
+            - docker-user
+            - kurtosis-user
           filters:
             branches:
               only:
