@@ -1,3 +1,6 @@
+## TBD
+* Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
+
 ## 1.1.0
 * Add Apache license
 * Fix changelog check in CircleCI 
