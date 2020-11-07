@@ -1,4 +1,8 @@
 ## TBD
+* Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
+* Switch to using [our forked version of action-comment-run](https://github.com/mieubrisse/actions-comment-run) that allows user whitelisting
+
+## 1.1.0
 * Add Apache license
 * Fix changelog check in CircleCI 
 * Cleaning TODOs 
@@ -7,6 +11,11 @@
 * Explain nil start command for the example impl
 * Added a new bootstrapping process for creating Kurtosis Go testsuites from scratch
 * Add [the comment-run Github Action](https://github.com/nwtgck/actions-comment-run/tree/20297f070391450752be7ac1ebd454fb53f62795#pr-merge-preview) to the repository in order to set up [a workaround for Github not passing secrets to untrusted PRs](https://github.community/t/secrets-for-prs-who-are-not-collaborators/17712), which would prevent auth'd Kurtosis from running
+* Simplified the bootstrapping process quite a bit
+* In addition to building `develop` and `master` images, build `X.Y.Z` tag images
+* Cleaned up an over-aggressive check that was causing testsuite log-listing to fail
+* When no arguments are provided to `build_and_run.sh`, the script errors
+* In CircleCI config, don't run the `validate` workflow on `develop` and `master` (because they should already be validated by PR merge)
 
 ## 1.0.0
 * Created example test suite to validate that the client library work
