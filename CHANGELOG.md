@@ -1,3 +1,5 @@
+TEST
+
 ## TBD
 * Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
 * Switch to using [our forked version of action-comment-run](https://github.com/mieubrisse/actions-comment-run) that allows user whitelisting
