@@ -21,4 +21,4 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         allowed-associations: '["OWNER"]'
-        whitelisted-users: '["mieubrisse"]'
+        allowed-users: '["mieubrisse"]'
