@@ -7,7 +7,7 @@ script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 SUITE_IMAGE="kurtosistech/kurtosis-go-example"
 
 # The name of the release channel of Kurtosis that you'll be using, which indicates which Kurtosis Docker images you'll be using
-KURTOSIS_CORE_CHANNEL="1.1.0"
+KURTOSIS_CORE_CHANNEL="master"
 
 # The directory where Kurtosis will store files it uses in between executions, e.g. access tokens
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
