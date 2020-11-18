@@ -17,7 +17,7 @@ jobs:
       with:
         # 0 indicates all history
         fetch-depth: 0
-    - uses: mieubrisse/actions-comment-run@mieubrisse/disjunctive-whitelisted-users
+    - uses: mieubrisse/actions-comment-run@allowed-users-for-orgs
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         allowed-associations: '["OWNER"]'
