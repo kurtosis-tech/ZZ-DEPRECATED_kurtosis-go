@@ -1,3 +1,7 @@
+## TBD
+* Removed scary warning from `bootstrap.sh`
+* Clarified what should be provided for Go module name & Docker image name in `bootstrap.sh`
+
 ## 1.1.1
 * Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
 * Switch to using [our forked version of action-comment-run](https://github.com/mieubrisse/actions-comment-run) that allows user whitelisting

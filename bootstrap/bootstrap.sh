@@ -27,17 +27,15 @@ if [ "$(grep "^${DOCKER_IMAGE_VAR_KEYWORD}" "${buildscript_filepath}" | wc -l)" 
 fi
 
 # ============== Inputs & Verification =================================================================
-read -p "VERIFICATION: This will delete nearly all files in ${root_dirpath}, leaving only what's necessary for writing a new Kurtosis Go testsuite! Are you sure you want to proceed? (Ctrl-C to abort, ENTER to continue)"
-read -p "FINAL VERIFICATION: you DO want to delete files like the .git dir to bootstrap a new testsuite, correct? (Ctrl-C to abort, ENTER to continue)"
+read -p "VERIFICATION: This will clear the state of this repo, leaving a fresh, bootstrapped testsuite. Proceed? (Ctrl-C to abort, ENTER to continue)"
 new_module_name=""
 while [ -z "${new_module_name}" ]; do
-    read -p "New Go module name (e.g. github.com/my-org/my-repo): " new_module_name
+    read -p "Go module name to give this repo (e.g. github.com/your-org/your-repo): " new_module_name
 done
 docker_image_name=""
 while [ -z "${docker_image_name}" ]; do
-    echo "Name for the Docker image that this repo will build, which must conform to the Docker image naming rules:"
-    echo "  https://docs.docker.com/engine/reference/commandline/tag/#extended-description"
-    read -p "Image name: " docker_image_name
+    echo "Your testsuite will be encapsulated in a Docker image, which must conform to the Docker image naming rules at https://docs.docker.com/engine/reference/commandline/tag/#extended-description"
+    read -p "Name to give the Docker image of this testsuite (e.g. your-docker-repo/your-image-name): " docker_image_name
 done
 
 
