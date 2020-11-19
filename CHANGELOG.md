@@ -1,3 +1,10 @@
+## 1.1.1
+* Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
+* Switch to using [our forked version of action-comment-run](https://github.com/mieubrisse/actions-comment-run) that allows user whitelisting
+* Bump kurtosis-core to 1.1.0
+* Make the requests to the Kurtosis API container retry every second, with 10s retry maximum for normal operations (e.g. add/remove services) and 60s retry maximum for test suite registration
+* Update the version of the `actions-comment-run` Github Action which allows for running CI on untrusted PRs, to match the advice we give in the "Running In CI" instructions
+
 ## 1.1.0
 * Add Apache license
 * Fix changelog check in CircleCI 

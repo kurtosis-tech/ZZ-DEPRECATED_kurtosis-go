@@ -11,10 +11,15 @@ import (
 	"github.com/palantir/stacktrace"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/sirupsen/logrus"
+	"net/http"
+	"time"
 )
 
 const (
 	kurtosisApiPort = 7443
+
+	registrationRetryDurationSeconds = 60
+	regularOperationRetryDurationSeconds = 10
 
 	kurtosisServiceStruct = "KurtosisService"
 	addServiceMethod = kurtosisServiceStruct + ".AddService"
@@ -41,7 +46,7 @@ func (service KurtosisService) AddService(
 		startCmdArgs []string,
 		envVariables map[string]string,
 		testVolumeMountLocation string) (string, string, error) {
-	client := getJsonRpcClient(service.ipAddr)
+	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
 	// TODO allow non-TCP protocols
@@ -69,7 +74,7 @@ func (service KurtosisService) AddService(
 Stops the container with the given service ID, and removes it from the network.
 */
 func (service KurtosisService) RemoveService(containerId string, containerStopTimeoutSeconds int) error {
-	client := getJsonRpcClient(service.ipAddr)
+	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
 	logrus.Debugf("Removing service with container ID %v...", containerId)
@@ -89,7 +94,7 @@ func (service KurtosisService) RemoveService(containerId string, containerStopTi
 }
 
 func (service KurtosisService) RegisterTestExecution(testTimeoutSeconds int) error {
-	client := getJsonRpcClient(service.ipAddr)
+	client := getConstantBackoffJsonRpcClient(service.ipAddr, registrationRetryDurationSeconds)
 	defer client.Close()
 
 	logrus.Debugf("Registering a test execution with a timeout of %v seconds...", testTimeoutSeconds)
@@ -107,9 +112,12 @@ func (service KurtosisService) RegisterTestExecution(testTimeoutSeconds int) err
 }
 
 // ================================= Private helper function ============================================
-func getJsonRpcClient(ipAddr string) *jsonrpc2.Client {
+func getConstantBackoffJsonRpcClient(ipAddr string, retryDurationSeconds int) *jsonrpc2.Client {
 	kurtosisUrl := fmt.Sprintf("http://%v:%v", ipAddr, kurtosisApiPort)
 	retryingClient := retryablehttp.NewClient()
-	// TODO change backoff so it's not so long
+	retryingClient.RetryMax = retryDurationSeconds
+	retryingClient.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+		return time.Second
+	}
 	return jsonrpc2.NewCustomHTTPClient(kurtosisUrl, retryingClient.StandardClient())
 }

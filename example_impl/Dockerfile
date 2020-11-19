@@ -11,8 +11,7 @@ COPY . .
 # Build the application
 RUN go build -o testsuite example_impl/main.go
 
-# TODO Get rid of tee/LOG_FILEPATH in favor of using a Docker logging driver in the initializer
-CMD set -euo pipefail && ./testsuite \
+CMD ./testsuite \
     `# ------------- Custom variable particular to this test suite -----------------` \
     --service-image=${EXAMPLE_SERVICE_IMAGE} \
     `# ------------------Kurtosis-specific environment variables -------------------` \
@@ -21,4 +20,4 @@ CMD set -euo pipefail && ./testsuite \
     --log-level=${LOG_LEVEL} \
     --metadata-filepath=${METADATA_FILEPATH} \
     --services-relative-dirpath=${SERVICES_RELATIVE_DIRPATH} \
-    --test=${TEST} | tee ${LOG_FILEPATH}
+    --test=${TEST}
