@@ -17,8 +17,7 @@ type ExampleAvailabilityCheckerCore struct{}
 
 func (e ExampleAvailabilityCheckerCore) IsServiceUp(toCheck services.Service, dependencies []services.Service) bool {
 	castedService := toCheck.(ExampleService)
-	socket := castedService.GetHelloWorldSocket()
-	url := fmt.Sprintf("http://%v:%v", socket.IPAddr, socket.Port)
+	url := fmt.Sprintf("http://%v:%v", castedService.GetIpAddress(), castedService.GetPort())
 
 	httpClient := http.Client{
 		Timeout: 5 * time.Second,

@@ -34,8 +34,7 @@ func (test FixedSizeExampleTest) Run(network networks.Network, context testsuite
 		if err != nil {
 			context.Fatal(stacktrace.Propagate(err, "An error occurred when getting the service interface for node #%v", i))
 		}
-		socket := service.GetHelloWorldSocket()
-		serviceUrl := fmt.Sprintf("http://%v:%v", socket.IPAddr, socket.Port)
+		serviceUrl := fmt.Sprintf("http://%v:%v", service.GetIpAddress(), service.GetPort())
 		if _, err := http.Get(serviceUrl); err != nil {
 			context.Fatal(stacktrace.Propagate(err, "Received an error when calling the example service endpoint for node #%v", i))
 		}
