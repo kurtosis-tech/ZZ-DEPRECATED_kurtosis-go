@@ -8,8 +8,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/example_impl/example_testsuite"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client"
+	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl"
 	"github.com/sirupsen/logrus"
 	"os"
 )
@@ -47,7 +47,7 @@ func main() {
 	serviceImageArg := flag.String(
 		"service-image",
 		"",
-		"Name of Docker image that will be used to launch service containers")
+		"Name of Nginx Docker image that will be used to launch service containers")
 
 
 	flag.Parse()
@@ -59,7 +59,7 @@ func main() {
 	}
 	logrus.SetLevel(level)
 
-	testSuite := example_testsuite.NewExampleTestsuite(*serviceImageArg)
+	testSuite := testsuite_impl.NewTestsuite(*serviceImageArg)
 	exitCode := client.Run(testSuite, *metadataFilepath, *servicesDirpathArg, *testArg, *kurtosisApiIpArg)
 	os.Exit(exitCode)
 }

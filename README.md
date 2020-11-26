@@ -3,7 +3,7 @@ Kurtosis Go Client
 This repo contains:
 
 1. The Kurtosis Go client for using the Kurtosis platform with Golang
-2. [An example implementation of the Go client](./example_impl), to demonstrate how to use the client
+2. [An example implementation of the Go client](./testsuite), to demonstrate how to use the client
 3. A generator for building new Kurtosis Go testsuites
 
 ### Quickstart
