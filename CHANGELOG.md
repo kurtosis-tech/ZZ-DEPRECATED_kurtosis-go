@@ -1,3 +1,6 @@
+## TBD
+* Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods
+
 ## 1.1.1
 * Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
 * Switch to using [our forked version of action-comment-run](https://github.com/mieubrisse/actions-comment-run) that allows user whitelisting

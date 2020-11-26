@@ -12,9 +12,10 @@ type ExampleServiceImpl struct{
 	IPAddr string
 }
 
-func (e ExampleServiceImpl) GetHelloWorldSocket() Socket {
-	return Socket{
-		IPAddr: e.IPAddr,
-		Port: exampleServicePort,
-	}
+func (e ExampleServiceImpl) GetIpAddress() string {
+	return e.IPAddr
+}
+
+func (e ExampleServiceImpl) GetPort() int {
+	return exampleServicePort
 }

@@ -12,5 +12,7 @@ import (
 type ExampleService interface {
 	services.Service
 
-	GetHelloWorldSocket() Socket
+	GetIpAddress() string
+
+	GetPort() int
 }
