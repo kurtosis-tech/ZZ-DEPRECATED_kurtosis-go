@@ -2,8 +2,23 @@
 * Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods
 * Remove TODO on allowing non-TCP ports
 * Removed the `example_` prefix to make bootstrapping even easier (users need only modify the existing suite, no need to remove the `example_` prefix)
-* Refactor client architecture to make it simpler to define services
-    * TODO instructions
+* Heavily refactored the client architecture to make it much less confusing to define testsuite infrastructure:
+    * The notion of `dependencies` that showed up in several places (e.g. `ServiceInitializerCore.GetStartCommand`, `ServiceAvailabilityCheckerCore.IsServiceUp`, etc) have been removed due to being too confusing
+    * Services: 
+        * The `Service` interface has received two new methods, `GetIPAddress` and `IsAvailable` to better reflect what services are
+        * `ServiceInitializerCore`, `ServiceInitializer`, and `ServiceAvailabilityCheckerCore` have been removed
+        * `ServiceInitializerCore`'s functionality has been subsumed by a new interface, `DockerContainerInitializer`
+        * `ServiceAvailabilityChecker` renamed to `AvailabilityChecker`
+        * The old `ServiceAvailabilityChecker.WaitForStartup` method is now `AvailabilityChecker.WaitForStartup(timeBetweenPolls time.Duration, maxNumRetries int)`
+    * Networks: 
+        * `ServiceNetwork` has been renamed `NetworkContext`, with `NetworkContext.AddService(DockerContainerInitializer) (Service, AvailabilityChecker, error)` replacing the old `ServiceNetwork.AddService(ConfigurationID, ServiceID, map[ServiceID]bool) (*ServiceAvailabilityChecker, error)` method
+        * Test networks are no longer instantiated in two separate configuration/instantiation phases, and are simply instantiated with a `Test.Setup` method
+        * The notion of "service configuration" that was used during the network configuration phase has been removed, since networks are simply instantiated now
+        * `ServiceNetworkBuilder` has been removed
+        * `NetworkLoader` has been removed
+    * Testsuite:
+        * The `Test.GetNetworkLoader` method has been replaced with `Test.Setup(NetworkContext) Network`
+            * The `Network` return type is still `interface{}`, so users can return `NetworkContext` directly or wrap it in a more test-friendly custom object
 
 ## 1.1.1
 * Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
