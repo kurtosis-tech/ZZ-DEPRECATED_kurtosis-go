@@ -3,12 +3,12 @@
  * All Rights Reserved.
  */
 
-package single_node_example_network
+package single_node_nginx_network
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/example_impl/example_services"
 	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
+	"github.com/kurtosis-tech/kurtosis-go/testsuite/services_impl"
 	"github.com/palantir/stacktrace"
 )
 
@@ -20,19 +20,19 @@ const (
 )
 
 // =================================== NETWORK ===================================
-type SingleNodeExampleNetwork struct{
+type SingleNodeNginxNetwork struct{
 	rawNetwork *networks.ServiceNetwork
 	theNodeAdded bool
 }
 
-func NewSingleNodeExampleNetwork(rawNetwork *networks.ServiceNetwork) *SingleNodeExampleNetwork {
-	return &SingleNodeExampleNetwork{
+func NewSingleNodeNginxNetwork(rawNetwork *networks.ServiceNetwork) *SingleNodeNginxNetwork {
+	return &SingleNodeNginxNetwork{
 		rawNetwork: rawNetwork,
 		theNodeAdded: false,
 	}
 }
 
-func (network *SingleNodeExampleNetwork) AddTheNode() (example_services.ExampleService, error) {
+func (network *SingleNodeNginxNetwork) AddTheNode() (services_impl.NginxService, error) {
 	if network.theNodeAdded {
 		return nil, stacktrace.NewError("The node is already added")
 	}
@@ -50,11 +50,11 @@ func (network *SingleNodeExampleNetwork) AddTheNode() (example_services.ExampleS
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred getting the node's service information")
 	}
-	castedService := serviceNode.Service.(example_services.ExampleService)
+	castedService := serviceNode.Service.(services_impl.NginxService)
 	return castedService, nil
 }
 
-func (network *SingleNodeExampleNetwork) RemoveTheNode() error {
+func (network *SingleNodeNginxNetwork) RemoveTheNode() error {
 	if !network.theNodeAdded {
 		return stacktrace.NewError("The node hasn't been added yet")
 	}
@@ -66,29 +66,29 @@ func (network *SingleNodeExampleNetwork) RemoveTheNode() error {
 }
 
 // =================================== NETWORK LOADER ===================================
-type SingleNodeExampleNetworkLoader struct {
+type SingleNodeNginxNetworkLoader struct {
 	serviceImage string
 }
 
-func NewSingleNodeExampleNetworkLoader(serviceImage string) *SingleNodeExampleNetworkLoader {
-	return &SingleNodeExampleNetworkLoader{serviceImage: serviceImage}
+func NewSingleNodeNginxNetworkLoader(serviceImage string) *SingleNodeNginxNetworkLoader {
+	return &SingleNodeNginxNetworkLoader{serviceImage: serviceImage}
 }
 
 
-func (loader SingleNodeExampleNetworkLoader) ConfigureNetwork(builder *networks.ServiceNetworkBuilder) error {
+func (loader SingleNodeNginxNetworkLoader) ConfigureNetwork(builder *networks.ServiceNetworkBuilder) error {
 	builder.AddConfiguration(
 		vanillaConfigId,
 		loader.serviceImage,
-		example_services.ExampleServiceInitializerCore{},
-		example_services.ExampleAvailabilityCheckerCore{})
+		services_impl.NginxServiceInitializerCore{},
+		services_impl.NginxAvailabilityCheckerCore{})
 	return nil
 }
 
-func (loader SingleNodeExampleNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.ServiceAvailabilityChecker, error) {
+func (loader SingleNodeNginxNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.ServiceAvailabilityChecker, error) {
 	return map[networks.ServiceID]services.ServiceAvailabilityChecker{}, nil
 }
 
-func (loader SingleNodeExampleNetworkLoader) WrapNetwork(network *networks.ServiceNetwork) (networks.Network, error) {
-	return *NewSingleNodeExampleNetwork(network), nil
+func (loader SingleNodeNginxNetworkLoader) WrapNetwork(network *networks.ServiceNetwork) (networks.Network, error) {
+	return *NewSingleNodeNginxNetwork(network), nil
 }
 

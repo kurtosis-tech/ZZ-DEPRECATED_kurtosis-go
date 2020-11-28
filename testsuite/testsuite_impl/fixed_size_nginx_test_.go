@@ -3,13 +3,13 @@
  * All Rights Reserved.
  */
 
-package example_testsuite
+package testsuite_impl
 
 import (
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/example_impl/example_networks/fixed_size_example_network"
 	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-go/testsuite/networks_impl/fixed_size_nginx_network"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -20,13 +20,13 @@ const (
 	numNodes = 5
 )
 
-type FixedSizeExampleTest struct {
+type FixedSizeNginxTest struct {
 	ServiceImage string
 }
 
-func (test FixedSizeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
+func (test FixedSizeNginxTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
-	castedNetwork := network.(fixed_size_example_network.FixedSizeExampleNetwork)
+	castedNetwork := network.(fixed_size_nginx_network.FixedSizeNginxNetwork)
 
 	for i := 0; i < castedNetwork.GetNumNodes(); i++ {
 		logrus.Infof("Making query against node #%v...", i)
@@ -42,15 +42,15 @@ func (test FixedSizeExampleTest) Run(network networks.Network, context testsuite
 	}
 }
 
-func (test FixedSizeExampleTest) GetNetworkLoader() (networks.NetworkLoader, error) {
-	return fixed_size_example_network.NewFixedSizeExampleNetworkLoader(numNodes, test.ServiceImage), nil
+func (test FixedSizeNginxTest) GetNetworkLoader() (networks.NetworkLoader, error) {
+	return fixed_size_nginx_network.NewFixedSizeNginxNetworkLoader(numNodes, test.ServiceImage), nil
 }
 
-func (test FixedSizeExampleTest) GetExecutionTimeout() time.Duration {
+func (test FixedSizeNginxTest) GetExecutionTimeout() time.Duration {
 	return 30 * time.Second
 }
 
-func (test FixedSizeExampleTest) GetSetupBuffer() time.Duration {
+func (test FixedSizeNginxTest) GetSetupBuffer() time.Duration {
 	return 30 * time.Second
 }
 

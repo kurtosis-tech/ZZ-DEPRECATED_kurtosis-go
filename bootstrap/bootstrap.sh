@@ -1,6 +1,6 @@
 # Deletes all the extraneous files, leaving a repo containing only the example impl and necessary infrastructure needed to write a testsuite
 
-EXAMPLE_IMPL_DIRNAME="example_impl"
+TESTSUITE_IMPL_DIRNAME="testsuite"
 README_FILENAME="README.md"
 
 # Constants 
@@ -44,7 +44,7 @@ done
 # ============== Main Code =================================================================
 find "${root_dirpath}" \
     ! -name bootstrap \
-    ! -name "${EXAMPLE_IMPL_DIRNAME}" \
+    ! -name "${TESTSUITE_IMPL_DIRNAME}" \
     ! -name "${GO_MOD_FILENAME}" \
     ! -name go.sum \
     ! -name scripts \
@@ -57,8 +57,8 @@ cp "${script_dirpath}/README.md" "${root_dirpath}/"
 # Replace module names in code (we need the "-i '' " argument because Mac sed requires it)
 existing_module_name="$(grep "module" "${go_mod_filepath}" | awk '{print $2}')"
 sed -i '' "s,${existing_module_name},${new_module_name},g" ${go_mod_filepath}
-# We search for old_module_name/example_impl because we don't want the old_module_name/lib entries to get renamed
-sed -i '' "s,${existing_module_name}/${EXAMPLE_IMPL_DIRNAME},${new_module_name}/${EXAMPLE_IMPL_DIRNAME},g" $(find "${root_dirpath}" -type f)
+# We search for old_module_name/testsuite because we don't want the old_module_name/lib entries to get renamed
+sed -i '' "s,${existing_module_name}/${TESTSUITE_IMPL_DIRNAME},${new_module_name}/${TESTSUITE_IMPL_DIRNAME},g" $(find "${root_dirpath}" -type f)
 
 # Replace Docker image name in buildscript
 sed -i '' "s,^${DOCKER_IMAGE_VAR_KEYWORD}.*,${DOCKER_IMAGE_VAR_KEYWORD}\"${docker_image_name}\"," "${buildscript_filepath}"
