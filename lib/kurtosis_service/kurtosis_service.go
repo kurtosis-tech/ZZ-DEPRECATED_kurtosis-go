@@ -49,7 +49,6 @@ func (service KurtosisService) AddService(
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
-	// TODO allow non-TCP protocols
 	usedPortsList := []int{}
 	for port, _ := range usedPorts {
 		usedPortsList = append(usedPortsList, port)
