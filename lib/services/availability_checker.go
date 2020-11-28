@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-const (
-	TIME_BETWEEN_STARTUP_POLLS = 1 * time.Second
-)
-
 type AvailabilityChecker interface {
 	WaitForStartup(timeBetweenPolls time.Duration, maxNumRetries int) error
 }

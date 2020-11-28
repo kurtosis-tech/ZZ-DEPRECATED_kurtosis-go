@@ -125,18 +125,18 @@ func runTest(servicesRelativeDirpath string, testSuite testsuite.TestSuite, test
 
 	networkCtx := networks.NewNetworkContext(kurtosisService, suiteExecutionVolumeMountDirpath, servicesRelativeDirpath)
 
-	logrus.Info("Initializing test network...")
-	network, err := test.Setup(networkCtx)
+	logrus.Info("Setting up the test network...")
+	untypedNetwork, err := test.Setup(networkCtx)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred setting up the test network")
 	}
-	logrus.Info("Test network initialized")
+	logrus.Info("Test network set up")
 
 	logrus.Infof("Executing test '%v'...", testName)
 	testResultChan := make(chan error)
 
 	go func() {
-		testResultChan <- runTestInGoroutine(test, network)
+		testResultChan <- runTestInGoroutine(test, untypedNetwork)
 	}()
 
 	// Time out the test so a poorly-written test doesn't run forever

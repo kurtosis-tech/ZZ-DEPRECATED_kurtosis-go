@@ -85,8 +85,8 @@ Args:
 	initializer: The Docker container initializer that contains the logic for starting the service
 
 Return:
-	The new service
-	An availability checker which can be used to wait until the service is available, if desired
+	services.Service: The new service
+	services.AvailabilityChecker: An availability checker which can be used to wait until the service is available, if desired
 */
 func (networkCtx *NetworkContext) AddService(
 		serviceId ServiceID,
@@ -130,7 +130,7 @@ func (networkCtx *NetworkContext) AddService(
 		mountFilepaths[fileId] = filepath.Join(mountServiceDirpath, filename)
 	}
 	// NOTE: If we need the IP address when initializing mounted files, we'll need to rejigger the Kurtosis API
-	//  container so that it can do a "pre-registration" - register an IP address before actually starting the container
+	//  container so that it can do a "pre-registration" - dole out an IP address before actually starting the container
 	if err := initializer.InitializeMountedFiles(osFiles); err != nil {
 		return nil, nil, stacktrace.Propagate(err, "An error occurred initializing the files before service start")
 	}

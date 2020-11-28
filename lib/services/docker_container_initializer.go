@@ -67,7 +67,6 @@ type DockerContainerInitializer interface {
 	*/
 	GetTestVolumeMountpoint() string
 
-	// GENERICS TOOD: when Go gets generics, make the type of 'dependencies' to be []N
 	/*
 		Uses the given arguments to build the command that the Docker container running this service will be launched with.
 
