@@ -26,13 +26,13 @@ type Test interface {
 	 */
 	Run(network networks.Network, context TestContext)
 
-	// Gets the network loader that will be used to spin up the test network that the test will run against
-	GetNetworkLoader() (networks.NetworkLoader, error)
+	// Initializes the network to the desired state before test execution
+	Setup(context networks.NetworkContext) (networks.Network)
 
 	/*
 	The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
 		is marked as failed. This does NOT include the time needed to do pre-test setup or post-test teardown,
-		which is handled by `GetSetupBuffer`. The total amount of time a test (with setup & teardown) is allowed
+		which is handled by `GetSetupTeardownBuffer`. The total amount of time a test (with setup & teardown) is allowed
 		to run for = GetExecutionTimeout + GetSetupBuffer.
 	 */
 	GetExecutionTimeout() time.Duration
@@ -40,7 +40,7 @@ type Test interface {
 	/*
 	How long the test will be given to do the pre-execution setup and post-setup teardown before the test will be
 		hard-killed. The total amount of time a test (with setup & teardown) is allowed to run
-		for = GetExecutionTimeout + GetSetupBuffer.
+		for = GetExecutionTimeout + GetSetupTeardownBuffer.
 	 */
-	GetSetupBuffer() time.Duration
+	GetSetupTeardownBuffer() time.Duration
 }

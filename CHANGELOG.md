@@ -2,6 +2,8 @@
 * Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods
 * Remove TODO on allowing non-TCP ports
 * Removed the `example_` prefix to make bootstrapping even easier (users need only modify the existing suite, no need to remove the `example_` prefix)
+* Refactor client architecture to make it simpler to define services
+    * TODO instructions
 
 ## 1.1.1
 * Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)

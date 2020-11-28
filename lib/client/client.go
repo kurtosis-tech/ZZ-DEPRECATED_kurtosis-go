@@ -97,11 +97,17 @@ func printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) er
 /*
 Runs the single given test from the testsuite
 
+Args:
+	servicesRelativeDirpath: Dirpath where per-service directories live, relative to the root of the suite execution volume
+	testSuite: Test suite to run
+	testName: Name of test to run
+	kurtosisApiIp: IP address of the Kurtosis API container
+
 Returns:
 	setupErr: Indicates an error setting up the test that prevented the test from running
 	testErr: Indicates an error in the test itself, indicating a test failure
 */
-func runTest(servicesDirpath string, testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
+func runTest(servicesRelativeDirpath string, testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
 	kurtosisService := kurtosis_service.NewKurtosisService(kurtosisApiIp)
 
 	tests := testSuite.GetTests()
@@ -111,31 +117,16 @@ func runTest(servicesDirpath string, testSuite testsuite.TestSuite, testName str
 	}
 
 	// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
-	hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupBuffer()
+	hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
 	hardTestTimeoutSeconds := int(hardTestTimeout.Seconds())
 	if err := kurtosisService.RegisterTestExecution(hardTestTimeoutSeconds); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
 
-	logrus.Info("Configuring test network...")
-	builder := networks.NewServiceNetworkBuilder(
-		kurtosisService,
-		suiteExecutionVolumeMountDirpath)
-	networkLoader, err := test.GetNetworkLoader()
-	if err != nil {
-		return stacktrace.Propagate(err, "Could not get network loader")
-	}
-	if err := networkLoader.ConfigureNetwork(builder); err != nil {
-		return stacktrace.Propagate(err, "Could not configure test network")
-	}
-	network := builder.Build()
-	logrus.Info("Test network configured")
+	networks.NewNetworkContext(kurtosisService, servicesRelativeDirpath)
 
 	logrus.Info("Initializing test network...")
-	availabilityCheckers, err := networkLoader.InitializeNetwork(network);
-	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred initialized the network to its starting state")
-	}
+	test.Setup()
 	logrus.Info("Test network initialized")
 
 	// Second pass: wait for all services to come up

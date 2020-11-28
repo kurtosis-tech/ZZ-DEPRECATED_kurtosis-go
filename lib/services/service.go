@@ -5,8 +5,16 @@
 
 package services
 
+import "time"
+
 /*
-Marker interface representing a generic service in a test network. The developer should implement their own
-	use-case-specific interface that inherits from this one.
+The developer should implement their own use-case-specific interface that extends this one
  */
-type Service interface {}
+type Service interface {
+	// Returns the IP address of the service
+	GetIPAddress() string
+
+	// Blocks until the service is available or the timeout is reached
+	WaitForAvailability(timeout time.Duration) error
+}
+

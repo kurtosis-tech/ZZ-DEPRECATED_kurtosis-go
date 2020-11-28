@@ -38,7 +38,7 @@ func main() {
 		"",
 		"String corresponding to Logrus log level that the test suite will output with",
 		)
-	servicesDirpathArg := flag.String(
+	servicesRelativeDirpathArg := flag.String(
 		"services-relative-dirpath",
 		"",
 		"Dirpath, relative to the root of the suite execution volume, where directories for each service should be created")
@@ -60,6 +60,6 @@ func main() {
 	logrus.SetLevel(level)
 
 	testSuite := testsuite_impl.NewTestsuite(*serviceImageArg)
-	exitCode := client.Run(testSuite, *metadataFilepath, *servicesDirpathArg, *testArg, *kurtosisApiIpArg)
+	exitCode := client.Run(testSuite, *metadataFilepath, *servicesRelativeDirpathArg, *testArg, *kurtosisApiIpArg)
 	os.Exit(exitCode)
 }
