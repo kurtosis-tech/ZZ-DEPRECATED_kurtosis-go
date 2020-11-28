@@ -84,8 +84,8 @@ func (loader SingleNodeNginxNetworkLoader) ConfigureNetwork(builder *networks.Se
 	return nil
 }
 
-func (loader SingleNodeNginxNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.ServiceAvailabilityChecker, error) {
-	return map[networks.ServiceID]services.ServiceAvailabilityChecker{}, nil
+func (loader SingleNodeNginxNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.AvailabilityChecker, error) {
+	return map[networks.ServiceID]services.AvailabilityChecker{}, nil
 }
 
 func (loader SingleNodeNginxNetworkLoader) WrapNetwork(network *networks.ServiceNetwork) (networks.Network, error) {

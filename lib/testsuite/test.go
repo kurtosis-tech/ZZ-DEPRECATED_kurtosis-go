@@ -27,7 +27,7 @@ type Test interface {
 	Run(network networks.Network, context TestContext)
 
 	// Initializes the network to the desired state before test execution
-	Setup(context networks.NetworkContext) (networks.Network)
+	Setup(context *networks.NetworkContext) (networks.Network, error)
 
 	/*
 	The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test

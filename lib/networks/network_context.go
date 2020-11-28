@@ -39,7 +39,7 @@ type NetworkNode struct {
 
 
 type NetworkContext struct {
-	kurtosisService *kurtosis_service.KurtosisService
+	kurtosisService kurtosis_service.KurtosisService
 
 	// The dirpath ON THE SUITE CONTAINER where the suite execution volume is mounted
 	suiteExecutionVolumeDirpath string
@@ -49,15 +49,17 @@ type NetworkContext struct {
 
 	services map[ServiceID]NetworkNode
 }
+
 /*
 Creates a new NetworkContext object with the given parameters.
 
 Args:
 	kurtosisService: The Docker manager that will be used for manipulating the Docker engine during test network modification.
-	servicesDirpath: The dirpath where directories for each new service will be created to store file IO
+	servicesRelativeDirpath: The dirpath where directories for each new service will be created to store file IO, which
+		is RELATIVE to the root of the suite execution volume!
 */
 func NewNetworkContext(
-		kurtosisService *kurtosis_service.KurtosisService,
+		kurtosisService kurtosis_service.KurtosisService,
 		servicesRelativeDirpath string) *NetworkContext {
 	return &NetworkContext{
 		kurtosisService:             kurtosisService,

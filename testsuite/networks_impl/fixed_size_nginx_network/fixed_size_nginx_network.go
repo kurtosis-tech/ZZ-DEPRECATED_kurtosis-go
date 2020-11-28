@@ -63,8 +63,8 @@ func (loader FixedSizeNginxNetworkLoader) ConfigureNetwork(builder *networks.Ser
 	return nil
 }
 
-func (loader FixedSizeNginxNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.ServiceAvailabilityChecker, error) {
-	availabilityCheckers := map[networks.ServiceID]services.ServiceAvailabilityChecker{}
+func (loader FixedSizeNginxNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.AvailabilityChecker, error) {
+	availabilityCheckers := map[networks.ServiceID]services.AvailabilityChecker{}
 	for i := 0; i < loader.numNodes; i++ {
 		serviceId := networks.ServiceID(fmt.Sprintf("%v%v", serviceIdPrefix, i))
 		checker, err := network.AddService(vanillaConfigId, serviceId, map[networks.ServiceID]bool{})

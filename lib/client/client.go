@@ -108,7 +108,7 @@ Returns:
 	testErr: Indicates an error in the test itself, indicating a test failure
 */
 func runTest(servicesRelativeDirpath string, testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
-	kurtosisService := kurtosis_service.NewKurtosisService(kurtosisApiIp)
+	kurtosisService := kurtosis_service.NewDefaultKurtosisService(kurtosisApiIp)
 
 	tests := testSuite.GetTests()
 	test, found := tests[testName]
@@ -123,35 +123,20 @@ func runTest(servicesRelativeDirpath string, testSuite testsuite.TestSuite, test
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
 
-	networks.NewNetworkContext(kurtosisService, servicesRelativeDirpath)
+	networkCtx := networks.NewNetworkContext(kurtosisService, servicesRelativeDirpath)
 
 	logrus.Info("Initializing test network...")
-	test.Setup()
-	logrus.Info("Test network initialized")
-
-	// Second pass: wait for all services to come up
-	logrus.Info("Waiting for test network to become available...")
-	for serviceId, availabilityChecker := range availabilityCheckers {
-		logrus.Debugf("Waiting for service %v to become available...", serviceId)
-		if err := availabilityChecker.WaitForStartup(); err != nil {
-			return stacktrace.Propagate(err, "An error occurred waiting for service with ID %v to start up", serviceId)
-		}
-		logrus.Debugf("Service %v is available", serviceId)
-	}
-	logrus.Info("Test network is available")
-
-	logrus.Info("Wrapping untyped network in user-custom type...")
-	untypedNetwork, err := networkLoader.WrapNetwork(network)
+	network, err := test.Setup(networkCtx)
 	if err != nil {
-		return stacktrace.Propagate(err, "Error occurred wrapping network in user-defined network type")
+		return stacktrace.Propagate(err, "An error occurred setting up the test network")
 	}
-	logrus.Info("Untyped network wrapped in user-custom type")
+	logrus.Info("Test network initialized")
 
 	logrus.Infof("Executing test '%v'...", testName)
 	testResultChan := make(chan error)
 
 	go func() {
-		testResultChan <- runTestInGoroutine(test, untypedNetwork)
+		testResultChan <- runTestInGoroutine(test, network)
 	}()
 
 	// Time out the test so a poorly-written test doesn't run forever
