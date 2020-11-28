@@ -26,7 +26,7 @@ func (test DynamicSingleNodeExampleTest) Setup(context *networks.NetworkContext)
 
 func (test DynamicSingleNodeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
-	castedNetwork := network.(single_node_nginx_network.DynamicSingleNodeNginxNetwork)
+	castedNetwork := network.(*single_node_nginx_network.DynamicSingleNodeNginxNetwork)
 
 	logrus.Info("Adding the node...")
 	service, err := castedNetwork.AddTheNode()

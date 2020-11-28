@@ -23,7 +23,7 @@ const (
 )
 
 // ======================================== NETWORK ==============================================
-type NginxNetwork struct{
+type FixedSizeNginxNetwork struct{
 	// Network context
 	networkCtx *networks.NetworkContext
 
@@ -31,7 +31,7 @@ type NginxNetwork struct{
 	numNodes int
 }
 
-func NewFixedSizeNginxNetwork(networkCtx *networks.NetworkContext, dockerImage string, numNodes int) (*NginxNetwork, error) {
+func NewFixedSizeNginxNetwork(networkCtx *networks.NetworkContext, dockerImage string, numNodes int) (*FixedSizeNginxNetwork, error) {
 	// Meta: It's not great that we do actual logic here in the constructor; if this becomes problematic
 	//  then we can create a Builder to separate the configuration & instantiation
 	availabilityCheckers := map[networks.ServiceID]services.AvailabilityChecker{}
@@ -50,14 +50,14 @@ func NewFixedSizeNginxNetwork(networkCtx *networks.NetworkContext, dockerImage s
 			return nil, stacktrace.Propagate(err, "An error occurred waiting for service ID '%v' to come up", serviceId)
 		}
 	}
-	return &NginxNetwork{networkCtx: networkCtx, numNodes: numNodes}, nil
+	return &FixedSizeNginxNetwork{networkCtx: networkCtx, numNodes: numNodes}, nil
 }
 
-func (network NginxNetwork) GetNumNodes() int {
+func (network FixedSizeNginxNetwork) GetNumNodes() int {
 	return network.numNodes
 }
 
-func (network *NginxNetwork) GetService(idInt int) (services_impl.NginxService, error) {
+func (network *FixedSizeNginxNetwork) GetService(idInt int) (services_impl.NginxService, error) {
 	if idInt < 0 || idInt >= network.numNodes {
 		return services_impl.NginxService{}, stacktrace.NewError("Invalid service ID '%v'", idInt)
 	}

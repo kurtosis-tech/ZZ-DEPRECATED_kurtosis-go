@@ -34,7 +34,7 @@ func (test FixedSizeNginxTest) Setup(context *networks.NetworkContext) (networks
 
 func (test FixedSizeNginxTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
-	castedNetwork := network.(fixed_size_nginx_network.NginxNetwork)
+	castedNetwork := network.(*fixed_size_nginx_network.FixedSizeNginxNetwork)
 
 	for i := 0; i < castedNetwork.GetNumNodes(); i++ {
 		logrus.Infof("Making query against node #%v...", i)

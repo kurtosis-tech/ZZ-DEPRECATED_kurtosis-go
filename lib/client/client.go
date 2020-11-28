@@ -123,7 +123,7 @@ func runTest(servicesRelativeDirpath string, testSuite testsuite.TestSuite, test
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
 
-	networkCtx := networks.NewNetworkContext(kurtosisService, servicesRelativeDirpath)
+	networkCtx := networks.NewNetworkContext(kurtosisService, suiteExecutionVolumeMountDirpath, servicesRelativeDirpath)
 
 	logrus.Info("Initializing test network...")
 	network, err := test.Setup(networkCtx)
