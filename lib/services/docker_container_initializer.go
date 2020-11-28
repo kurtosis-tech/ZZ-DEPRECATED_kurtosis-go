@@ -8,7 +8,7 @@ package services
 import "os"
 
 // GENERIC TOOD: If Go had generics, this would be parameterized with the subtype of Service that this returns
-type ServiceBuilderCore interface {
+type DockerContainerInitializer interface {
 	// Gets the Docker image that will be used for instantiating the Docker container
 	GetDockerImage() string
 
@@ -47,7 +47,8 @@ type ServiceBuilderCore interface {
 	GetFilesToMount() map[string]bool
 
 	/*
-		Initializes the contents of the files that the developer requested in `GetFilesToMount` with whatever contents the developer desires
+		Initializes the contents of the files that the developer requested in `GetFilesToMount` with whatever
+			contents the developer desires. This will be called before service startup.
 
 		Args:
 			mountedFiles: A mapping of developer_key -> file_pointer, with developer_key corresponding to the keys declares in

@@ -14,24 +14,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// TODO Rename this to ServiceTag, rather than ServiceID (the old name)
-/*
-The identifier used for services with the network.
- */
-type ServiceID string
-
-/*
-A package object containing the details that the ServiceNetwork is tracking about a node.
- */
-type ServiceNode struct {
-	// The user-defined interface for interacting with the node.
-	// NOTE: this will need to be casted to the appropriate interface becaus Go doesn't yet have generics!
-	Service services.Service
-
-	// The Docker container ID running a given service
-	ContainerID string
-}
-
 /*
 A package object containing the details of a particular service configuration, to give Kurtosis the implementation-specific
 	details about how to interact with user-defined services.
@@ -57,7 +39,7 @@ type ServiceNetwork struct {
 	kurtosisService *kurtosis_service.KurtosisService
 
 	// A mapping of human-readable Service ID -> information about a node
-	serviceNodes map[ServiceID]ServiceNode
+	serviceNodes map[ServiceID]NetworkNode
 
 	// A mapping of configuration ID -> configuration details
 	configurations map[ConfigurationID]serviceConfig
@@ -83,7 +65,7 @@ func NewServiceNetwork(
 			servicesDirpath string) *ServiceNetwork {
 	return &ServiceNetwork{
 		kurtosisService: kurtosisService,
-		serviceNodes:    make(map[ServiceID]ServiceNode),
+		serviceNodes:    make(map[ServiceID]NetworkNode),
 		configurations:  configurations,
 		servicesDirpath: servicesDirpath,
 	}
@@ -147,7 +129,7 @@ func (network *ServiceNetwork) AddService(configurationId ConfigurationID, servi
 	}
 	logrus.Tracef("Successfully created new service with Docker image '%v'", config.dockerImage)
 
-	network.serviceNodes[serviceId] = ServiceNode{
+	network.serviceNodes[serviceId] = NetworkNode{
 		Service:     service,
 		ContainerID: containerId,
 	}
@@ -159,10 +141,10 @@ func (network *ServiceNetwork) AddService(configurationId ConfigurationID, servi
 /*
 Gets the node information for the service with the given service ID.
  */
-func (network *ServiceNetwork) GetService(serviceId ServiceID) (ServiceNode, error) {
+func (network *ServiceNetwork) GetService(serviceId ServiceID) (NetworkNode, error) {
 	node, found := network.serviceNodes[serviceId]
 	if !found {
-		return ServiceNode{}, stacktrace.NewError("No service with ID %v exists in the network", serviceId)
+		return NetworkNode{}, stacktrace.NewError("No service with ID %v exists in the network", serviceId)
 	}
 
 	return node, nil
