@@ -3,22 +3,47 @@
 * Remove TODO on allowing non-TCP ports
 * Removed the `example_` prefix to make bootstrapping even easier (users need only modify the existing suite, no need to remove the `example_` prefix)
 * Heavily refactored the client architecture to make it much less confusing to define testsuite infrastructure:
-    * The notion of `dependencies` that showed up in several places (e.g. `ServiceInitializerCore.GetStartCommand`, `ServiceAvailabilityCheckerCore.IsServiceUp`, etc) have been removed due to being too confusing
-    * Services: 
-        * The `Service` interface has received two new methods, `GetIPAddress` and `IsAvailable` to better reflect what services are
-        * `ServiceInitializerCore`, `ServiceInitializer`, and `ServiceAvailabilityCheckerCore` have been removed
-        * `ServiceInitializerCore`'s functionality has been subsumed by a new interface, `DockerContainerInitializer`
-        * `ServiceAvailabilityChecker` renamed to `AvailabilityChecker`
-        * The old `ServiceAvailabilityChecker.WaitForStartup` method is now `AvailabilityChecker.WaitForStartup(timeBetweenPolls time.Duration, maxNumRetries int)`
-    * Networks: 
-        * `ServiceNetwork` has been renamed `NetworkContext`, with `NetworkContext.AddService(DockerContainerInitializer) (Service, AvailabilityChecker, error)` replacing the old `ServiceNetwork.AddService(ConfigurationID, ServiceID, map[ServiceID]bool) (*ServiceAvailabilityChecker, error)` method
-        * Test networks are no longer instantiated in two separate configuration/instantiation phases, and are simply instantiated with a `Test.Setup` method
-        * The notion of "service configuration" that was used during the network configuration phase has been removed, since networks are simply instantiated now
-        * `ServiceNetworkBuilder` has been removed
-        * `NetworkLoader` has been removed
-    * Testsuite:
-        * The `Test.GetNetworkLoader` method has been replaced with `Test.Setup(NetworkContext) Network`
-            * The `Network` return type is still `interface{}`, so users can return `NetworkContext` directly or wrap it in a more test-friendly custom object
+    * **Detailed changes:**
+        * The notion of `dependencies` that showed up in several places (e.g. `ServiceInitializerCore.GetStartCommand`, `ServiceAvailabilityCheckerCore.IsServiceUp`, etc) have been removed due to being too confusing
+        * Services: 
+            * The `Service` interface has received two new methods, `GetIPAddress` and `IsAvailable` to better reflect what services are
+            * `ServiceInitializerCore`, `ServiceInitializer`, and `ServiceAvailabilityCheckerCore` have been removed
+            * `ServiceInitializerCore`'s functionality has been subsumed by a new interface, `DockerContainerInitializer`
+            * `ServiceAvailabilityChecker` renamed to `AvailabilityChecker`
+            * The old `ServiceAvailabilityChecker.WaitForStartup` method is now `AvailabilityChecker.WaitForStartup(timeBetweenPolls time.Duration, maxNumRetries int)`
+        * Networks: 
+            * `ServiceNetwork` has been renamed `NetworkContext`, with `NetworkContext.AddService(DockerContainerInitializer) (Service, AvailabilityChecker, error)` replacing the old `ServiceNetwork.AddService(ConfigurationID, ServiceID, map[ServiceID]bool) (*ServiceAvailabilityChecker, error)` method
+            * Test networks are no longer instantiated in two separate configuration/instantiation phases, and are simply instantiated with a `Test.Setup` method
+            * The notion of "service configuration" that was used during the network configuration phase has been removed, since networks are simply instantiated now
+            * `ServiceNetworkBuilder` has been removed
+            * `NetworkLoader` has been removed
+        * Testsuite:
+            * The `Test.GetNetworkLoader` method has been replaced with `Test.Setup(NetworkContext) Network`
+                * The `Network` return type is still `interface{}`, so users can return `NetworkContext` directly or wrap it in a more test-friendly custom object
+    * **Remediation instructions:**
+        1. Services:
+            1. Update any existing implementations of the `Service` interface to implement the `GetIPAddress` and `IsAvailable` methods
+                * `GetIPAddress` should return an IP address `string` that's given to the `Service` at construction time
+                * `IsAvailable` should contain the logic that's currently inside the `ServiceAvailabilityCheckerCore` implementation for the service
+            1. Delete any `ServiceAvailabilityCheckerCore` implementations after their logic has been moved to `Service.IsAvailable`
+            1. For each existing `ServiceInitializerCore` implementation, modify it to instead implement `DockerContainerInitializer`:
+                * Rename the file/struct if desired
+                * Add a `GetDockerImage` method (which will likely just return a `string` passed in at construction time)
+                * Remove the `dependencies` parameter from the `InitializeMountedFiles` function
+                * Remove the `dependencies` parameter from the `GetStartCommand` function
+        1. Networks:
+            1. For each `Network` implementation, 
+            1. Modify all uses of the old `ServiceAvailabilityCheckerCore.WaitForStartup()` method to match the new `AvailabilityChecker.WaitForStartup(timeBetweenPolls time.Duration, maxNumRetries int)` signature
+        1. Testsuite:
+            1. For each old `Test` implementation, update it to use the updated `Test` interface:
+                1. Add a `Setup` method to match the new interface
+                1. Move the logic from the test's network loader's `NetworkLoader.Initialize` function to the test's `Setup` method (or extract it into a new struct if you prefer)
+                1. Remove the `GetNetworkLoader` method
+        * Networks:
+            1. Delete each `NetworkLoader` implementation after verifying that the `Initializer` contents are correctly being called 
+        * All methods on `ServiceInitializerCore` should be 
+        * ServiceInitializerCore
+        * TODO instructions
 
 ## 1.1.1
 * Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
