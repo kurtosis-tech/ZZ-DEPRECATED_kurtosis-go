@@ -20,8 +20,8 @@ func NewTestsuite(serviceImage string) *Testsuite {
 
 func (suite Testsuite) GetTests() map[string]testsuite.Test {
 	return map[string]testsuite.Test{
-		"singleNodeNginxTest": SingleNodeExampleTest{ServiceImage: suite.serviceImage},
-		"fixedSizeNginxTest": FixedSizeNginxTest{ServiceImage: suite.serviceImage},
+		"singleNodeNginxTest": DynamicSingleNodeExampleTest{ServiceImage: suite.serviceImage},
+		"fixedSizeNginxTest":  FixedSizeNginxTest{ServiceImage: suite.serviceImage},
 	}
 }
 

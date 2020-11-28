@@ -81,11 +81,14 @@ Args:
 	initializer: The Docker container initializer that contains the logic for starting the service
 
 Return:
-	An AvailabilityChecker for checking when the new service is available and ready for use.
+	The new service
+	An availability checker which can be used to wait until the service is available, if desired
 */
-func (networkCtx *NetworkContext) AddService(serviceId ServiceID, initializer services.DockerContainerInitializer) (services.Service, error) {
+func (networkCtx *NetworkContext) AddService(
+		serviceId ServiceID,
+		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
 	if _, exists := networkCtx.services[serviceId]; exists {
-		return nil, stacktrace.NewError("Service ID %s already exists in the network", serviceId)
+		return nil, nil, stacktrace.NewError("Service ID %s already exists in the network", serviceId)
 	}
 
 	serviceDirname := fmt.Sprintf("%v-%v", serviceId, uuid.New().String())
@@ -95,7 +98,7 @@ func (networkCtx *NetworkContext) AddService(serviceId ServiceID, initializer se
 	testSuiteServiceDirpath := filepath.Join(networkCtx.suiteExecutionVolumeDirpath, serviceRelativeDirpath)
 	err := os.Mkdir(testSuiteServiceDirpath, os.ModeDir)
 	if err != nil {
-		return nil, stacktrace.Propagate(
+		return nil, nil, stacktrace.Propagate(
 			err,
 			"An error occurred creating the new service's directory in the volume at filepath '%v' on the testsuite",
 			testSuiteServiceDirpath)
@@ -113,7 +116,7 @@ func (networkCtx *NetworkContext) AddService(serviceId ServiceID, initializer se
 		testSuiteFilepath := filepath.Join(testSuiteServiceDirpath, filename)
 		fp, err := os.Create(testSuiteFilepath)
 		if err != nil {
-			return nil, stacktrace.Propagate(
+			return nil, nil, stacktrace.Propagate(
 				err,
 				"Could not create new file for requested file ID '%v'",
 				fileId)
@@ -125,14 +128,14 @@ func (networkCtx *NetworkContext) AddService(serviceId ServiceID, initializer se
 	// NOTE: If we need the IP address when initializing mounted files, we'll need to rejigger the Kurtosis API
 	//  container so that it can do a "pre-registration" - register an IP address before actually starting the container
 	if err := initializer.InitializeMountedFiles(osFiles); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred initializing the files before service start")
+		return nil, nil, stacktrace.Propagate(err, "An error occurred initializing the files before service start")
 	}
 	logrus.Tracef("Successfully initialized files needed for service")
 
 	logrus.Tracef("Creating start command for service...")
 	startCmdArgs, err := initializer.GetStartCommand(mountFilepaths, ipPlaceholder)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "Failed to create start command")
+		return nil, nil, stacktrace.Propagate(err, "Failed to create start command")
 	}
 	logrus.Tracef("Successfully created start command for service")
 
@@ -146,7 +149,7 @@ func (networkCtx *NetworkContext) AddService(serviceId ServiceID, initializer se
 		make(map[string]string),
 		initializer.GetTestVolumeMountpoint())
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "Could not add service for Docker image %v", dockerImage)
+		return nil, nil, stacktrace.Propagate(err, "Could not add service for Docker image %v", dockerImage)
 	}
 	logrus.Tracef("Kurtosis API returned IP for new service: %v", ipAddr)
 
@@ -159,7 +162,9 @@ func (networkCtx *NetworkContext) AddService(serviceId ServiceID, initializer se
 		ContainerID: containerId,
 	}
 
-	return service, nil
+	availabilityChecker := services.NewDefaultAvailabilityChecker(service)
+
+	return service, availabilityChecker, nil
 }
 
 /*

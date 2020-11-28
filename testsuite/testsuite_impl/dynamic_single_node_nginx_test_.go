@@ -16,13 +16,17 @@ import (
 	"time"
 )
 
-type SingleNodeExampleTest struct {
+type DynamicSingleNodeExampleTest struct {
 	ServiceImage string
 }
 
-func (test SingleNodeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
+func (test DynamicSingleNodeExampleTest) Setup(context *networks.NetworkContext) (networks.Network, error) {
+	return single_node_nginx_network.NewDynamicSingleNodeNginxNetwork(context, test.ServiceImage), nil
+}
+
+func (test DynamicSingleNodeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
-	castedNetwork := network.(single_node_nginx_network.SingleNodeNginxNetwork)
+	castedNetwork := network.(single_node_nginx_network.DynamicSingleNodeNginxNetwork)
 
 	logrus.Info("Adding the node...")
 	service, err := castedNetwork.AddTheNode()
@@ -32,7 +36,7 @@ func (test SingleNodeExampleTest) Run(network networks.Network, context testsuit
 	logrus.Info("Successfully added the test node")
 
 	logrus.Info("Making a query to the node...")
-	serviceUrl := fmt.Sprintf("http://%v:%v", service.GetIpAddress(), service.GetPort())
+	serviceUrl := fmt.Sprintf("http://%v:%v", service.GetIPAddress(), service.GetPort())
 	if _, err := http.Get(serviceUrl); err != nil {
 		context.Fatal(stacktrace.Propagate(err, "Received an error when calling the example service endpoint"))
 	}
@@ -45,15 +49,11 @@ func (test SingleNodeExampleTest) Run(network networks.Network, context testsuit
 	logrus.Info("Successfully removed the test node")
 }
 
-func (test SingleNodeExampleTest) GetNetworkLoader() (networks.NetworkLoader, error) {
-	return single_node_nginx_network.NewSingleNodeNginxNetworkLoader(test.ServiceImage), nil
-}
-
-func (test SingleNodeExampleTest) GetExecutionTimeout() time.Duration {
+func (test DynamicSingleNodeExampleTest) GetExecutionTimeout() time.Duration {
 	return 30 * time.Second
 }
 
-func (test SingleNodeExampleTest) GetSetupBuffer() time.Duration {
+func (test DynamicSingleNodeExampleTest) GetSetupTeardownBuffer() time.Duration {
 	return 30 * time.Second
 }
 
