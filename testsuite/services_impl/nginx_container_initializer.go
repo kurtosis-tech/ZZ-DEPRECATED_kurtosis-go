@@ -6,6 +6,7 @@
 package services_impl
 
 import (
+	"fmt"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"os"
 )
@@ -26,9 +27,9 @@ func (initializer NginxContainerInitializer) GetDockerImage() string {
 	return initializer.dockerImage
 }
 
-func (initializer NginxContainerInitializer) GetUsedPorts() map[int]bool {
-	return map[int]bool{
-		nginxServicePort: true,
+func (initializer NginxContainerInitializer) GetUsedPorts() map[string]bool {
+	return map[string]bool{
+		fmt.Sprintf("%v/tcp", nginxServicePort): true,
 	}
 }
 

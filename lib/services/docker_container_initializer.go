@@ -13,7 +13,9 @@ type DockerContainerInitializer interface {
 	GetDockerImage() string
 
 	// Gets the "set" of ports that the Docker container running the service will listen on
-	GetUsedPorts() map[int]bool
+	// This is in Docker port specification syntax, e.g. "80" (default TCP) or "80/udp"
+	// It might even support ranges (e.g. "90:100/tcp"), though this is untested as of 2020-12-08
+	GetUsedPorts() map[string]bool
 
 	// GENERICS TOOD: When Go has generics, make this return type be parameterized
 	/*

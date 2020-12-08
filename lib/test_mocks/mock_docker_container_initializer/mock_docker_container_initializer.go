@@ -6,6 +6,7 @@
 package mock_docker_container_initializer
 
 import (
+	"fmt"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/kurtosis-tech/kurtosis-go/lib/test_mocks/mock_service"
 	"os"
@@ -21,9 +22,9 @@ func (m MockDockerContainerInitializer) GetDockerImage() string {
 	return "some-image"
 }
 
-func (m MockDockerContainerInitializer) GetUsedPorts() map[int]bool {
-	return map[int]bool{
-		mock_service.MockServicePort: true,
+func (m MockDockerContainerInitializer) GetUsedPorts() map[string]bool {
+	return map[string]bool{
+		fmt.Sprintf("%v/tcp", mock_service.MockServicePort): true,
 	}
 }
 

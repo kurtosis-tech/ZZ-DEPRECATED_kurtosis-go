@@ -32,7 +32,7 @@ const (
 type KurtosisService interface {
 	AddService(
 		dockerImage string,
-		usedPorts map[int]bool,
+		usedPorts map[string]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
@@ -53,7 +53,7 @@ func NewDefaultKurtosisService(ipAddr string) *DefaultKurtosisService {
 
 func (service DefaultKurtosisService) AddService(
 		dockerImage string,
-		usedPorts map[int]bool,
+		usedPorts map[string]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
@@ -61,9 +61,9 @@ func (service DefaultKurtosisService) AddService(
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
-	usedPortsList := []int{}
-	for port, _ := range usedPorts {
-		usedPortsList = append(usedPortsList, port)
+	usedPortsList := []string{}
+	for portSpecification, _ := range usedPorts {
+		usedPortsList = append(usedPortsList, portSpecification)
 	}
 	args := AddServiceArgs{
 		IPPlaceholder: ipPlaceholder,

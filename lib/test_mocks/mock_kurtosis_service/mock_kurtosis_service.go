@@ -14,7 +14,7 @@ func NewMockKurtosisService() *MockKurtosisService {
 
 func (m MockKurtosisService) AddService(
 		dockerImage string,
-		usedPorts map[int]bool,
+		usedPorts map[string]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
