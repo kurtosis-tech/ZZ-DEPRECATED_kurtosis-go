@@ -41,7 +41,7 @@ Calls the Kurtosis API container to add a service to the network
 func (service KurtosisService) AddService(
 		dockerImage string,
 		// TODO change type of this to be an actual Port type
-		usedPorts map[int]bool,
+		usedPorts map[string]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
@@ -49,9 +49,9 @@ func (service KurtosisService) AddService(
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
-	usedPortsList := []int{}
-	for port, _ := range usedPorts {
-		usedPortsList = append(usedPortsList, port)
+	usedPortsList := []string{}
+	for portSpecification, _ := range usedPorts {
+		usedPortsList = append(usedPortsList, portSpecification)
 	}
 	args := AddServiceArgs{
 		IPPlaceholder: ipPlaceholder,
