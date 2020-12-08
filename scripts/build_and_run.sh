@@ -90,7 +90,7 @@ if "${do_build}"; then
     fi
 
     echo "Building example Go implementation image..."
-    docker build -t "${SUITE_IMAGE}:${docker_tag}" -f "${root_dirpath}/example_impl/Dockerfile" "${root_dirpath}"
+    docker build -t "${SUITE_IMAGE}:${docker_tag}" -f "${root_dirpath}/testsuite/Dockerfile" "${root_dirpath}"
 fi
 
 if "${do_run}"; then

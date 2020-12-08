@@ -3,13 +3,13 @@
  * All Rights Reserved.
  */
 
-package fixed_size_example_network
+package fixed_size_nginx_network
 
 import (
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/example_impl/example_services"
 	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
+	"github.com/kurtosis-tech/kurtosis-go/testsuite/services_impl"
 	"github.com/palantir/stacktrace"
 )
 
@@ -19,16 +19,16 @@ const (
 )
 
 // ======================================== NETWORK ==============================================
-type FixedSizeExampleNetwork struct{
+type FixedSizeNginxNetwork struct{
 	rawNetwork *networks.ServiceNetwork
 	numNodes int
 }
 
-func (network FixedSizeExampleNetwork) GetNumNodes() int {
+func (network FixedSizeNginxNetwork) GetNumNodes() int {
 	return network.numNodes
 }
 
-func (network *FixedSizeExampleNetwork) GetService(idInt int) (example_services.ExampleService, error) {
+func (network *FixedSizeNginxNetwork) GetService(idInt int) (services_impl.NginxService, error) {
 	if idInt < 0 || idInt >= network.numNodes {
 		return nil, stacktrace.NewError("Invalid service ID '%v'", idInt)
 	}
@@ -37,33 +37,33 @@ func (network *FixedSizeExampleNetwork) GetService(idInt int) (example_services.
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred getting the service node info")
 	}
-	castedService := serviceNode.Service.(example_services.ExampleService)
+	castedService := serviceNode.Service.(services_impl.NginxService)
 	return castedService, nil
 }
 
 // ======================================== NETWORK LOADER ==============================================
-type FixedSizeExampleNetworkLoader struct {
+type FixedSizeNginxNetworkLoader struct {
 	numNodes int
 	serviceImage string
 }
 
-func NewFixedSizeExampleNetworkLoader(numNodes int, serviceImage string) *FixedSizeExampleNetworkLoader {
-	return &FixedSizeExampleNetworkLoader{
+func NewFixedSizeNginxNetworkLoader(numNodes int, serviceImage string) *FixedSizeNginxNetworkLoader {
+	return &FixedSizeNginxNetworkLoader{
 		numNodes: numNodes,
 		serviceImage: serviceImage,
 	}
 }
 
-func (loader FixedSizeExampleNetworkLoader) ConfigureNetwork(builder *networks.ServiceNetworkBuilder) error {
+func (loader FixedSizeNginxNetworkLoader) ConfigureNetwork(builder *networks.ServiceNetworkBuilder) error {
 	builder.AddConfiguration(
 		vanillaConfigId,
 		loader.serviceImage,
-		example_services.ExampleServiceInitializerCore{},
-		example_services.ExampleAvailabilityCheckerCore{})
+		services_impl.NginxServiceInitializerCore{},
+		services_impl.NginxAvailabilityCheckerCore{})
 	return nil
 }
 
-func (loader FixedSizeExampleNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.ServiceAvailabilityChecker, error) {
+func (loader FixedSizeNginxNetworkLoader) InitializeNetwork(network *networks.ServiceNetwork) (map[networks.ServiceID]services.ServiceAvailabilityChecker, error) {
 	availabilityCheckers := map[networks.ServiceID]services.ServiceAvailabilityChecker{}
 	for i := 0; i < loader.numNodes; i++ {
 		serviceId := networks.ServiceID(fmt.Sprintf("%v%v", serviceIdPrefix, i))
@@ -76,8 +76,8 @@ func (loader FixedSizeExampleNetworkLoader) InitializeNetwork(network *networks.
 	return availabilityCheckers, nil
 }
 
-func (loader FixedSizeExampleNetworkLoader) WrapNetwork(network *networks.ServiceNetwork) (networks.Network, error) {
-	return FixedSizeExampleNetwork{
+func (loader FixedSizeNginxNetworkLoader) WrapNetwork(network *networks.ServiceNetwork) (networks.Network, error) {
+	return FixedSizeNginxNetwork{
 		rawNetwork: network,
 		numNodes: loader.numNodes,
 	}, nil

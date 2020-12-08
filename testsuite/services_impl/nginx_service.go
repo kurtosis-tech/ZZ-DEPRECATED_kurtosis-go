@@ -3,14 +3,16 @@
  * All Rights Reserved.
  */
 
-package example_services
+package services_impl
 
 import (
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 )
 
-type ExampleService interface {
+type NginxService interface {
 	services.Service
 
-	GetHelloWorldSocket() Socket
+	GetIpAddress() string
+
+	GetPort() int
 }

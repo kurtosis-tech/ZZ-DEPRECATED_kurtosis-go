@@ -22,8 +22,8 @@ type TestService struct {}
 
 // ======================== Test Initializer Core ========================
 type TestInitializerCore struct {}
-func (t TestInitializerCore) GetUsedPorts() map[int]bool {
-	return make(map[int]bool)
+func (t TestInitializerCore) GetUsedPorts() map[string]bool {
+	return make(map[string]bool)
 }
 
 func (t TestInitializerCore) GetServiceFromIp(ipAddr string) services.Service {

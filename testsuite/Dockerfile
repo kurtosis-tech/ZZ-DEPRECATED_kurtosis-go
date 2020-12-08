@@ -9,9 +9,9 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o testsuite example_impl/main.go
+RUN go build -o testsuite.bin testsuite/main.go
 
-CMD ./testsuite \
+CMD ./testsuite.bin \
     `# ------------- Custom variable particular to this test suite -----------------` \
     --service-image=${EXAMPLE_SERVICE_IMAGE} \
     `# ------------------Kurtosis-specific environment variables -------------------` \

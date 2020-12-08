@@ -3,13 +3,13 @@
  * All Rights Reserved.
  */
 
-package example_testsuite
+package testsuite_impl
 
 import (
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/example_impl/example_networks/single_node_example_network"
 	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-go/testsuite/networks_impl/single_node_nginx_network"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -22,7 +22,7 @@ type SingleNodeExampleTest struct {
 
 func (test SingleNodeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
-	castedNetwork := network.(single_node_example_network.SingleNodeExampleNetwork)
+	castedNetwork := network.(single_node_nginx_network.SingleNodeNginxNetwork)
 
 	logrus.Info("Adding the node...")
 	service, err := castedNetwork.AddTheNode()
@@ -32,8 +32,7 @@ func (test SingleNodeExampleTest) Run(network networks.Network, context testsuit
 	logrus.Info("Successfully added the test node")
 
 	logrus.Info("Making a query to the node...")
-	socket := service.GetHelloWorldSocket()
-	serviceUrl := fmt.Sprintf("http://%v:%v", socket.IPAddr, socket.Port)
+	serviceUrl := fmt.Sprintf("http://%v:%v", service.GetIpAddress(), service.GetPort())
 	if _, err := http.Get(serviceUrl); err != nil {
 		context.Fatal(stacktrace.Propagate(err, "Received an error when calling the example service endpoint"))
 	}
@@ -47,7 +46,7 @@ func (test SingleNodeExampleTest) Run(network networks.Network, context testsuit
 }
 
 func (test SingleNodeExampleTest) GetNetworkLoader() (networks.NetworkLoader, error) {
-	return single_node_example_network.NewSingleNodeExampleNetworkLoader(test.ServiceImage), nil
+	return single_node_nginx_network.NewSingleNodeNginxNetworkLoader(test.ServiceImage), nil
 }
 
 func (test SingleNodeExampleTest) GetExecutionTimeout() time.Duration {
