@@ -6,6 +6,7 @@
 package services_impl
 
 import (
+	"fmt"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"os"
 )
@@ -16,9 +17,9 @@ const (
 
 type NginxServiceInitializerCore struct{}
 
-func (e NginxServiceInitializerCore) GetUsedPorts() map[int]bool {
-	return map[int]bool{
-		nginxServicePort: true,
+func (e NginxServiceInitializerCore) GetUsedPorts() map[string]bool {
+	return map[string]bool{
+		fmt.Sprintf("%v/tcp", nginxServicePort) : true,
 	}
 }
 
