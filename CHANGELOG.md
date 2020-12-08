@@ -1,4 +1,4 @@
-## TBD
+## 1.2.0
 * Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods
 * Removed the `example_` prefix to make bootstrapping even easier (users need only modify the existing suite, no need to remove the `example_` prefix)
 * Support UDP ports
