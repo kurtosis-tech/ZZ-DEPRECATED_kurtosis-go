@@ -19,7 +19,7 @@
             * The `Network` return type is still `interface{}`, so users can return `NetworkContext` directly or wrap it in a more test-friendly custom object
         * Kurtosis no longer controls network availability-checking, which lets users do it however they please in `Test.Setup` (e.g. start all services in parallel then wait for them to come up, start them in serial, skip it entirely, etc.)
             * An `AvailabilityChecker` is still returned by `NetworkContext.AddService`, so waiting on a service is still simple
-* Bump kurtosis-core-channel to 1.2.0 
+* Bump kurtosis-core-channel to 1.2.0
 
 ## 1.2.0
 * Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods
