@@ -127,7 +127,7 @@ func getConstantBackoffJsonRpcClient(ipAddr string, retryDurationSeconds int) *j
 	kurtosisUrl := fmt.Sprintf("http://%v:%v", ipAddr, kurtosisApiPort)
 	retryingClient := retryablehttp.NewClient()
 	retryingClient.RetryMax = retryDurationSeconds
-	retryingClient.Logger  = logrus.StandardLogger()
+	retryingClient.Logger  = nil	// The output of this is distracting and not useful
 	retryingClient.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
 		return time.Second
 	}
