@@ -21,6 +21,7 @@
         * Kurtosis no longer controls network availability-checking, which lets users do it however they please in `Test.Setup` (e.g. start all services in parallel then wait for them to come up, start them in serial, skip it entirely, etc.)
             * An `AvailabilityChecker` is still returned by `NetworkContext.AddService`, so waiting on a service is still simple
 * Disable logging from the RetryingHTTPClient inside `KurtosisService`, as the output isn't useful (and can be unnecessarily alarming, when a request fails)
+* Remove the `FixedSizeNginxNetwork` from the example implementation, to demonstrate a simpler `Test.Setup` usage without a custom `Network`
 
 ## 1.2.0
 * Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods
