@@ -21,31 +21,44 @@ const (
 	registrationRetryDurationSeconds = 60
 	regularOperationRetryDurationSeconds = 10
 
+	// Constants for making RPC calls to the Kurtosis API
 	kurtosisServiceStruct = "KurtosisService"
 	addServiceMethod = kurtosisServiceStruct + ".AddService"
 	removeServiceMethod = kurtosisServiceStruct + ".RemoveService"
 	registerTestExecutionMethod = kurtosisServiceStruct + ".RegisterTestExecution"
 )
 
-type KurtosisService struct {
-	ipAddr string
-}
-
-func NewKurtosisService(ipAddr string) *KurtosisService {
-	return &KurtosisService{ipAddr: ipAddr}
-}
-
-/*
-Calls the Kurtosis API container to add a service to the network
- */
-func (service KurtosisService) AddService(
+// This interface provides tests with an API for performing administrative actions on the testnet, like
+//  starting or stopping a service
+type KurtosisService interface {
+	AddService(
 		dockerImage string,
-		// TODO change type of this to be an actual Port type
 		usedPorts map[string]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (string, string, error) {
+		testVolumeMountLocation string) (ipAddr string, containerId string, err error)
+
+	RemoveService(containerId string, containerStopTimeoutSeconds int) error
+
+	RegisterTestExecution(testTimeoutSeconds int) error
+}
+
+type DefaultKurtosisService struct {
+	ipAddr string
+}
+
+func NewDefaultKurtosisService(ipAddr string) *DefaultKurtosisService {
+	return &DefaultKurtosisService{ipAddr: ipAddr}
+}
+
+func (service DefaultKurtosisService) AddService(
+		dockerImage string,
+		usedPorts map[string]bool,
+		ipPlaceholder string,
+		startCmdArgs []string,
+		envVariables map[string]string,
+		testVolumeMountLocation string) (ipAddr string, containerId string, err error) {
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
@@ -72,7 +85,7 @@ func (service KurtosisService) AddService(
 /*
 Stops the container with the given service ID, and removes it from the network.
 */
-func (service KurtosisService) RemoveService(containerId string, containerStopTimeoutSeconds int) error {
+func (service DefaultKurtosisService) RemoveService(containerId string, containerStopTimeoutSeconds int) error {
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
@@ -92,7 +105,7 @@ func (service KurtosisService) RemoveService(containerId string, containerStopTi
 	return nil
 }
 
-func (service KurtosisService) RegisterTestExecution(testTimeoutSeconds int) error {
+func (service DefaultKurtosisService) RegisterTestExecution(testTimeoutSeconds int) error {
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, registrationRetryDurationSeconds)
 	defer client.Close()
 
@@ -115,6 +128,7 @@ func getConstantBackoffJsonRpcClient(ipAddr string, retryDurationSeconds int) *j
 	kurtosisUrl := fmt.Sprintf("http://%v:%v", ipAddr, kurtosisApiPort)
 	retryingClient := retryablehttp.NewClient()
 	retryingClient.RetryMax = retryDurationSeconds
+	retryingClient.Logger  = nil	// The output of this is distracting and not useful
 	retryingClient.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
 		return time.Second
 	}

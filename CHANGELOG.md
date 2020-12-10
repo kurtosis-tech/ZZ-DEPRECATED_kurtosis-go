@@ -1,8 +1,30 @@
 ## TBD
 * Bump kurtosis-core-channel to 1.2.0
+* Heavily refactored the client architecture to make it much less confusing to define testsuite infrastructure:
+    * The notion of `dependencies` that showed up in several places (e.g. `ServiceInitializerCore.GetStartCommand`, `ServiceAvailabilityCheckerCore.IsServiceUp`, etc) have been removed due to being too confusing
+    * Services: 
+        * The `Service` interface (which used to be a confusing marker interface) has now received `GetIPAddress` and `IsAvailable` to more accurately reflect what a user expects a service to be
+        * `ServiceInitializerCore`, `ServiceInitializer`, and `ServiceAvailabilityCheckerCore` have been removed to cut down on the number of components users need to write & remember
+        * `ServiceInitializerCore`'s functionality has been subsumed by a new interface, `DockerContainerInitializer`, to more accurately reflect what its purpose
+        * `ServiceAvailabilityChecker` renamed to `AvailabilityChecker` to make it easier to say & type
+    * Networks: 
+        * `ServiceNetwork` has been renamed to `NetworkContext` to more accurately reflect its purpose
+        * `NetworkContext.AddService` has been made easier to work with by directly returning the `Service` that gets added (rather than a `ServiceNode` package object)
+        * Test networks are no longer created in two separate configuration-then-instantiation phases, and are simply instantiated directly in the new `Test.Setup` method
+        * The notion of "service configuration" that was used during the network configuration phase has been removed, now that networks are instantiated directly in `Test.Setup`
+        * `ServiceNetworkBuilder` has been removed
+        * `NetworkLoader` has been removed
+    * Testsuite:
+        * `Test.GetSetupBuffer` has been renamed to `GetSetupTeardownBuffer` to more accurately reflect its purpose
+        * The `Test.GetNetworkLoader` method has been replaced with `Test.Setup(NetworkContext) Network` to simplify network instantiation and more closely match other test frameworks
+            * The `Network` return type is still `interface{}`, so users can return `NetworkContext` directly or wrap it in a more test-friendly custom object
+        * Kurtosis no longer controls network availability-checking, which lets users do it however they please in `Test.Setup` (e.g. start all services in parallel then wait for them to come up, start them in serial, skip it entirely, etc.)
+            * An `AvailabilityChecker` is still returned by `NetworkContext.AddService`, so waiting on a service is still simple
+* Disable logging from the RetryingHTTPClient inside `KurtosisService`, as the output isn't useful (and can be unnecessarily alarming, when a request fails)
 
 ## 1.2.0
 * Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods
+* Remove TODO on allowing non-TCP ports
 * Removed the `example_` prefix to make bootstrapping even easier (users need only modify the existing suite, no need to remove the `example_` prefix)
 * Support UDP ports
 
