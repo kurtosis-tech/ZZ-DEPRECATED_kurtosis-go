@@ -1,4 +1,4 @@
-## TBD
+## 1.3.0
 * Bump kurtosis-core-channel to 1.2.0
 * Heavily refactored the client architecture to make it much less confusing to define testsuite infrastructure:
     * The notion of `dependencies` that showed up in several places (e.g. `ServiceInitializerCore.GetStartCommand`, `ServiceAvailabilityCheckerCore.IsServiceUp`, etc) have been removed due to being too confusing
