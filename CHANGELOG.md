@@ -1,4 +1,5 @@
 ## TBD
+* Bmp kurtosis-core-channel to 1.2.0
 * Add a more explanatory help message to `build_and_run`
 
 ## 1.2.0
