@@ -6,13 +6,39 @@
 package services_impl
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
+	"fmt"
+	"github.com/sirupsen/logrus"
+	"net/http"
+	"time"
 )
 
-type NginxService interface {
-	services.Service
+const (
+	nginxServicePort = 80
+)
 
-	GetIpAddress() string
-
-	GetPort() int
+type NginxService struct{
+	IPAddr string
 }
+
+func (e NginxService) GetIPAddress() string {
+	return e.IPAddr
+}
+
+func (e NginxService) GetPort() int {
+	return nginxServicePort
+}
+
+func (e NginxService) IsAvailable() bool {
+	url := fmt.Sprintf("http://%v:%v", e.GetIPAddress(), nginxServicePort)
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	resp, err := client.Get(url)
+	if err != nil {
+		logrus.Tracef("Service not yet available due to the following error:")
+		fmt.Fprintln(logrus.StandardLogger().Out, err)
+		return false
+	}
+	return resp.StatusCode == 200
+}
+
