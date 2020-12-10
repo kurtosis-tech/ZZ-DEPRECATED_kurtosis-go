@@ -28,7 +28,8 @@ const (
 	registerTestExecutionMethod = kurtosisServiceStruct + ".RegisterTestExecution"
 )
 
-// Extracted as an interface for test mocking
+// This interface provides tests with an API for performing administrative actions on the testnet, like
+//  starting or stopping a service
 type KurtosisService interface {
 	AddService(
 		dockerImage string,
