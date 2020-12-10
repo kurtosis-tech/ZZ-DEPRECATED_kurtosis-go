@@ -1,4 +1,5 @@
 ## TBD
+* Bump kurtosis-core-channel to 1.2.0
 * Heavily refactored the client architecture to make it much less confusing to define testsuite infrastructure:
     * The notion of `dependencies` that showed up in several places (e.g. `ServiceInitializerCore.GetStartCommand`, `ServiceAvailabilityCheckerCore.IsServiceUp`, etc) have been removed due to being too confusing
     * Services: 
@@ -19,7 +20,6 @@
             * The `Network` return type is still `interface{}`, so users can return `NetworkContext` directly or wrap it in a more test-friendly custom object
         * Kurtosis no longer controls network availability-checking, which lets users do it however they please in `Test.Setup` (e.g. start all services in parallel then wait for them to come up, start them in serial, skip it entirely, etc.)
             * An `AvailabilityChecker` is still returned by `NetworkContext.AddService`, so waiting on a service is still simple
-* Bump kurtosis-core-channel to 1.2.0
 * Disable logging from the RetryingHTTPClient inside `KurtosisService`, as the output isn't useful (and can be unnecessarily alarming, when a request fails)
 
 ## 1.2.0
