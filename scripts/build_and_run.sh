@@ -35,8 +35,7 @@ show_help() {
     echo "  To modify how your suite is run, you can set Kurtosis environment variables using the '--env' flag to 'docker run' like so:"
     echo "    ${0} all --env PARALLELISM=4"
     echo ""
-    echo "  The full list of Kurtosis environment variables for use can be found at:"
-    echo "    https://github.com/kurtosis-tech/kurtosis-docs/blob/master/testsuite-details.md"
+    echo "  To see all the environment variables Kurtosis accepts, add the '--env SHOW_HELP=true' flag"
     echo ""
 }
 

@@ -1,3 +1,6 @@
+## TBD
+* Add a more explanatory help message to `build_and_run`
+
 ## 1.3.0
 * Bump kurtosis-core-channel to 1.2.0
 * Heavily refactored the client architecture to make it much less confusing to define testsuite infrastructure:
