@@ -95,7 +95,8 @@ fi
 if "${do_run}"; then
     # Kurtosis needs a Docker volume to store its execution data in
     # To learn more about volumes, see: https://docs.docker.com/storage/volumes/
-    suite_execution_volume="go-example-suite_${docker_tag}_$(date +%s)"
+    sanitized_image="$(echo "${SUITE_IMAGE}" | sed 's/[^a-zA-Z0-9_.-]/_/g')"
+    suite_execution_volume="${sanitized_image}_${docker_tag}_$(date +%s)"
     docker volume create "${suite_execution_volume}"
 
     mkdir -p "${KURTOSIS_DIRPATH}"
