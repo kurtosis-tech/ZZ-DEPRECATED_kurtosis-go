@@ -16,15 +16,15 @@ import (
 	"time"
 )
 
-type DynamicSingleNodeExampleTest struct {
+type DynamicSingleNodeNginxTest struct {
 	ServiceImage string
 }
 
-func (test DynamicSingleNodeExampleTest) Setup(context *networks.NetworkContext) (networks.Network, error) {
+func (test DynamicSingleNodeNginxTest) Setup(context *networks.NetworkContext) (networks.Network, error) {
 	return single_node_nginx_network.NewDynamicSingleNodeNginxNetwork(context, test.ServiceImage), nil
 }
 
-func (test DynamicSingleNodeExampleTest) Run(network networks.Network, context testsuite.TestContext) {
+func (test DynamicSingleNodeNginxTest) Run(network networks.Network, context testsuite.TestContext) {
 	// NOTE: We have to do this as the first line of every test because Go doesn't have generics
 	castedNetwork := network.(*single_node_nginx_network.DynamicSingleNodeNginxNetwork)
 
@@ -49,11 +49,11 @@ func (test DynamicSingleNodeExampleTest) Run(network networks.Network, context t
 	logrus.Info("Successfully removed the test node")
 }
 
-func (test DynamicSingleNodeExampleTest) GetExecutionTimeout() time.Duration {
+func (test DynamicSingleNodeNginxTest) GetExecutionTimeout() time.Duration {
 	return 30 * time.Second
 }
 
-func (test DynamicSingleNodeExampleTest) GetSetupTeardownBuffer() time.Duration {
+func (test DynamicSingleNodeNginxTest) GetSetupTeardownBuffer() time.Duration {
 	return 30 * time.Second
 }
 
