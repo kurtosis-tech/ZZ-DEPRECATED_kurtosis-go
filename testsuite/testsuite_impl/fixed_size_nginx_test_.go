@@ -76,7 +76,7 @@ func (test FixedSizeNginxTest) Run(network networks.Network, context testsuite.T
 			context.Fatal(
 				stacktrace.Propagate(
 					err,
-					"Received an error when calling the example service endpoint for service with ID '%v'",
+					"Received an error when calling the NginX service endpoint for service with ID '%v'",
 					serviceId,
 				),
 			)
