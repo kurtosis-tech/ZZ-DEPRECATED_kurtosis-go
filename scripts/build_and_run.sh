@@ -88,20 +88,21 @@ if "${do_build}"; then
         echo "Tests succeeded"
     fi
 
-    echo "Building example Go implementation image..."
+    echo "Building ${SUITE_IMAGE} Docker image..."
     docker build -t "${SUITE_IMAGE}:${docker_tag}" -f "${root_dirpath}/testsuite/Dockerfile" "${root_dirpath}"
 fi
 
 if "${do_run}"; then
     # Kurtosis needs a Docker volume to store its execution data in
     # To learn more about volumes, see: https://docs.docker.com/storage/volumes/
-    suite_execution_volume="go-example-suite_${docker_tag}_$(date +%s)"
+    sanitized_image="$(echo "${SUITE_IMAGE}" | sed 's/[^a-zA-Z0-9_.-]/_/g')"
+    suite_execution_volume="${sanitized_image}_${docker_tag}_$(date +%s)"
     docker volume create "${suite_execution_volume}"
 
     mkdir -p "${KURTOSIS_DIRPATH}"
 
     # Docker only allows you to have spaces in the variable if you escape them or use a Docker env file
-    custom_env_vars_json_flag="CUSTOM_ENV_VARS_JSON={\"EXAMPLE_SERVICE_IMAGE\":\"nginxdemos/hello\"}"
+    custom_env_vars_json_flag="CUSTOM_ENV_VARS_JSON={\"SERVICE_IMAGE\":\"nginxdemos/hello\"}"
 
     docker run \
         `# The Kurtosis initializer runs inside a Docker container, but needs to access to the Docker engine; this is how to do it` \

@@ -1,5 +1,6 @@
 ## TBD
 * Add a more explanatory help message to `build_and_run`
+* After calling `bootstrap.sh`, ensure the volume is named based off the name of the user's Docker image
 
 ## 1.3.0
 * Bump kurtosis-core-channel to 1.2.0
