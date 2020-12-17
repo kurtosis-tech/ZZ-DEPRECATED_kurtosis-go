@@ -11,6 +11,7 @@ import (
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
+	"github.com/sirupsen/logrus"
 	"os"
 )
 
@@ -22,17 +23,18 @@ const (
 	testVolumeMountpoint = "/test-volume"
 )
 
+// Fields are public so we can marshal them as JSON
 type config struct {
-	datastoreIp string	`json:"datastoreIp"`
-	datastorePort int	`json:"datastorePort"`
+	DatastoreIp string	`json:"datastoreIp"`
+	DatastorePort int	`json:"datastorePort"`
 }
 
 type ApiContainerInitializer struct {
 	dockerImage string
-	datastore datastore.DatastoreService
+	datastore *datastore.DatastoreService
 }
 
-func NewApiContainerInitializer(dockerImage string, datastore datastore.DatastoreService) *ApiContainerInitializer {
+func NewApiContainerInitializer(dockerImage string, datastore *datastore.DatastoreService) *ApiContainerInitializer {
 	return &ApiContainerInitializer{dockerImage: dockerImage, datastore: datastore}
 }
 
@@ -57,14 +59,17 @@ func (initializer ApiContainerInitializer) GetFilesToMount() map[string]bool {
 }
 
 func (initializer ApiContainerInitializer) InitializeMountedFiles(mountedFiles map[string]*os.File) error {
+	logrus.Debugf("Datastore IP: %v , port: %v", initializer.datastore.GetIPAddress(), initializer.datastore.GetPort())
 	configObj := config{
-		datastoreIp:   initializer.datastore.GetIPAddress(),
-		datastorePort: initializer.datastore.GetPort(),
+		DatastoreIp:   initializer.datastore.GetIPAddress(),
+		DatastorePort: initializer.datastore.GetPort(),
 	}
-	configBytes, err := json.Marshal(&configObj)
+	configBytes, err := json.Marshal(configObj)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred serializing the config to JSON")
 	}
+
+	logrus.Debugf("API config JSON: %v", string(configBytes))
 
 	configFp := mountedFiles[configFileKey]
 	if _, err := configFp.Write(configBytes); err != nil {
@@ -79,7 +84,13 @@ func (initializer ApiContainerInitializer) GetTestVolumeMountpoint() string {
 }
 
 func (initializer ApiContainerInitializer) GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string) ([]string, error) {
-	// The Dockerfile for the service has a start command baked in, so we don't need to specify one
-	return nil, nil
+	// TODO Replace this with a productized way to start a container using only environment variables
+	configFilepath := mountedFileFilepaths[configFileKey]
+	startCmd := []string{
+		"./api.bin",
+		"--config",
+		configFilepath,
+	}
+	return startCmd, nil
 }
 

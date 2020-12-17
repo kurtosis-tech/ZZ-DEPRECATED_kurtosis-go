@@ -27,6 +27,10 @@ type DatastoreService struct {
 	port int
 }
 
+func NewDatastoreService(ipAddr string, port int) *DatastoreService {
+	return &DatastoreService{ipAddr: ipAddr, port: port}
+}
+
 // ===========================================================================================
 //                              Service interface methods
 // ===========================================================================================

@@ -47,7 +47,7 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 	}
 
 	// Go doesn't have generics so we need to do this cast
-	datastoreSvc := uncastedDatastoreSvc.(datastore.DatastoreService)
+	datastoreSvc := uncastedDatastoreSvc.(*datastore.DatastoreService)
 
 	apiInitializer := api.NewApiContainerInitializer(b.apiImage, datastoreSvc)
 	_, apiChecker, err := networkCtx.AddService(apiServiceId, apiInitializer)
@@ -69,7 +69,7 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network, testCtx testsuit
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the API service"))
 	}
-	apiService := uncastedApiService.(api.ApiService)
+	apiService := uncastedApiService.(*api.ApiService)
 
 	logrus.Infof("Verifying that person with test ID '%v' doesn't already exist...", testPersonId)
 	if _, err = apiService.GetPerson(testPersonId); err == nil {

@@ -55,7 +55,7 @@ func (test BasicDatastoreTest) Run(network networks.Network, testCtx testsuite.T
 	}
 
 	// Necessary again due to no Go generics
-	castedService := uncastedService.(datastore.DatastoreService)
+	castedService := uncastedService.(*datastore.DatastoreService)
 
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
 	exists, err := castedService.Exists(testKey)
