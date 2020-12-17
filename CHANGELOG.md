@@ -1,4 +1,4 @@
-## TBD
+## 1.4.0
 * Add a more explanatory help message to `build_and_run`
 * After calling `bootstrap.sh`, ensure the volume is named based off the name of the user's Docker image
 * Update the example testsuite to use the Kurtosis-developed example API service and example datastore service, to show dependencies and file generation
