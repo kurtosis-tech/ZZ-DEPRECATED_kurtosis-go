@@ -14,6 +14,9 @@ import (
 An interface encapsulating a test to run against a test network.
  */
 type Test interface {
+	// Initializes the network to the desired state before test execution
+	Setup(networkCtx *networks.NetworkContext) (networks.Network, error)
+
 	// NOTE: if Go had generics, 'network' would be a parameterized type representing the network that this test consumes
 	// as produced by the NetworkLoader
 	/*
@@ -24,10 +27,7 @@ type Test interface {
 			be casted to the appropriate type.
 		context: The test context, which is the user's tool for making test assertions.
 	 */
-	Run(network networks.Network, context TestContext)
-
-	// Initializes the network to the desired state before test execution
-	Setup(context *networks.NetworkContext) (networks.Network, error)
+	Run(network networks.Network, testCtx TestContext)
 
 	/*
 	The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test

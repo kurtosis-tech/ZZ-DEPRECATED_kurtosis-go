@@ -4,7 +4,8 @@ script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 # ====================== CONSTANTS =======================================================
 # TODO Extract these constants out into their own file so the bootstrap can easily replace it
 # The name of to give the Docker image containing the testsuite
-SUITE_IMAGE="kurtosistech/kurtosis-go-example"
+KURTOSIS_DOCKERHUB_ORG="kurtosistech"
+SUITE_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-go-example"
 
 # The name of the release channel of Kurtosis that you'll be using, which indicates which Kurtosis Docker images you'll be using
 KURTOSIS_CORE_CHANNEL="1.2.0"
@@ -12,8 +13,8 @@ KURTOSIS_CORE_CHANNEL="1.2.0"
 # The directory where Kurtosis will store files it uses in between executions, e.g. access tokens
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
 
-INITIALIZER_IMAGE="kurtosistech/kurtosis-core_initializer:${KURTOSIS_CORE_CHANNEL}"
-API_IMAGE="kurtosistech/kurtosis-core_api:${KURTOSIS_CORE_CHANNEL}"
+INITIALIZER_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_initializer:${KURTOSIS_CORE_CHANNEL}"
+API_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_api:${KURTOSIS_CORE_CHANNEL}"
 
 BUILD_ACTION="build"
 RUN_ACTION="run"
@@ -101,8 +102,13 @@ if "${do_run}"; then
 
     mkdir -p "${KURTOSIS_DIRPATH}"
 
+    # ======================================= Custom Docker environment variables ========================================================
+    # NOTE: Replace these with whatever custom properties your service needs
+    api_service_image="${KURTOSIS_DOCKERHUB_ORG}/example-microservices_api"
+    datastore_service_image="${KURTOSIS_DOCKERHUB_ORG}/example-microservices_datastore"
     # Docker only allows you to have spaces in the variable if you escape them or use a Docker env file
-    custom_env_vars_json_flag="CUSTOM_ENV_VARS_JSON={\"SERVICE_IMAGE\":\"nginxdemos/hello\"}"
+    custom_env_vars_json_flag="CUSTOM_ENV_VARS_JSON={\"API_SERVICE_IMAGE\":\"${api_service_image}\",\"DATASTORE_SERVICE_IMAGE\":\"${datastore_service_image}\"}"
+    # ====================================== End custom Docker environment variables =====================================================
 
     docker run \
         `# The Kurtosis initializer runs inside a Docker container, but needs to access to the Docker engine; this is how to do it` \

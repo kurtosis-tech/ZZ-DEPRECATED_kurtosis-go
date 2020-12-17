@@ -44,10 +44,14 @@ func main() {
 		"Dirpath, relative to the root of the suite execution volume, where directories for each service should be created")
 
 	// -------------------- Testsuite-custom params ----------------------------------
-	serviceImageArg := flag.String(
-		"service-image",
+	apiServiceImageArg := flag.String(
+		"api-service-image",
 		"",
-		"Name of Nginx Docker image that will be used to launch service containers")
+		"Name of API example microservice Docker image that will be used to launch service containers")
+	datastoreServiceImageArg := flag.String(
+		"datastore-service-image",
+		"",
+		"Name of datastore example microservice Docker image that will be used to launch service containers")
 
 
 	flag.Parse()
@@ -59,7 +63,7 @@ func main() {
 	}
 	logrus.SetLevel(level)
 
-	testSuite := testsuite_impl.NewTestsuite(*serviceImageArg)
+	testSuite := testsuite_impl.NewTestsuite(*apiServiceImageArg, *datastoreServiceImageArg)
 	exitCode := client.Run(testSuite, *metadataFilepath, *servicesRelativeDirpathArg, *testArg, *kurtosisApiIpArg)
 	os.Exit(exitCode)
 }
