@@ -16,15 +16,15 @@ import (
 )
 
 const (
-	numApiServices = 2
-
 	testPersonId = 46
 )
 
 type AdvancedNetworkTest struct {
 	datastoreServiceImage string
 	apiServiceImage string
-	apiServiceIds []services.ServiceID
+
+	personModifyingApiServiceId services.ServiceID
+	personRetrievingApiServiceId services.ServiceID
 }
 
 func NewAdvancedNetworkTest(datastoreServiceImage string, apiServiceImage string) *AdvancedNetworkTest {
@@ -38,46 +38,50 @@ func (test *AdvancedNetworkTest) Setup(networkCtx *networks.NetworkContext) (net
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore")
 	}
 
-	for i := 0; i < numApiServices; i++ {
-		apiService, err := network.AddApiService()
-		if err != nil {
-			return nil, stacktrace.Propagate(err, "An error occurred adding API service %v", i)
-		}
-		test.apiServiceIds = append(test.apiServiceIds, apiService)
+	personModifyingApiServiceId, err := network.AddApiService()
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "An error occurred adding the person-modifying API service")
 	}
+	test.personModifyingApiServiceId = personModifyingApiServiceId
+
+	personRetrievingApiServiceId, err := network.AddApiService()
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "An error occurred adding the person-retrieving API service")
+	}
+	test.personRetrievingApiServiceId = personRetrievingApiServiceId
 
 	return network, nil
 }
 
 func (test *AdvancedNetworkTest) Run(network networks.Network, testCtx testsuite.TestContext) {
 	castedNetwork := network.(*networks_impl.TestNetwork)
-	firstApiService, err := castedNetwork.GetApiService(test.apiServiceIds[0])
+	personModifier, err := castedNetwork.GetApiService(test.personModifyingApiServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the first API service"))
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the person-modifying API service"))
 	}
-	secondApiService, err := castedNetwork.GetApiService(test.apiServiceIds[1])
+	personRetriever, err := castedNetwork.GetApiService(test.personRetrievingApiServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the second API service"))
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the person-retrieving API service"))
 	}
 
-	logrus.Infof("Adding test person via first API service...")
-	if err := firstApiService.AddPerson(testPersonId); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred adding test person through first API service"))
+	logrus.Infof("Adding test person via first person-modifying API service...")
+	if err := personModifier.AddPerson(testPersonId); err != nil {
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred adding test person"))
 	}
 	logrus.Info("Test person added")
 
-	logrus.Infof("Incrementing test person's number of books read through first API service ...")
-	if err := firstApiService.IncrementBooksRead(testPersonId); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred incrementing the number of books read through the first API service"))
+	logrus.Infof("Incrementing test person's number of books read through person-modifying API service ...")
+	if err := personModifier.IncrementBooksRead(testPersonId); err != nil {
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred incrementing the number of books read"))
 	}
 	logrus.Info("Incremented number of books read")
 
-	logrus.Info("Retrieving test person to verify number of books read through second API service...")
-	person, err := secondApiService.GetPerson(testPersonId)
+	logrus.Info("Retrieving test person to verify number of books read person-retrieving API service...")
+	person, err := personRetriever.GetPerson(testPersonId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test person through second API service"))
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test person"))
 	}
-	logrus.Info("Retrieved test person through second API service")
+	logrus.Info("Retrieved test person")
 
 	testCtx.AssertTrue(
 		person.BooksRead == 1,
