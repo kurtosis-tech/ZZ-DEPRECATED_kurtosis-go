@@ -6,6 +6,7 @@
 package networks
 
 import (
+	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/kurtosis-tech/kurtosis-go/lib/test_mocks/mock_docker_container_initializer"
 	"github.com/kurtosis-tech/kurtosis-go/lib/test_mocks/mock_kurtosis_service"
 	"io/ioutil"
@@ -13,7 +14,7 @@ import (
 )
 
 func TestDisallowingSameIds(t *testing.T) {
-	var duplicatedId ServiceID = "the-id"
+	var duplicatedId services.ServiceID = "the-id"
 	kurtosisService := mock_kurtosis_service.NewMockKurtosisService()
 
 	tempDirpath, err := ioutil.TempDir("", "suite-volume")

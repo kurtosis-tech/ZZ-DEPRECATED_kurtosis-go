@@ -21,11 +21,6 @@ const (
 )
 
 /*
-The identifier used for services with the network.
-*/
-type ServiceID string
-
-/*
 A package object containing the details that the NetworkContext is tracking about a node.
 */
 type NetworkNode struct {
@@ -47,7 +42,7 @@ type NetworkContext struct {
 	// Filepath to the services directory, RELATIVE to the root of the suite execution volume root
 	servicesRelativeDirpath string
 
-	services map[ServiceID]NetworkNode
+	services map[services.ServiceID]NetworkNode
 }
 
 
@@ -68,7 +63,7 @@ func NewNetworkContext(
 		kurtosisService: kurtosisService,
 		suiteExecutionVolumeDirpath: suiteExecutionVolumeDirpath,
 		servicesRelativeDirpath: servicesRelativeDirpath,
-		services: map[ServiceID]NetworkNode{},
+		services: map[services.ServiceID]NetworkNode{},
 	}
 }
 
@@ -89,7 +84,7 @@ Return:
 	services.AvailabilityChecker: An availability checker which can be used to wait until the service is available, if desired
 */
 func (networkCtx *NetworkContext) AddService(
-		serviceId ServiceID,
+		serviceId services.ServiceID,
 		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
 	if _, exists := networkCtx.services[serviceId]; exists {
 		return nil, nil, stacktrace.NewError("Service ID %s already exists in the network", serviceId)
@@ -166,7 +161,7 @@ func (networkCtx *NetworkContext) AddService(
 		ContainerID: containerId,
 	}
 
-	availabilityChecker := services.NewDefaultAvailabilityChecker(service)
+	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
 
 	return service, availabilityChecker, nil
 }
@@ -174,7 +169,7 @@ func (networkCtx *NetworkContext) AddService(
 /*
 Gets the node information for the service with the given service ID.
 */
-func (networkCtx *NetworkContext) GetService(serviceId ServiceID) (services.Service, error) {
+func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (services.Service, error) {
 	node, found := networkCtx.services[serviceId]
 	if !found {
 		return nil, stacktrace.NewError("No service with ID %v exists in the network", serviceId)
@@ -186,7 +181,7 @@ func (networkCtx *NetworkContext) GetService(serviceId ServiceID) (services.Serv
 /*
 Stops the container with the given service ID, and removes it from the network.
 */
-func (networkCtx *NetworkContext) RemoveService(serviceId ServiceID, containerStopTimeoutSeconds int) error {
+func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, containerStopTimeoutSeconds int) error {
 	nodeInfo, found := networkCtx.services[serviceId]
 	if !found {
 		return stacktrace.NewError("No service with ID %v found", serviceId)
