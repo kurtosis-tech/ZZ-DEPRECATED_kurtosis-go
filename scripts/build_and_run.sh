@@ -4,7 +4,8 @@ script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 # ====================== CONSTANTS =======================================================
 # TODO Extract these constants out into their own file so the bootstrap can easily replace it
 # The name of to give the Docker image containing the testsuite
-SUITE_IMAGE="kurtosistech/kurtosis-go-example"
+KURTOSIS_DOCKERHUB_ORG="kurtosistech"
+SUITE_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-go-example"
 
 # The name of the release channel of Kurtosis that you'll be using, which indicates which Kurtosis Docker images you'll be using
 KURTOSIS_CORE_CHANNEL="1.2.0"
@@ -12,8 +13,8 @@ KURTOSIS_CORE_CHANNEL="1.2.0"
 # The directory where Kurtosis will store files it uses in between executions, e.g. access tokens
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
 
-INITIALIZER_IMAGE="kurtosistech/kurtosis-core_initializer:${KURTOSIS_CORE_CHANNEL}"
-API_IMAGE="kurtosistech/kurtosis-core_api:${KURTOSIS_CORE_CHANNEL}"
+INITIALIZER_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_initializer:${KURTOSIS_CORE_CHANNEL}"
+API_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_api:${KURTOSIS_CORE_CHANNEL}"
 
 BUILD_ACTION="build"
 RUN_ACTION="run"
@@ -35,8 +36,7 @@ show_help() {
     echo "  To modify how your suite is run, you can set Kurtosis environment variables using the '--env' flag to 'docker run' like so:"
     echo "    ${0} all --env PARALLELISM=4"
     echo ""
-    echo "  The full list of Kurtosis environment variables for use can be found at:"
-    echo "    https://github.com/kurtosis-tech/kurtosis-docs/blob/master/testsuite-details.md"
+    echo "  To see all the environment variables Kurtosis accepts, add the '--env SHOW_HELP=true' flag"
     echo ""
 }
 
@@ -89,20 +89,26 @@ if "${do_build}"; then
         echo "Tests succeeded"
     fi
 
-    echo "Building example Go implementation image..."
+    echo "Building ${SUITE_IMAGE} Docker image..."
     docker build -t "${SUITE_IMAGE}:${docker_tag}" -f "${root_dirpath}/testsuite/Dockerfile" "${root_dirpath}"
 fi
 
 if "${do_run}"; then
     # Kurtosis needs a Docker volume to store its execution data in
     # To learn more about volumes, see: https://docs.docker.com/storage/volumes/
-    suite_execution_volume="go-example-suite_${docker_tag}_$(date +%s)"
+    sanitized_image="$(echo "${SUITE_IMAGE}" | sed 's/[^a-zA-Z0-9_.-]/_/g')"
+    suite_execution_volume="${sanitized_image}_${docker_tag}_$(date +%s)"
     docker volume create "${suite_execution_volume}"
 
     mkdir -p "${KURTOSIS_DIRPATH}"
 
+    # ======================================= Custom Docker environment variables ========================================================
+    # NOTE: Replace these with whatever custom properties your service needs
+    api_service_image="${KURTOSIS_DOCKERHUB_ORG}/example-microservices_api"
+    datastore_service_image="${KURTOSIS_DOCKERHUB_ORG}/example-microservices_datastore"
     # Docker only allows you to have spaces in the variable if you escape them or use a Docker env file
-    custom_env_vars_json_flag="CUSTOM_ENV_VARS_JSON={\"EXAMPLE_SERVICE_IMAGE\":\"nginxdemos/hello\"}"
+    custom_env_vars_json_flag="CUSTOM_ENV_VARS_JSON={\"API_SERVICE_IMAGE\":\"${api_service_image}\",\"DATASTORE_SERVICE_IMAGE\":\"${datastore_service_image}\"}"
+    # ====================================== End custom Docker environment variables =====================================================
 
     docker run \
         `# The Kurtosis initializer runs inside a Docker container, but needs to access to the Docker engine; this is how to do it` \

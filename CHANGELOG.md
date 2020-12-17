@@ -1,3 +1,8 @@
+## 1.4.0
+* Add a more explanatory help message to `build_and_run`
+* After calling `bootstrap.sh`, ensure the volume is named based off the name of the user's Docker image
+* Update the example testsuite to use the Kurtosis-developed example API service and example datastore service, to show dependencies and file generation
+
 ## 1.3.0
 * Bump kurtosis-core-channel to 1.2.0
 * Heavily refactored the client architecture to make it much less confusing to define testsuite infrastructure:
@@ -21,6 +26,7 @@
         * Kurtosis no longer controls network availability-checking, which lets users do it however they please in `Test.Setup` (e.g. start all services in parallel then wait for them to come up, start them in serial, skip it entirely, etc.)
             * An `AvailabilityChecker` is still returned by `NetworkContext.AddService`, so waiting on a service is still simple
 * Disable logging from the RetryingHTTPClient inside `KurtosisService`, as the output isn't useful (and can be unnecessarily alarming, when a request fails)
+* Remove the `FixedSizeNginxNetwork` from the example implementation, to demonstrate a simpler `Test.Setup` usage without a custom `Network`
 
 ## 1.2.0
 * Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods

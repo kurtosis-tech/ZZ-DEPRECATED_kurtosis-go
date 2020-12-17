@@ -19,14 +19,14 @@ Struct for polling a service until it's available, with configurable retry optio
  */
 type DefaultAvailabilityChecker struct {
 	// ID of the service being monitored
-	serviceId string
+	serviceId ServiceID
 
 	// The service being monitored
 	toCheck Service
 }
 
-func NewDefaultAvailabilityChecker(toCheck Service) *DefaultAvailabilityChecker {
-	return &DefaultAvailabilityChecker{toCheck: toCheck}
+func NewDefaultAvailabilityChecker(serviceId ServiceID, toCheck Service) *DefaultAvailabilityChecker {
+	return &DefaultAvailabilityChecker{serviceId: serviceId, toCheck: toCheck}
 }
 
 /*
