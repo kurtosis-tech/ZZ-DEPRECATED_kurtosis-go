@@ -16,7 +16,7 @@ CMD ./testsuite.bin \
     --api-service-image=${API_SERVICE_IMAGE} \
     --datastore-service-image=${DATASTORE_SERVICE_IMAGE} \
     `# ------------------Kurtosis-specific environment variables -------------------` \
-    `# See: https://github.com/kurtosis-tech/kurtosis-docs/blob/master/testsuite-details.md` \
+    `# See: http://docs.kurtosistech.com/testsuite-details.html` \
     --kurtosis-api-ip=${KURTOSIS_API_IP} \
     --log-level=${LOG_LEVEL} \
     --metadata-filepath=${METADATA_FILEPATH} \
