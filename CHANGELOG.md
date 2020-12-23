@@ -1,4 +1,11 @@
+## 1.4.1
+* Point all old `kurtosis-docs` references to `docs.kurtosistech.com`
+* Switch `build_and_run.sh` to use `kurtosis.sh`
+* Upgrade to Kurtosis Core 1.4
+* Reduce the size of the testsuite image by using the `golang` image only for building, and then `alpine` for execution; this results in a reduction of 325 MB -> 14 MB
+
 ## 1.4.0
+* BREAKING: Moved `ServiceID` from the `networks` package to the `services` package
 * Add a more explanatory help message to `build_and_run`
 * After calling `bootstrap.sh`, ensure the volume is named based off the name of the user's Docker image
 * Update the example testsuite to use the Kurtosis-developed example API service and example datastore service, to show dependencies and file generation
