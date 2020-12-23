@@ -2,7 +2,7 @@
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`
 * Switch `build_and_run.sh` to use `kurtosis.sh`
 * Upgrade to Kurtosis Core 1.4
-* Reduce the size of the testsuite image by using the `golang` image only for building, and then `alpine` for execution
+* Reduce the size of the testsuite image by using the `golang` image only for building, and then `alpine` for execution; this results in a reduction of 325 MB -> 14 MB
 
 ## 1.4.0
 * BREAKING: Moved `ServiceID` from the `networks` package to the `services` package

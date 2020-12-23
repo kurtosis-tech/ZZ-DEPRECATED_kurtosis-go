@@ -11,6 +11,14 @@ COPY . .
 # Build the application
 RUN go build -o testsuite.bin testsuite/main.go
 
+# ============= Execution Stage ================
+FROM alpine:3.12 AS execution
+
+WORKDIR /run
+
+# Copy the code into the container
+COPY --from=builder /build/testsuite.bin .
+
 CMD ./testsuite.bin \
     `# ------------- Custom variable particular to this test suite -----------------` \
     --api-service-image=${API_SERVICE_IMAGE} \
