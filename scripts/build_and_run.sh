@@ -94,5 +94,5 @@ if "${do_run}"; then
     }'
     # ====================================== End custom Docker environment variables =====================================================
 
-    bash "${script_dirpath}/kurtosis.sh" --custom-env-vars "${custom_env_vars_json}" "${SUITE_IMAGE}:${docker_tag}"
+    bash "${script_dirpath}/kurtosis.sh" --custom-env-vars "${custom_env_vars_json}" "${@}" "${SUITE_IMAGE}:${docker_tag}"
 fi
