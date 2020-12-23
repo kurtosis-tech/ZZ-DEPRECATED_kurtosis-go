@@ -1,6 +1,8 @@
 ## TBD
 * Switch to using kurtosis-core `1.2` tag (which will automatically pull in patch version fixes)
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`
+* Switch `build_and_run.sh` to use `kurtosis.sh`
+* Upgrade to Kurtosis Core 1.4
 
 ## 1.4.0
 * BREAKING: Moved `ServiceID` from the `networks` package to the `services` package
