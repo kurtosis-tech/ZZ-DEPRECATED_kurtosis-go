@@ -1,3 +1,6 @@
+## TBD
+* Add a `.dockerignore` file
+
 ## 1.4.1
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`
 * Switch `build_and_run.sh` to use `kurtosis.sh`
