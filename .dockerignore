@@ -1,0 +1,15 @@
+.circleci
+.git
+.github
+.gitignore
+.idea
+.vscode
+
+LICENSE
+*.md
+
+bootstrap
+docs
+scripts
+
+testsuite/Dockerfile
