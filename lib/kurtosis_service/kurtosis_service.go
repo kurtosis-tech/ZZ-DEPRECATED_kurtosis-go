@@ -32,14 +32,15 @@ const (
 //  starting or stopping a service
 type KurtosisService interface {
 	AddService(
+		serviceId 	string,
 		dockerImage string,
 		usedPorts map[string]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, containerId string, err error)
+		testVolumeMountLocation string) (ipAddr string, err error)
 
-	RemoveService(containerId string, containerStopTimeoutSeconds int) error
+	RemoveService(serviceId string, containerStopTimeoutSeconds int) error
 
 	RegisterTestExecution(testTimeoutSeconds int) error
 }
@@ -53,12 +54,13 @@ func NewDefaultKurtosisService(ipAddr string) *DefaultKurtosisService {
 }
 
 func (service DefaultKurtosisService) AddService(
+		serviceId string,
 		dockerImage string,
 		usedPorts map[string]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, containerId string, err error) {
+		testVolumeMountLocation string) (ipAddr string, err error) {
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
@@ -67,40 +69,42 @@ func (service DefaultKurtosisService) AddService(
 		usedPortsList = append(usedPortsList, portSpecification)
 	}
 	args := AddServiceArgs{
+		ServiceID: string(serviceId),
+		PartitionID: "", // TODO Allow setting the partition
 		IPPlaceholder: ipPlaceholder,
 		ImageName:               dockerImage,
 		UsedPorts:               usedPortsList,
 		StartCmd:                startCmdArgs,
 		DockerEnvironmentVars:   envVariables,
-		TestVolumeMountFilepath: testVolumeMountLocation,
+		TestVolumeMountDirpath: testVolumeMountLocation,
 	}
 	var reply AddServiceResponse
 	if err := client.Call(addServiceMethod, args, &reply); err != nil {
-		return "", "", stacktrace.Propagate(err, "An error occurred making the call to add a service using the Kurtosis API")
+		return "", stacktrace.Propagate(err, "An error occurred making the call to add a service using the Kurtosis API")
 	}
 
-	return reply.IPAddress, reply.ContainerID, nil
+	return reply.IPAddress, nil
 }
 
 /*
 Stops the container with the given service ID, and removes it from the network.
 */
-func (service DefaultKurtosisService) RemoveService(containerId string, containerStopTimeoutSeconds int) error {
+func (service DefaultKurtosisService) RemoveService(serviceId string, containerStopTimeoutSeconds int) error {
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
-	logrus.Debugf("Removing service with container ID %v...", containerId)
+	logrus.Debugf("Removing service '%v'...", serviceId)
 
 	args := RemoveServiceArgs{
-		ContainerID: containerId,
+		ServiceID: serviceId,
 		ContainerStopTimeoutSeconds: containerStopTimeoutSeconds,
 	}
 
 	var reply struct{}
 	if err := client.Call(removeServiceMethod, args, &reply); err != nil {
-		return stacktrace.Propagate(err, "An error occurred making the call to remove a service using the Kurtosis API")
+		return stacktrace.Propagate(err, "An error occurred making the call to remove service '%v' using the Kurtosis API", serviceId)
 	}
-	logrus.Debugf("Successfully removed service with container ID %v", containerId)
+	logrus.Debugf("Successfully removed service '%v'", serviceId)
 
 	return nil
 }

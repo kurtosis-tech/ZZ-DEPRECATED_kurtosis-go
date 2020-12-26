@@ -8,6 +8,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -30,17 +31,22 @@ type Person struct {
 }
 
 type ApiService struct {
+	serviceId services.ServiceID
 	ipAddr string
 	port int
 }
 
-func NewApiService(ipAddr string, port int) *ApiService {
-	return &ApiService{ipAddr: ipAddr, port: port}
+func NewApiService(serviceId services.ServiceID, ipAddr string, port int) *ApiService {
+	return &ApiService{serviceId: serviceId, ipAddr: ipAddr, port: port}
 }
 
 // ===========================================================================================
 //                              Service interface methods
 // ===========================================================================================
+func (service ApiService) GetServiceID() services.ServiceID {
+	return service.serviceId
+}
+
 func (service ApiService) GetIPAddress() string {
 	return service.ipAddr
 }

@@ -20,19 +20,6 @@ const (
 	ipPlaceholder = "KURTOSISSERVICEIP"
 )
 
-/*
-A package object containing the details that the NetworkContext is tracking about a node.
-*/
-type NetworkNode struct {
-	// The user-defined interface for interacting with the node.
-	// NOTE: this will need to be casted to the appropriate interface becaus Go doesn't yet have generics!
-	Service services.Service
-
-	// The Docker container ID running a given service
-	ContainerID string
-}
-
-
 type NetworkContext struct {
 	kurtosisService kurtosis_service.KurtosisService
 
@@ -42,7 +29,9 @@ type NetworkContext struct {
 	// Filepath to the services directory, RELATIVE to the root of the suite execution volume root
 	servicesRelativeDirpath string
 
-	services map[services.ServiceID]NetworkNode
+	// The user-defined interfaces for interacting with the node.
+	// NOTE: these will need to be casted to the appropriate interface becaus Go doesn't yet have generics!
+	services map[services.ServiceID]services.Service
 }
 
 
@@ -63,7 +52,7 @@ func NewNetworkContext(
 		kurtosisService: kurtosisService,
 		suiteExecutionVolumeDirpath: suiteExecutionVolumeDirpath,
 		servicesRelativeDirpath: servicesRelativeDirpath,
-		services: map[services.ServiceID]NetworkNode{},
+		services: map[services.ServiceID]services.Service{},
 	}
 }
 
@@ -140,7 +129,8 @@ func (networkCtx *NetworkContext) AddService(
 
 	logrus.Tracef("Calling to Kurtosis API to create service...")
 	dockerImage := initializer.GetDockerImage()
-	ipAddr, containerId, err := networkCtx.kurtosisService.AddService(
+	ipAddr, err := networkCtx.kurtosisService.AddService(
+		string(serviceId),
 		dockerImage,
 		initializer.GetUsedPorts(),
 		ipPlaceholder,
@@ -153,13 +143,10 @@ func (networkCtx *NetworkContext) AddService(
 	logrus.Tracef("Kurtosis API returned IP for new service: %v", ipAddr)
 
 	logrus.Tracef("Getting service from IP...")
-	service := initializer.GetServiceFromIp(ipAddr)
+	service := initializer.GetService(serviceId, ipAddr)
 	logrus.Tracef("Successfully got service from IP")
 
-	networkCtx.services[serviceId] = NetworkNode{
-		Service:     service,
-		ContainerID: containerId,
-	}
+	networkCtx.services[serviceId] = service
 
 	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
 
@@ -170,49 +157,33 @@ func (networkCtx *NetworkContext) AddService(
 Gets the node information for the service with the given service ID.
 */
 func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (services.Service, error) {
-	node, found := networkCtx.services[serviceId]
+	service, found := networkCtx.services[serviceId]
 	if !found {
-		return nil, stacktrace.NewError("No service with ID %v exists in the network", serviceId)
+		return nil, stacktrace.NewError("No service with ID '%v' exists in the network", serviceId)
 	}
 
-	return node.Service, nil
+	return service, nil
 }
 
 /*
 Stops the container with the given service ID, and removes it from the network.
 */
 func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, containerStopTimeoutSeconds int) error {
-	nodeInfo, found := networkCtx.services[serviceId]
+	_, found := networkCtx.services[serviceId]
 	if !found {
 		return stacktrace.NewError("No service with ID %v found", serviceId)
 	}
 
-	logrus.Debugf("Removing service ID %v...", serviceId)
+	logrus.Debugf("Removing service '%v'...", serviceId)
 	delete(networkCtx.services, serviceId)
 
 	// Make a best-effort attempt to stop the container
-	err := networkCtx.kurtosisService.RemoveService(nodeInfo.ContainerID, containerStopTimeoutSeconds)
+	err := networkCtx.kurtosisService.RemoveService(string(serviceId), containerStopTimeoutSeconds)
 	if err != nil {
-		logrus.Errorf(
-			"The following error occurred stopping service ID %v with container ID %v; proceeding to stop other containers:",
-			serviceId,
-			nodeInfo.ContainerID)
-		fmt.Fprintln(logrus.StandardLogger().Out, err)
+		return stacktrace.Propagate(err,
+			"An error occurred removing service with ID '%v'",
+			serviceId)
 	}
 	logrus.Debugf("Successfully removed service ID %v", serviceId)
-	return nil
-}
-
-/*
-Makes a best-effort attempt to remove all the containers in the network, waiting for the given timeout and returning
-	an error if the timeout is reached.
-
-Args:
-	containerStopTimeoutSeconds: How long to wait, in seconds, for each container to stop before force-killing it
-*/
-func (networkCtx *NetworkContext) RemoveAll(containerStopTimeoutSeconds int) error {
-	for serviceId, _ := range networkCtx.services {
-		networkCtx.RemoveService(serviceId, containerStopTimeoutSeconds)
-	}
 	return nil
 }

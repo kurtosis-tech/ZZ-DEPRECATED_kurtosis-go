@@ -3,12 +3,10 @@
  * All Rights Reserved.
  */
 
-package mock_docker_container_initializer
+package services
 
 import (
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
-	"github.com/kurtosis-tech/kurtosis-go/lib/test_mocks/mock_service"
 	"os"
 )
 
@@ -24,12 +22,12 @@ func (m MockDockerContainerInitializer) GetDockerImage() string {
 
 func (m MockDockerContainerInitializer) GetUsedPorts() map[string]bool {
 	return map[string]bool{
-		fmt.Sprintf("%v/tcp", mock_service.MockServicePort): true,
+		fmt.Sprintf("%v/tcp", MockServicePort): true,
 	}
 }
 
-func (m MockDockerContainerInitializer) GetServiceFromIp(ipAddr string) services.Service {
-	return mock_service.NewMockService(ipAddr, 1)
+func (m MockDockerContainerInitializer) GetService(serviceId ServiceID, ipAddr string) Service {
+	return NewMockService(serviceId, ipAddr, 1)
 }
 
 func (m MockDockerContainerInitializer) GetFilesToMount() map[string]bool {
