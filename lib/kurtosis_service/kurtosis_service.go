@@ -35,6 +35,7 @@ const (
 type KurtosisService interface {
 	AddService(
 		serviceId 	string,
+		partitionId string,
 		dockerImage string,
 		usedPorts map[string]bool,
 		ipPlaceholder string,
@@ -62,6 +63,7 @@ func NewDefaultKurtosisService(ipAddr string) *DefaultKurtosisService {
 
 func (service DefaultKurtosisService) AddService(
 		serviceId string,
+		partitionId string,
 		dockerImage string,
 		usedPorts map[string]bool,
 		ipPlaceholder string,
@@ -76,8 +78,8 @@ func (service DefaultKurtosisService) AddService(
 		usedPortsList = append(usedPortsList, portSpecification)
 	}
 	args := method_types.AddServiceArgs{
-		ServiceID: string(serviceId),
-		PartitionID: "", // TODO Allow setting the partition
+		ServiceID: serviceId,
+		PartitionID: partitionId,
 		IPPlaceholder: ipPlaceholder,
 		ImageName:               dockerImage,
 		UsedPorts:               usedPortsList,

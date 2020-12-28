@@ -19,6 +19,10 @@ import (
 
 const (
 	ipPlaceholder = "KURTOSISSERVICEIP"
+
+	// This will alwyas resolve to the default partition ID (regardless of whether such a partition exists in the network,
+	//  or it was repartitioned away)
+	defaultPartitionId PartitionID = ""
 )
 
 type NetworkContext struct {
@@ -63,18 +67,48 @@ func (networkCtx *NetworkContext) GetSize() int {
 }
 
 /*
-Adds a service to the network with the given service ID, created using the given configuration ID.
+Adds a service to the network in the default partition with the given service ID, created using the given configuration ID.
+
+NOTE: If the network has been repartitioned and the default partition hasn't been preserved, you should use
+	AddServiceToPartition instead.
 
 Args:
 	serviceId: The service ID that will be used to identify this node in the network.
 	initializer: The Docker container initializer that contains the logic for starting the service
 
 Return:
-	services.Service: The new service
-	services.AvailabilityChecker: An availability checker which can be used to wait until the service is available, if desired
+	service: The new service
 */
 func (networkCtx *NetworkContext) AddService(
 		serviceId services.ServiceID,
+		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
+	service, availabilityChecker, err := networkCtx.AddServiceToPartition(
+		serviceId,
+		defaultPartitionId,
+		initializer)
+	if err != nil {
+		return nil, nil, stacktrace.Propagate(err, "An error occurred adding the service to the network in the default partition")
+	}
+	return service, availabilityChecker, nil
+}
+
+/*
+Adds a service to the network with the given service ID, created using the given configuration ID.
+
+NOTE: If the network hasn't been repartitioned yet, the PartitionID should be an empty string to add to the default
+	partition.
+
+Args:
+	serviceId: The service ID that will be used to identify this node in the network.
+	partitionId: The partition ID to add the service to
+	initializer: The Docker container initializer that contains the logic for starting the service
+
+Return:
+	service.Service: The new service
+*/
+func (networkCtx *NetworkContext) AddServiceToPartition(
+		serviceId services.ServiceID,
+		partitionId PartitionID,
 		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
 	if _, exists := networkCtx.services[serviceId]; exists {
 		return nil, nil, stacktrace.NewError("Service ID %s already exists in the network", serviceId)
@@ -132,6 +166,7 @@ func (networkCtx *NetworkContext) AddService(
 	dockerImage := initializer.GetDockerImage()
 	ipAddr, err := networkCtx.kurtosisService.AddService(
 		string(serviceId),
+		string(partitionId),
 		dockerImage,
 		initializer.GetUsedPorts(),
 		ipPlaceholder,
@@ -196,7 +231,7 @@ Args:
 	isDefaultPartitionConnectionBlocked: If true, when the connection details between two partitions aren't specified
 		during a repartition then traffic between them will be blocked by default
  */
-func (networkCtx NetworkContext) CreateRepartitionerBuilder(isDefaultPartitionConnectionBlocked bool) *RepartitionerBuilder {
+func (networkCtx NetworkContext) GetRepartitionerBuilder(isDefaultPartitionConnectionBlocked bool) *RepartitionerBuilder {
 	return newRepartitionerBuilder(isDefaultPartitionConnectionBlocked)
 }
 
