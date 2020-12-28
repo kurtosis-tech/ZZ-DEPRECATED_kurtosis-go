@@ -108,6 +108,10 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network, testCtx testsuit
 	)
 }
 
+func (test *BasicDatastoreAndApiTest) GetTestConfiguration() testsuite.TestConfiguration {
+	return testsuite.TestConfiguration{}
+}
+
 func (b BasicDatastoreAndApiTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }

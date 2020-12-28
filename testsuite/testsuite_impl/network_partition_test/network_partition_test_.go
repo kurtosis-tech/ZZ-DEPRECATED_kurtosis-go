@@ -115,6 +115,13 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 	}
 }
 
+
+func (test *NetworkPartitionTest) GetTestConfiguration() testsuite.TestConfiguration {
+	return testsuite.TestConfiguration{
+		IsPartitioningEnabled: true,
+	}
+}
+
 func (test NetworkPartitionTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
