@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
+	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
@@ -186,4 +187,60 @@ func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, co
 	}
 	logrus.Debugf("Successfully removed service ID %v", serviceId)
 	return nil
+}
+
+/*
+Constructs a new repartitioner builder in preparation for a repartition.
+
+Args:
+	isDefaultPartitionConnectionBlocked: If true, when the connection details between two partitions aren't specified
+		during a repartition then traffic between them will be blocked by default
+ */
+func (networkCtx NetworkContext) CreateRepartitionerBuilder(isDefaultPartitionConnectionBlocked bool) *RepartitionerBuilder {
+	return newRepartitionerBuilder(isDefaultPartitionConnectionBlocked)
+}
+
+/*
+Repartitions the network using the given repartitioner. A repartitioner builder can be constructed using the
+	NewRepartitionerBuilder method of this network context object.
+ */
+func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitioner) error {
+	partitionServices := map[string]map[string]bool{}
+	for partitionId, serviceIdSet := range repartitioner.partitionServices {
+		serviceIdStrPseudoSet := map[string]bool{}
+		for _, serviceId := range serviceIdSet.getElems() {
+			serviceIdStr := string(serviceId)
+			serviceIdStrPseudoSet[serviceIdStr] = true
+		}
+		partitionIdStr := string(partitionId)
+		partitionServices[partitionIdStr] = serviceIdStrPseudoSet
+	}
+
+	serializablePartConns := map[string]map[string]method_types.SerializablePartitionConnection{}
+	for partitionAId, partitionAConns := range repartitioner.partitionConnections {
+		serializablePartAConns := map[string]method_types.SerializablePartitionConnection{}
+		for partitionBId, unserializableConn := range partitionAConns {
+			partitionBIdStr := string(partitionBId)
+			serializableConn := makePartConnSerializable(unserializableConn)
+			serializablePartAConns[partitionBIdStr] = serializableConn
+		}
+		partitionAIdStr := string(partitionAId)
+		serializablePartConns[partitionAIdStr] = serializablePartAConns
+	}
+
+	serializableDefaultConn := makePartConnSerializable(repartitioner.defaultConnection)
+
+	if err := networkCtx.kurtosisService.Repartition(partitionServices, serializablePartConns, serializableDefaultConn); err != nil {
+		return stacktrace.Propagate(err, "An error occurred repartitioning the test network")
+	}
+	return nil
+}
+
+// ============================================================================================
+//                                    Private helper methods
+// ============================================================================================
+func makePartConnSerializable(connection PartitionConnection) method_types.SerializablePartitionConnection {
+	return method_types.SerializablePartitionConnection{
+		IsBlocked: connection.IsBlocked,
+	}
 }

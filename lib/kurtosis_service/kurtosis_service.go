@@ -8,6 +8,7 @@ package kurtosis_service
 import (
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/palantir/stacktrace"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/sirupsen/logrus"
@@ -25,6 +26,7 @@ const (
 	kurtosisServiceStruct = "KurtosisService"
 	addServiceMethod = kurtosisServiceStruct + ".AddService"
 	removeServiceMethod = kurtosisServiceStruct + ".RemoveService"
+	repartitionMethod = kurtosisServiceStruct + ".Repartition"
 	registerTestExecutionMethod = kurtosisServiceStruct + ".RegisterTestExecution"
 )
 
@@ -41,6 +43,11 @@ type KurtosisService interface {
 		testVolumeMountLocation string) (ipAddr string, err error)
 
 	RemoveService(serviceId string, containerStopTimeoutSeconds int) error
+
+	Repartition(
+		partitionServices map[string]map[string]bool,
+		partitionConnections map[string]map[string]method_types.SerializablePartitionConnection,
+		defaultConnection method_types.SerializablePartitionConnection) error
 
 	RegisterTestExecution(testTimeoutSeconds int) error
 }
@@ -68,7 +75,7 @@ func (service DefaultKurtosisService) AddService(
 	for portSpecification, _ := range usedPorts {
 		usedPortsList = append(usedPortsList, portSpecification)
 	}
-	args := AddServiceArgs{
+	args := method_types.AddServiceArgs{
 		ServiceID: string(serviceId),
 		PartitionID: "", // TODO Allow setting the partition
 		IPPlaceholder: ipPlaceholder,
@@ -78,7 +85,7 @@ func (service DefaultKurtosisService) AddService(
 		DockerEnvironmentVars:   envVariables,
 		TestVolumeMountDirpath: testVolumeMountLocation,
 	}
-	var reply AddServiceResponse
+	var reply method_types.AddServiceResponse
 	if err := client.Call(addServiceMethod, args, &reply); err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred making the call to add a service using the Kurtosis API")
 	}
@@ -95,7 +102,7 @@ func (service DefaultKurtosisService) RemoveService(serviceId string, containerS
 
 	logrus.Debugf("Removing service '%v'...", serviceId)
 
-	args := RemoveServiceArgs{
+	args := method_types.RemoveServiceArgs{
 		ServiceID: serviceId,
 		ContainerStopTimeoutSeconds: containerStopTimeoutSeconds,
 	}
@@ -109,13 +116,39 @@ func (service DefaultKurtosisService) RemoveService(serviceId string, containerS
 	return nil
 }
 
+func (service DefaultKurtosisService) Repartition(
+		partitionServices map[string]map[string]bool,
+		partitionConnections map[string]map[string]method_types.SerializablePartitionConnection,
+		defaultConnection method_types.SerializablePartitionConnection) error {
+	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
+	defer client.Close()
+
+	logrus.Debugf("Repartitioning test network with the following args:")
+	logrus.Debugf("New partition services: %v", partitionServices)
+	logrus.Debugf("New partition connections: %v", partitionConnections)
+	logrus.Debugf("New default connection: %v", defaultConnection)
+
+	args := method_types.RepartitionArgs{
+		PartitionServices:    partitionServices,
+		PartitionConnections: partitionConnections,
+		DefaultConnection:    defaultConnection,
+	}
+
+	var reply struct{}
+	if err := client.Call(repartitionMethod, args, &reply); err != nil {
+		return stacktrace.Propagate(err, "An error occurred making the call to repartition the test network using the Kurtosis API")
+	}
+	logrus.Debugf("Successfully repartitioned the test network")
+	return nil
+}
+
 func (service DefaultKurtosisService) RegisterTestExecution(testTimeoutSeconds int) error {
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, registrationRetryDurationSeconds)
 	defer client.Close()
 
 	logrus.Debugf("Registering a test execution with a timeout of %v seconds...", testTimeoutSeconds)
 
-	args := RegisterTestExecutionArgs{TestTimeoutSeconds: testTimeoutSeconds}
+	args := method_types.RegisterTestExecutionArgs{TestTimeoutSeconds: testTimeoutSeconds}
 
 	var reply struct{}
 	if err := client.Call(registerTestExecutionMethod, args, &reply); err != nil {
