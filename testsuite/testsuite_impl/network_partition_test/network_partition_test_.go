@@ -45,10 +45,10 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 	datastoreInitializer := datastore.NewDatastoreContainerInitializer(test.datstoreImage)
 	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreInitializer)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred adding the uncastedDatastoreSvc service")
+		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 	if err := datastoreChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the uncastedDatastoreSvc service to start")
+		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to start")
 	}
 
 	// Go doesn't have generics so we need to do this cast

@@ -40,10 +40,10 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 	datastoreInitializer := datastore.NewDatastoreContainerInitializer(b.datstoreImage)
 	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreInitializer)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred adding the uncastedDatastoreSvc service")
+		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 	if err := datastoreChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the uncastedDatastoreSvc service to start")
+		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to start")
 	}
 
 	// Go doesn't have generics so we need to do this cast
