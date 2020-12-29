@@ -62,10 +62,10 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 	}
 
 	apiSvc := uncastedApiSvc.(*api.ApiService)
-	if err := apiSvc.AddPerson(testPersonId, 5 * time.Second); err != nil {
+	if err := apiSvc.AddPerson(testPersonId); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the test person in preparation for the test")
 	}
-	if err := apiSvc.IncrementBooksRead(testPersonId, 5 * time.Second); err != nil {
+	if err := apiSvc.IncrementBooksRead(testPersonId); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred test person's books read in preparation for the test")
 	}
 
@@ -100,7 +100,7 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 
 	// Use a short timeout because we expect a partition
 	logrus.Info("Incrementing books read while partition is in place, to verify no comms are possible...")
-	if err := apiService.IncrementBooksRead(testPersonId, 2 * time.Second); err == nil {
+	if err := apiService.IncrementBooksRead(testPersonId); err == nil {
 		testCtx.Fatal(stacktrace.NewError("Expected the book increment call to fail due to the network " +
 			"partition between API and datastore services, but no error was thrown"))
 	} else {
@@ -112,19 +112,15 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the 2-partition repartitioner with open connection"))
 	}
 
-	logrus.Info("Launching goroutine which will heal the partition in 2 seconds...")
-	go func() {
-		time.Sleep(2 * time.Second)
-		if err := castedNetwork.RepartitionNetwork(openConnRepartitioner); err != nil {
-			testCtx.Fatal(stacktrace.Propagate(err, "An error occurred repartitiong the network to open the connection"))
-		}
-		logrus.Info("Partition healed successfully")
-	}()
-	logrus.Info("Goroutine launched")
+	logrus.Info("Repartitioning to heal partition between API and datastore...")
+	if err := castedNetwork.RepartitionNetwork(openConnRepartitioner); err != nil {
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred healing the partition"))
+	}
+	logrus.Info("Partition healed successfully")
 
 	logrus.Info("Making another call to increment books read, where the partition will heal in the middle of the call...")
 	// Use infinite timeout because we expect the partition healing to fix the issue
-	if err := apiService.IncrementBooksRead(testPersonId, 0 * time.Second); err != nil {
+	if err := apiService.IncrementBooksRead(testPersonId); err != nil {
 		testCtx.Fatal(stacktrace.Propagate(
 			err,
 			"An error occurred incrementing the number of books read, even though the partition should have been " +

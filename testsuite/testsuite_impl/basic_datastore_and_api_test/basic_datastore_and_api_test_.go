@@ -25,8 +25,6 @@ const (
 
 	testPersonId = 23
 	testNumBooksRead = 3
-
-	requestTimeout = 10 * time.Second
 )
 
 type BasicDatastoreAndApiTest struct {
@@ -74,27 +72,27 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network, testCtx testsuit
 	apiService := uncastedApiService.(*api.ApiService)
 
 	logrus.Infof("Verifying that person with test ID '%v' doesn't already exist...", testPersonId)
-	if _, err = apiService.GetPerson(testPersonId, requestTimeout); err == nil {
+	if _, err = apiService.GetPerson(testPersonId); err == nil {
 		testCtx.Fatal(stacktrace.NewError("Expected an error trying to get a person who doesn't exist yet, but didn't receive one"))
 	}
 	logrus.Infof("Verified that test person doesn't already exist")
 
 	logrus.Infof("Adding test person with ID '%v'...", testPersonId)
-	if err := apiService.AddPerson(testPersonId, requestTimeout); err != nil {
+	if err := apiService.AddPerson(testPersonId); err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred adding person with test ID '%v'", testPersonId))
 	}
 	logrus.Info("Test person added")
 
 	logrus.Infof("Incrementing test person's number of books read by %v...", testNumBooksRead)
 	for i := 0; i < testNumBooksRead; i++ {
-		if err := apiService.IncrementBooksRead(testPersonId, requestTimeout); err != nil {
+		if err := apiService.IncrementBooksRead(testPersonId); err != nil {
 			testCtx.Fatal(stacktrace.Propagate(err, "An error occurred incrementing the number of books read"))
 		}
 	}
 	logrus.Info("Incremented number of books read")
 
 	logrus.Info("Retrieving test person to verify number of books read...")
-	person, err := apiService.GetPerson(testPersonId, requestTimeout)
+	person, err := apiService.GetPerson(testPersonId)
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test person to verify the number of books read"))
 	}

@@ -17,8 +17,6 @@ import (
 
 const (
 	testPersonId = 46
-
-	requestTimeout = 10 * time.Second
 )
 
 type AdvancedNetworkTest struct {
@@ -67,19 +65,19 @@ func (test *AdvancedNetworkTest) Run(network networks.Network, testCtx testsuite
 	}
 
 	logrus.Infof("Adding test person via first person-modifying API service...")
-	if err := personModifier.AddPerson(testPersonId, requestTimeout); err != nil {
+	if err := personModifier.AddPerson(testPersonId); err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred adding test person"))
 	}
 	logrus.Info("Test person added")
 
 	logrus.Infof("Incrementing test person's number of books read through person-modifying API service ...")
-	if err := personModifier.IncrementBooksRead(testPersonId, requestTimeout); err != nil {
+	if err := personModifier.IncrementBooksRead(testPersonId); err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred incrementing the number of books read"))
 	}
 	logrus.Info("Incremented number of books read")
 
 	logrus.Info("Retrieving test person to verify number of books read person-retrieving API service...")
-	person, err := personRetriever.GetPerson(testPersonId, requestTimeout)
+	person, err := personRetriever.GetPerson(testPersonId)
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test person"))
 	}

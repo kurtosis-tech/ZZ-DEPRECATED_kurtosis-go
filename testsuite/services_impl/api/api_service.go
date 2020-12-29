@@ -86,10 +86,9 @@ func (service ApiService) getPersonUrlForId(id int) string {
 	return fmt.Sprintf("http://%v:%v/%v/%v", service.ipAddr, service.port, personEndpoint, id)
 }
 
-func (service ApiService) AddPerson(id int, timeout time.Duration) error {
+func (service ApiService) AddPerson(id int) error {
 	url := service.getPersonUrlForId(id)
-	client := getHttpClientWithTimeout(timeout)
-	resp, err := client.Post(url, textContentType, nil)
+	resp, err := http.Post(url, textContentType, nil)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred making the request to add person with ID '%v'", id)
 	}
@@ -99,10 +98,9 @@ func (service ApiService) AddPerson(id int, timeout time.Duration) error {
 	return nil
 }
 
-func (service ApiService) GetPerson(id int, timeout time.Duration) (Person, error) {
+func (service ApiService) GetPerson(id int) (Person, error) {
 	url := service.getPersonUrlForId(id)
-	client := getHttpClientWithTimeout(timeout)
-	resp, err := client.Get(url)
+	resp, err := http.Get(url)
 	if err != nil {
 		return Person{}, stacktrace.Propagate(err, "An error occurred making the request to get person with ID '%v'", id)
 	}
@@ -123,10 +121,9 @@ func (service ApiService) GetPerson(id int, timeout time.Duration) (Person, erro
 	return person, nil
 }
 
-func (service ApiService) IncrementBooksRead(id int, timeout time.Duration) error {
+func (service ApiService) IncrementBooksRead(id int) error {
 	url := fmt.Sprintf("http://%v:%v/%v/%v", service.ipAddr, service.port, incrementBooksReadEndpoint, id)
-	client := getHttpClientWithTimeout(timeout)
-	resp, err := client.Post(url, textContentType, nil)
+	resp, err := http.Post(url, textContentType, nil)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred making the request to increment the books read of person with ID '%v'", id)
 	}
@@ -134,10 +131,4 @@ func (service ApiService) IncrementBooksRead(id int, timeout time.Duration) erro
 		return stacktrace.NewError("Incrementing the books read of person with ID '%v' returned non-OK status code %v", id, resp.StatusCode)
 	}
 	return nil
-}
-
-func getHttpClientWithTimeout(timeout time.Duration) *http.Client {
-	return &http.Client{
-		Timeout:       timeout,
-	}
 }
