@@ -11,9 +11,13 @@ type serviceIdSet struct {
 	elems map[services.ServiceID]bool
 }
 
-func newServiceIdSet() *serviceIdSet {
+func newServiceIdSet(serviceIds ...services.ServiceID) *serviceIdSet {
+	elems := map[services.ServiceID]bool{}
+	for _, serviceId := range serviceIds {
+		elems[serviceId] = true
+	}
 	return &serviceIdSet{
-		elems: map[services.ServiceID]bool{},
+		elems: elems,
 	}
 }
 
