@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 const (
@@ -20,10 +21,12 @@ const (
 	healthyValue       = "healthy"
 
 	textContentType = "text/plain"
-	keyEndpoint = "key"
 
 	personEndpoint = "person"
 	incrementBooksReadEndpoint = "incrementBooksRead"
+
+	// How long to wait before timing out HTTP requests
+	timeoutSeconds = 3 * time.Second
 )
 
 type Person struct {
@@ -80,12 +83,13 @@ func (service ApiService) IsAvailable() bool {
 //                         API service-specific methods
 // ===========================================================================================
 func (service ApiService) getPersonUrlForId(id int) string {
-	return fmt.Sprintf("http://%v:%v/person/%v", service.ipAddr, service.port, id)
+	return fmt.Sprintf("http://%v:%v/%v/%v", service.ipAddr, service.port, personEndpoint, id)
 }
 
-func (service ApiService) AddPerson(id int) error {
+func (service ApiService) AddPerson(id int, timeout time.Duration) error {
 	url := service.getPersonUrlForId(id)
-	resp, err := http.Post(url, textContentType, nil)
+	client := getHttpClientWithTimeout(timeout)
+	resp, err := client.Post(url, textContentType, nil)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred making the request to add person with ID '%v'", id)
 	}
@@ -95,9 +99,10 @@ func (service ApiService) AddPerson(id int) error {
 	return nil
 }
 
-func (service ApiService) GetPerson(id int) (Person, error) {
+func (service ApiService) GetPerson(id int, timeout time.Duration) (Person, error) {
 	url := service.getPersonUrlForId(id)
-	resp, err := http.Get(url)
+	client := getHttpClientWithTimeout(timeout)
+	resp, err := client.Get(url)
 	if err != nil {
 		return Person{}, stacktrace.Propagate(err, "An error occurred making the request to get person with ID '%v'", id)
 	}
@@ -118,9 +123,10 @@ func (service ApiService) GetPerson(id int) (Person, error) {
 	return person, nil
 }
 
-func (service ApiService) IncrementBooksRead(id int) error {
+func (service ApiService) IncrementBooksRead(id int, timeout time.Duration) error {
 	url := fmt.Sprintf("http://%v:%v/%v/%v", service.ipAddr, service.port, incrementBooksReadEndpoint, id)
-	resp, err := http.Post(url, textContentType, nil)
+	client := getHttpClientWithTimeout(timeout)
+	resp, err := client.Post(url, textContentType, nil)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred making the request to increment the books read of person with ID '%v'", id)
 	}
@@ -128,4 +134,10 @@ func (service ApiService) IncrementBooksRead(id int) error {
 		return stacktrace.NewError("Incrementing the books read of person with ID '%v' returned non-OK status code %v", id, resp.StatusCode)
 	}
 	return nil
+}
+
+func getHttpClientWithTimeout(timeout time.Duration) *http.Client {
+	return &http.Client{
+		Timeout:       timeout,
+	}
 }

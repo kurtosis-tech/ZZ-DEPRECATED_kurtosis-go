@@ -20,8 +20,6 @@ const (
 	apiPartitionId networks.PartitionID = "api"
 	datastorePartitionId networks.PartitionID = "datastore"
 
-	gaiaPartitionId = "we-are-all-one"
-
 	datastoreServiceId services.ServiceID = "datastore"
 	apiServiceId services.ServiceID = "api"
 
@@ -64,10 +62,10 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 	}
 
 	apiSvc := uncastedApiSvc.(*api.ApiService)
-	if err := apiSvc.AddPerson(testPersonId); err != nil {
+	if err := apiSvc.AddPerson(testPersonId, 5 * time.Second); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the test person in preparation for the test")
 	}
-	if err := apiSvc.IncrementBooksRead(testPersonId); err != nil {
+	if err := apiSvc.IncrementBooksRead(testPersonId, 5 * time.Second); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred test person's books read in preparation for the test")
 	}
 
@@ -79,27 +77,20 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 	// Go doesn't have generics so we have to do this cast first
 	castedNetwork := network.(*networks.NetworkContext)
 
+	blockedConnRepartitioner, err := getTwoPartitionsRepartitioner(castedNetwork, true)
+	if err != nil {
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the 2-partition repartitioner with blocked connection"))
+	}
 
-	repartitioner, err := castedNetwork.GetRepartitionerBuilder(
-			false,
-		).WithPartition(
-			apiPartitionId,
-			apiServiceId,
-		).WithPartition(
-			datastorePartitionId,
-			datastoreServiceId,
-		).WithPartitionConnection(
-			apiPartitionId,
-			datastorePartitionId,
-			true,
-		).Build()
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred building the repartitioner block access between API <-> datastore"))
 	}
 
-	if err := castedNetwork.RepartitionNetwork(repartitioner); err != nil {
+	logrus.Info("Partitioning API and datastore services off from each other...")
+	if err := castedNetwork.RepartitionNetwork(blockedConnRepartitioner); err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred repartitioning the network to block access between API <-> datastore"))
 	}
+	logrus.Info("Repartition complete")
 
 	uncastedApiService, err := castedNetwork.GetService(apiServiceId)
 	if err != nil {
@@ -107,12 +98,40 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 	}
 	apiService := uncastedApiService.(*api.ApiService)	// Necessary because Go doesn't have generics
 
-	if err := apiService.IncrementBooksRead(testPersonId); err == nil {
+	// Use a short timeout because we expect a partition
+	logrus.Info("Incrementing books read while partition is in place, to verify no comms are possible...")
+	if err := apiService.IncrementBooksRead(testPersonId, 2 * time.Second); err == nil {
 		testCtx.Fatal(stacktrace.NewError("Expected the book increment call to fail due to the network " +
 			"partition between API and datastore services, but no error was thrown"))
 	} else {
 		logrus.Infof("Incrementing books read threw the following error as expected due to network partition: %v", err)
 	}
+
+	openConnRepartitioner, err := getTwoPartitionsRepartitioner(castedNetwork, false)
+	if err != nil {
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the 2-partition repartitioner with open connection"))
+	}
+
+	logrus.Info("Launching goroutine which will heal the partition in 2 seconds...")
+	go func() {
+		time.Sleep(2 * time.Second)
+		if err := castedNetwork.RepartitionNetwork(openConnRepartitioner); err != nil {
+			testCtx.Fatal(stacktrace.Propagate(err, "An error occurred repartitiong the network to open the connection"))
+		}
+		logrus.Info("Partition healed successfully")
+	}()
+	logrus.Info("Goroutine launched")
+
+	logrus.Info("Making another call to increment books read, where the partition will heal in the middle of the call...")
+	// Use infinite timeout because we expect the partition healing to fix the issue
+	if err := apiService.IncrementBooksRead(testPersonId, 0 * time.Second); err != nil {
+		testCtx.Fatal(stacktrace.Propagate(
+			err,
+			"An error occurred incrementing the number of books read, even though the partition should have been " +
+				"healed by the goroutine",
+		))
+	}
+	logrus.Info("Successfully incremented books read, indicating that the partition has healed successfully!")
 }
 
 
@@ -128,6 +147,34 @@ func (test NetworkPartitionTest) GetExecutionTimeout() time.Duration {
 
 func (test NetworkPartitionTest) GetSetupTeardownBuffer() time.Duration {
 	return 60 * time.Second
+}
+
+/*
+Creates a repartitioner that will partition the network between the API & datastore services, with the connection between them configurable
+ */
+func getTwoPartitionsRepartitioner(
+		networkCtx *networks.NetworkContext,
+		isConnectionBlocked bool) (*networks.Repartitioner, error){
+	repartitioner, err := networkCtx.GetRepartitionerBuilder(
+			false,
+		).WithPartition(
+			apiPartitionId,
+			apiServiceId,
+		).WithPartition(
+			datastorePartitionId,
+			datastoreServiceId,
+		).WithPartitionConnection(
+			apiPartitionId,
+			datastorePartitionId,
+			isConnectionBlocked,
+		).Build()
+	if err != nil {
+		return nil, stacktrace.Propagate(
+			err,
+			"An error occurred creating a two-partition repartitioner with isConnectionBlocked = %v",
+			isConnectionBlocked)
+	}
+	return repartitioner, nil
 }
 
 
