@@ -89,7 +89,7 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 	logrus.Info("Incrementing books read via API 1 while partition is in place, to verify no comms are possible...")
 	uncastedApi1Service, err := castedNetwork.GetService(api1ServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the API service interface"))
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the API 1 service interface"))
 	}
 	api1Service := uncastedApi1Service.(*api.ApiService) // Necessary because Go doesn't have generics
 	if err := api1Service.IncrementBooksRead(testPersonId); err == nil {
