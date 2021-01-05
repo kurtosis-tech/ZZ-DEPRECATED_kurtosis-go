@@ -7,13 +7,11 @@ package kurtosis_service
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/palantir/stacktrace"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/sirupsen/logrus"
 	"net/http"
-	"time"
 )
 
 const (
@@ -165,11 +163,9 @@ func (service DefaultKurtosisService) RegisterTestExecution(testTimeoutSeconds i
 // ================================= Private helper function ============================================
 func getConstantBackoffJsonRpcClient(ipAddr string, retryDurationSeconds int) *jsonrpc2.Client {
 	kurtosisUrl := fmt.Sprintf("http://%v:%v", ipAddr, kurtosisApiPort)
-	retryingClient := retryablehttp.NewClient()
-	retryingClient.RetryMax = retryDurationSeconds
-	retryingClient.Logger  = nil	// The output of this is distracting and not useful
-	retryingClient.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
-		return time.Second
-	}
-	return jsonrpc2.NewCustomHTTPClient(kurtosisUrl, retryingClient.StandardClient())
+
+	// We intentionally don't use a retrying client because if an error occurs on the Kurtosis API, a
+	//  retrying client would silently retry. This can lead to distracting errors like "cannot add
+	//  service ID X; it already exists!" when the real problem was with the first call to add the service.
+	return jsonrpc2.NewCustomHTTPClient(kurtosisUrl, &http.Client{})
 }
