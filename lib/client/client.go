@@ -6,6 +6,8 @@
 package client
 
 import (
+	"crypto"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
@@ -16,6 +18,10 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	// This is a special type of import that includes the correct hashing algorithm that we use
+	// If we don't have the "_" in front, Goland will complain it's unused
+	_ "golang.org/x/crypto/sha3"
 )
 
 const (
@@ -25,6 +31,8 @@ const (
 	// NOTE: right now this is hardcoded in the initializer as part of the contract between Kurtosis & a test suite image -
 	//  all test suite images MUST have this path available for mounting
 	suiteExecutionVolumeMountDirpath = "/suite-execution"
+
+	hashFunction = crypto.SHA3_256
 )
 
 func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativeDirpath string, testName string, kurtosisApiIp string) int {
@@ -65,6 +73,8 @@ func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativ
 }
 
 // =========================================== Private helper functions ========================================
+// TODO Write tests for this by splitting it into metadata-generating function and writing function
+//  then testing the metadata-generating
 func printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) error {
 	logrus.Debugf("Printing test suite metadata to file '%v'...", filepath)
 	fp, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -73,15 +83,32 @@ func printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) er
 	}
 	defer fp.Close()
 
-	testMetadata := map[string]TestMetadata{}
+	allTestMetadata := map[string]TestMetadata{}
 	for testName, test := range testSuite.GetTests() {
 		testConfig := test.GetTestConfiguration()
-		testMetadata[testName] = TestMetadata{
-			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
+
+		// "Set" of used artifact URLs
+		usedArtifactUrls := map[string]bool{}
+		for _, artifactUrl := range testConfig.FilesArtifactUrls {
+			usedArtifactUrls[artifactUrl] = true
 		}
+
+		artifactUrlsByHash := map[string]string{}
+		for artifactUrl, _ := range usedArtifactUrls {
+			hexEncodedHash, err := hashArtifactUrl(artifactUrl)
+			if err != nil {
+				return stacktrace.Propagate(err, "An error occurred hashing artifact URL '%v'", artifactUrl)
+			}
+			artifactUrlsByHash[hexEncodedHash] = artifactUrl
+		}
+
+		testMetadata := NewTestMetadata(
+			testConfig.IsPartitioningEnabled,
+			artifactUrlsByHash)
+		allTestMetadata[testName] = *testMetadata
 	}
 	suiteMetadata := TestSuiteMetadata{
-		TestMetadata:        testMetadata,
+		TestMetadata:     allTestMetadata,
 		NetworkWidthBits: testSuite.GetNetworkWidthBits(),
 	}
 
@@ -95,6 +122,16 @@ func printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) er
 	}
 
 	return nil
+}
+
+func hashArtifactUrl(artifactUrl string) (hexStr string, resultErr error) {
+	hasher := hashFunction.New()
+	artifactUrlBytes := []byte(artifactUrl)
+	if _, err := hasher.Write(artifactUrlBytes); err != nil {
+		return "", stacktrace.Propagate(err, "An error occurred writing the artifact URL to the hash function")
+	}
+	hexEncodedHash := hex.EncodeToString(hasher.Sum(nil))
+	return hexEncodedHash, nil
 }
 
 /*

@@ -5,6 +5,9 @@
 
 package testsuite
 
+// The ID of a .tar.gz artifact containing files that will be used by one or more services
+type FilesArtifactID string
+
 /*
 Holds configuration values that, if set, give the test the ability to do special things
  */
@@ -15,4 +18,8 @@ type TestConfiguration struct {
 	//  need to update their iptables for the new node. The slowdown will scale with the
 	//  number of services in your network.
 	IsPartitioningEnabled bool
+
+	// A mapping of ID -> URL where the artifact containing files should be downloaded from
+	// The ID is the ID that service initializers will use when requesting to use the artifact
+	FilesArtifactUrls map[FilesArtifactID]string
 }
