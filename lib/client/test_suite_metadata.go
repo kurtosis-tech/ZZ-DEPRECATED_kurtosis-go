@@ -19,7 +19,7 @@ type TestMetadata struct {
 	// The map is in the form of ID -> URL, where the ID is:
 	//	1. The ID that the initializer should associate the artifact with after downloading it and
 	//	2. The ID that the client will use to retrieve the artifact when a test requests it
-	UsedArtifacts map[string]string `json:"requestedFilesArtifacts"`
+	UsedArtifacts map[string]string `json:"usedArtifacts"`
 }
 
 func NewTestMetadata(isPartitioningEnabled bool, usedArtifacts map[string]string) *TestMetadata {
