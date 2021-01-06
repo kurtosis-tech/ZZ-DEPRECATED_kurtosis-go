@@ -21,7 +21,7 @@ type AddServiceArgs struct {
 
 	// Artifacts containing compressed files which should be unzipped and then
 	//  mounted at the given location for the service
-	FilesArtifactMounts map[string]string	`json:"filesArtifactMounts"`
+	FilesArtifactMountDirpaths map[string]string `json:"filesArtifactMountDirpaths"`
 }
 
 type AddServiceResponse struct {
