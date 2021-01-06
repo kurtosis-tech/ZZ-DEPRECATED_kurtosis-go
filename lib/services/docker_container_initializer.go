@@ -46,6 +46,7 @@ type DockerContainerInitializer interface {
 			A "set" of user-defined key strings identifying the files that the service will need, which is how files will be
 				identified in `InitializeMountedFiles` and `GetStartCommand`
 	*/
+	// TODO Rename "getFilesToGenerate"
 	GetFilesToMount() map[string]bool
 
 	/*
@@ -56,6 +57,7 @@ type DockerContainerInitializer interface {
 			mountedFiles: A mapping of developer_key -> file_pointer, with developer_key corresponding to the keys declares in
 				`GetFilesToMount`
 	*/
+	// TODO Rename "initializeFilesToGenerate"
 	InitializeMountedFiles(mountedFiles map[string]*os.File) error
 
 	/*
