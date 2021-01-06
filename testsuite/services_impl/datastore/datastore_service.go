@@ -7,6 +7,7 @@ package datastore
 
 import (
 	"fmt"
+	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -23,17 +24,22 @@ const (
 )
 
 type DatastoreService struct {
+	serviceId services.ServiceID
 	ipAddr string
 	port int
 }
 
-func NewDatastoreService(ipAddr string, port int) *DatastoreService {
-	return &DatastoreService{ipAddr: ipAddr, port: port}
+func NewDatastoreService(serviceId services.ServiceID, ipAddr string, port int) *DatastoreService {
+	return &DatastoreService{serviceId: serviceId, ipAddr: ipAddr, port: port}
 }
 
 // ===========================================================================================
 //                              Service interface methods
 // ===========================================================================================
+func (service DatastoreService) GetServiceID() services.ServiceID {
+	return service.serviceId
+}
+
 func (service DatastoreService) GetIPAddress() string {
 	return service.ipAddr
 }

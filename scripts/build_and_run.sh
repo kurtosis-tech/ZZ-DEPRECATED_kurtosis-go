@@ -79,9 +79,8 @@ if "${do_build}"; then
     if ! go test "${root_dirpath}/..."; then
         echo "Tests failed!"
         exit 1
-    else
-        echo "Tests succeeded"
     fi
+    echo "Tests succeeded"
 
     echo "Building ${SUITE_IMAGE} Docker image..."
     docker build -t "${SUITE_IMAGE}:${docker_tag}" -f "${root_dirpath}/testsuite/Dockerfile" "${root_dirpath}"

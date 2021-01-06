@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package mock_service
+package services
 
 const (
 	MockServicePort = 1000
@@ -11,6 +11,8 @@ const (
 
 // Mock service, for testing purposes only
 type MockService struct {
+	serviceId ServiceID
+
 	ipAddr string
 
 	// For testing, the service will report as available on the Nth call to IsAvailable
@@ -20,14 +22,18 @@ type MockService struct {
 	callsToIsAvailable int
 }
 
-func NewMockService(ipAddr string, becomesAvailableOnCheck int) *MockService {
+func NewMockService(serviceId ServiceID, ipAddr string, becomesAvailableOnCheck int) *MockService {
 	return &MockService{
+		serviceId: serviceId,
 		ipAddr:                  ipAddr,
 		becomesAvailableOnCheck: becomesAvailableOnCheck,
 		callsToIsAvailable:      0,
 	}
 }
 
+func (m MockService) GetServiceID() ServiceID {
+	return m.serviceId
+}
 
 func (m MockService) GetIPAddress() string {
 	return m.ipAddr

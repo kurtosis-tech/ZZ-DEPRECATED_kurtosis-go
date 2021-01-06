@@ -1,5 +1,8 @@
 ## TBD
 * Add a `.dockerignore` file, and a check in `build_and_run.sh` to ensure it exists
+* Add the `Service.GetServiceID` method
+* Renamed `DockerContainerInitializer.GetServiceFromIp` -> `GetService`, and passed in the `ServiceID` as a new first argument
+    * All `Service` implementations should have their constructors modified to store this new argument
 
 ## 1.4.1
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`

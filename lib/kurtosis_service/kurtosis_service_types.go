@@ -6,8 +6,10 @@
 package kurtosis_service
 
 type AddServiceArgs struct {
-	IPPlaceholder	      string 			`json:"ipPlaceholder"`
-	ImageName             string            `json:"imageName"`
+	ServiceID  		string 	`json:"serviceId"`
+	PartitionID 	string 	`json:"partitionId"`
+	IPPlaceholder	string 	`json:"ipPlaceholder"`
+	ImageName       string  `json:"imageName"`
 
 	// This is in Docker port specification syntax, e.g. "80" (default TCP) or "80/udp"
 	// It might even support ranges (e.g. "90:100/tcp"), though this is untested as of 2020-12-08
@@ -15,16 +17,15 @@ type AddServiceArgs struct {
 
 	StartCmd              []string          `json:"startCommand"`
 	DockerEnvironmentVars map[string]string `json:"dockerEnvironmentVars"`
-	TestVolumeMountFilepath string			`json:"testVolumeMountFilepath"`
+	TestVolumeMountDirpath string			`json:"testVolumeMountDirpath"`
 }
 
 type AddServiceResponse struct {
-	ContainerID string 	`json:"containerId"`
 	IPAddress string 	`json:"ipAddress"`
 }
 
 type RemoveServiceArgs struct {
-	ContainerID string	`json:"containerId"`
+	ServiceID string	`json:"serviceId"`
 	ContainerStopTimeoutSeconds int `json:"containerStopTimeoutSeconds"`
 }
 

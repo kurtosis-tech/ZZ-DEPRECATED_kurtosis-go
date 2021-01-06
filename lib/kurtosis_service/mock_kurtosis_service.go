@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package mock_kurtosis_service
+package kurtosis_service
 
 // =============== Mock Kurtosis service =====================
 type MockKurtosisService struct {}
@@ -13,16 +13,17 @@ func NewMockKurtosisService() *MockKurtosisService {
 }
 
 func (m MockKurtosisService) AddService(
+		serviceId string,
 		dockerImage string,
 		usedPorts map[string]bool,
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, containerId string, err error) {
-	return "1.2.3.4", "abcd1234", nil
+		testVolumeMountLocation string) (ipAddr string, err error) {
+	return "1.2.3.4", nil
 }
 
-func (m MockKurtosisService) RemoveService(containerId string, containerStopTimeoutSeconds int) error {
+func (m MockKurtosisService) RemoveService(serviceId string, containerStopTimeoutSeconds int) error {
 	return nil
 }
 
