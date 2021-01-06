@@ -5,6 +5,8 @@
 
 package kurtosis_service
 
+import "github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
+
 // =============== Mock Kurtosis service =====================
 type MockKurtosisService struct {}
 
@@ -14,6 +16,7 @@ func NewMockKurtosisService() *MockKurtosisService {
 
 func (m MockKurtosisService) AddService(
 		serviceId string,
+		partitionId string,
 		dockerImage string,
 		usedPorts map[string]bool,
 		ipPlaceholder string,
@@ -24,6 +27,10 @@ func (m MockKurtosisService) AddService(
 }
 
 func (m MockKurtosisService) RemoveService(serviceId string, containerStopTimeoutSeconds int) error {
+	return nil
+}
+
+func (m MockKurtosisService) Repartition(partitionServices map[string]map[string]bool, partitionConnections map[string]map[string]method_types.SerializablePartitionConnection, defaultConnection method_types.SerializablePartitionConnection) error {
 	return nil
 }
 

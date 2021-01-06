@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package kurtosis_service
+package method_types
 
 type AddServiceArgs struct {
 	ServiceID  		string 	`json:"serviceId"`
@@ -22,14 +22,5 @@ type AddServiceArgs struct {
 
 type AddServiceResponse struct {
 	IPAddress string 	`json:"ipAddress"`
-}
-
-type RemoveServiceArgs struct {
-	ServiceID string	`json:"serviceId"`
-	ContainerStopTimeoutSeconds int `json:"containerStopTimeoutSeconds"`
-}
-
-type RegisterTestExecutionArgs struct {
-	TestTimeoutSeconds int
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 const (
@@ -20,10 +21,12 @@ const (
 	healthyValue       = "healthy"
 
 	textContentType = "text/plain"
-	keyEndpoint = "key"
 
 	personEndpoint = "person"
 	incrementBooksReadEndpoint = "incrementBooksRead"
+
+	// How long to wait before timing out HTTP requests
+	timeoutSeconds = 3 * time.Second
 )
 
 type Person struct {
@@ -80,7 +83,7 @@ func (service ApiService) IsAvailable() bool {
 //                         API service-specific methods
 // ===========================================================================================
 func (service ApiService) getPersonUrlForId(id int) string {
-	return fmt.Sprintf("http://%v:%v/person/%v", service.ipAddr, service.port, id)
+	return fmt.Sprintf("http://%v:%v/%v/%v", service.ipAddr, service.port, personEndpoint, id)
 }
 
 func (service ApiService) AddPerson(id int) error {

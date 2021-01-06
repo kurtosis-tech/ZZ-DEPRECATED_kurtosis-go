@@ -83,6 +83,11 @@ func (test BasicDatastoreTest) Run(network networks.Network, testCtx testsuite.T
 		stacktrace.NewError("Returned value '%v' != test value '%v'", value, testValue))
 }
 
+
+func (test *BasicDatastoreTest) GetTestConfiguration() testsuite.TestConfiguration {
+	return testsuite.TestConfiguration{}
+}
+
 func (test BasicDatastoreTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }

@@ -9,18 +9,27 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
+	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 const (
 	ipPlaceholder = "KURTOSISSERVICEIP"
+
+	// This will alwyas resolve to the default partition ID (regardless of whether such a partition exists in the network,
+	//  or it was repartitioned away)
+	defaultPartitionId PartitionID = ""
 )
 
 type NetworkContext struct {
+	// Mutex, to make this thread-safe
+	mutex *sync.Mutex
+
 	kurtosisService kurtosis_service.KurtosisService
 
 	// The dirpath ON THE SUITE CONTAINER where the suite execution volume is mounted
@@ -49,6 +58,7 @@ func NewNetworkContext(
 		suiteExecutionVolumeDirpath string,
 		servicesRelativeDirpath string) *NetworkContext {
 	return &NetworkContext{
+		mutex: &sync.Mutex{},
 		kurtosisService: kurtosisService,
 		suiteExecutionVolumeDirpath: suiteExecutionVolumeDirpath,
 		servicesRelativeDirpath: servicesRelativeDirpath,
@@ -58,23 +68,60 @@ func NewNetworkContext(
 
 // Gets the number of nodes in the network
 func (networkCtx *NetworkContext) GetSize() int {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
 	return len(networkCtx.services)
 }
 
 /*
-Adds a service to the network with the given service ID, created using the given configuration ID.
+Adds a service to the network in the default partition with the given service ID, created using the given configuration ID.
+
+NOTE: If the network has been repartitioned and the default partition hasn't been preserved, you should use
+	AddServiceToPartition instead.
 
 Args:
 	serviceId: The service ID that will be used to identify this node in the network.
 	initializer: The Docker container initializer that contains the logic for starting the service
 
 Return:
-	services.Service: The new service
-	services.AvailabilityChecker: An availability checker which can be used to wait until the service is available, if desired
+	service: The new service
 */
 func (networkCtx *NetworkContext) AddService(
 		serviceId services.ServiceID,
 		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
+	// Mutex locked directly inside (we can't lock the mutex here because Go mutexes aren't reentrant)
+	service, availabilityChecker, err := networkCtx.AddServiceToPartition(
+		serviceId,
+		defaultPartitionId,
+		initializer)
+	if err != nil {
+		return nil, nil, stacktrace.Propagate(err, "An error occurred adding the service to the network in the default partition")
+	}
+	return service, availabilityChecker, nil
+}
+
+/*
+Adds a service to the network with the given service ID, created using the given configuration ID.
+
+NOTE: If the network hasn't been repartitioned yet, the PartitionID should be an empty string to add to the default
+	partition.
+
+Args:
+	serviceId: The service ID that will be used to identify this node in the network.
+	partitionId: The partition ID to add the service to
+	initializer: The Docker container initializer that contains the logic for starting the service
+
+Return:
+	service.Service: The new service
+*/
+func (networkCtx *NetworkContext) AddServiceToPartition(
+		serviceId services.ServiceID,
+		partitionId PartitionID,
+		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
 	if _, exists := networkCtx.services[serviceId]; exists {
 		return nil, nil, stacktrace.NewError("Service ID %s already exists in the network", serviceId)
 	}
@@ -131,6 +178,7 @@ func (networkCtx *NetworkContext) AddService(
 	dockerImage := initializer.GetDockerImage()
 	ipAddr, err := networkCtx.kurtosisService.AddService(
 		string(serviceId),
+		string(partitionId),
 		dockerImage,
 		initializer.GetUsedPorts(),
 		ipPlaceholder,
@@ -157,6 +205,9 @@ func (networkCtx *NetworkContext) AddService(
 Gets the node information for the service with the given service ID.
 */
 func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (services.Service, error) {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
 	service, found := networkCtx.services[serviceId]
 	if !found {
 		return nil, stacktrace.NewError("No service with ID '%v' exists in the network", serviceId)
@@ -169,6 +220,9 @@ func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (serv
 Stops the container with the given service ID, and removes it from the network.
 */
 func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, containerStopTimeoutSeconds int) error {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
 	_, found := networkCtx.services[serviceId]
 	if !found {
 		return stacktrace.NewError("No service with ID %v found", serviceId)
@@ -186,4 +240,64 @@ func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, co
 	}
 	logrus.Debugf("Successfully removed service ID %v", serviceId)
 	return nil
+}
+
+/*
+Constructs a new repartitioner builder in preparation for a repartition.
+
+Args:
+	isDefaultPartitionConnectionBlocked: If true, when the connection details between two partitions aren't specified
+		during a repartition then traffic between them will be blocked by default
+ */
+func (networkCtx NetworkContext) GetRepartitionerBuilder(isDefaultPartitionConnectionBlocked bool) *RepartitionerBuilder {
+	// This function doesn't need a mutex lock because (as of 2020-12-28) it doesn't touch internal state whatsoever
+	return newRepartitionerBuilder(isDefaultPartitionConnectionBlocked)
+}
+
+/*
+Repartitions the network using the given repartitioner. A repartitioner builder can be constructed using the
+	NewRepartitionerBuilder method of this network context object.
+ */
+func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitioner) error {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
+	partitionServices := map[string]map[string]bool{}
+	for partitionId, serviceIdSet := range repartitioner.partitionServices {
+		serviceIdStrPseudoSet := map[string]bool{}
+		for _, serviceId := range serviceIdSet.getElems() {
+			serviceIdStr := string(serviceId)
+			serviceIdStrPseudoSet[serviceIdStr] = true
+		}
+		partitionIdStr := string(partitionId)
+		partitionServices[partitionIdStr] = serviceIdStrPseudoSet
+	}
+
+	serializablePartConns := map[string]map[string]method_types.SerializablePartitionConnection{}
+	for partitionAId, partitionAConns := range repartitioner.partitionConnections {
+		serializablePartAConns := map[string]method_types.SerializablePartitionConnection{}
+		for partitionBId, unserializableConn := range partitionAConns {
+			partitionBIdStr := string(partitionBId)
+			serializableConn := makePartConnSerializable(unserializableConn)
+			serializablePartAConns[partitionBIdStr] = serializableConn
+		}
+		partitionAIdStr := string(partitionAId)
+		serializablePartConns[partitionAIdStr] = serializablePartAConns
+	}
+
+	serializableDefaultConn := makePartConnSerializable(repartitioner.defaultConnection)
+
+	if err := networkCtx.kurtosisService.Repartition(partitionServices, serializablePartConns, serializableDefaultConn); err != nil {
+		return stacktrace.Propagate(err, "An error occurred repartitioning the test network")
+	}
+	return nil
+}
+
+// ============================================================================================
+//                                    Private helper methods
+// ============================================================================================
+func makePartConnSerializable(connection PartitionConnection) method_types.SerializablePartitionConnection {
+	return method_types.SerializablePartitionConnection{
+		IsBlocked: connection.IsBlocked,
+	}
 }
