@@ -7,6 +7,7 @@
     * Added a `GetTestConfiguration` function to the `Test` interface, which allows tests to declare certain types of functionality (like network partitioning)
     * Added `NetworkPartitionTest` to test the new network partitioning functionality
     * Made `NetworkContext` thread-safe
+* Add tests for `RepartitionerBuilder` actions
 
 ## 1.4.1
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`

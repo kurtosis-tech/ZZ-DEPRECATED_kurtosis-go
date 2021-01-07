@@ -7,7 +7,6 @@ package networks
 
 import (
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
-	"github.com/palantir/stacktrace"
 )
 
 type repartitionerMutator interface {
@@ -15,7 +14,7 @@ type repartitionerMutator interface {
 }
 
 // ======================================================================================================
-//                                         Add Partition
+//                                         Add partition
 // ======================================================================================================
 type addPartitionAction struct {
 	partition PartitionID
@@ -24,10 +23,7 @@ type addPartitionAction struct {
 
 func (a addPartitionAction) mutate(repartitioner *Repartitioner) error {
 	newPartition := a.partition
-	_, found := repartitioner.partitionServices[newPartition]
-	if found {
-		return stacktrace.NewError("Partition '%v' already declared",newPartition)
-	}
+
 	newPartitionServices := newServiceIdSet()
 	for _, id := range a.services {
 		newPartitionServices.add(id)
@@ -37,7 +33,7 @@ func (a addPartitionAction) mutate(repartitioner *Repartitioner) error {
 }
 
 // ======================================================================================================
-//                                         Add Partition
+//                                     Add partition connection
 // ======================================================================================================
 type addPartitionConnectionAction struct {
 	partitionA PartitionID
@@ -49,18 +45,6 @@ func (a addPartitionConnectionAction) mutate(repartitioner *Repartitioner) error
 	partitionA := a.partitionA
 	partitionB := a.partitionB
 	connectionInfo := a.connection
-
-	// The API service will already check the forward & reverse, so we can limit our error-checking here to ensuring the user
-	//  doesn't overwrite something they've already defined
-	partitionAConns, foundA := repartitioner.partitionConnections[partitionA]
-	if foundA {
-		if _, foundB := partitionAConns[partitionB]; foundB {
-			return stacktrace.NewError(
-				"Partition connection '%v' <-> '%v' is already defined",
-				partitionA,
-				partitionB)
-		}
-	}
 
 	partitionAConns, found := repartitioner.partitionConnections[partitionA]
 	if !found {
