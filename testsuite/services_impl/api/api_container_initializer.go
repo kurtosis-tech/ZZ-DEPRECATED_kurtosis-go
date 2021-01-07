@@ -79,6 +79,10 @@ func (initializer ApiContainerInitializer) InitializeMountedFiles(mountedFiles m
 	return nil
 }
 
+func (initializer ApiContainerInitializer) GetFilesArtifactMountpoints() map[services.FilesArtifactID]string {
+	return map[services.FilesArtifactID]string{}
+}
+
 func (initializer ApiContainerInitializer) GetTestVolumeMountpoint() string {
 	return testVolumeMountpoint
 }

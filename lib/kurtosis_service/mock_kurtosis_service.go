@@ -22,7 +22,8 @@ func (m MockKurtosisService) AddService(
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, err error) {
+		testVolumeMountLocation string,
+		filesArtifactMountDirpaths map[string]string) (ipAddr string, err error) {
 	return "1.2.3.4", nil
 }
 

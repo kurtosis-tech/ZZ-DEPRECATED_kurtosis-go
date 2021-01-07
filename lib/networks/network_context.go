@@ -30,6 +30,8 @@ type NetworkContext struct {
 	// Mutex, to make this thread-safe
 	mutex *sync.Mutex
 
+	filesArtifactIdToGlobalArtifactIds map[services.FilesArtifactID]string
+
 	kurtosisService kurtosis_service.KurtosisService
 
 	// The dirpath ON THE SUITE CONTAINER where the suite execution volume is mounted
@@ -52,13 +54,17 @@ Args:
 	suiteExecutionVolumeDirpath: The path ON THE TEST SUITE CONTAINER where the suite execution volume is mounted
 	servicesRelativeDirpath: The dirpath where directories for each new service will be created to store file IO, which
 		is RELATIVE to the root of the suite execution volume!
+	filesArtifactIdToGlobalArtifactId: Lookup table mapping files artifact IDs to global artifact IDs, for use when
+		instantiating new services
 */
 func NewNetworkContext(
 		kurtosisService kurtosis_service.KurtosisService,
 		suiteExecutionVolumeDirpath string,
-		servicesRelativeDirpath string) *NetworkContext {
+		servicesRelativeDirpath string,
+		filesArtifactIdToGlobalArtifactId map[services.FilesArtifactID]string) *NetworkContext {
 	return &NetworkContext{
 		mutex: &sync.Mutex{},
+		filesArtifactIdToGlobalArtifactIds: filesArtifactIdToGlobalArtifactId,
 		kurtosisService: kurtosisService,
 		suiteExecutionVolumeDirpath: suiteExecutionVolumeDirpath,
 		servicesRelativeDirpath: servicesRelativeDirpath,
@@ -167,6 +173,21 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 	logrus.Tracef("Successfully initialized files needed for service")
 
+	logrus.Tracef("Creating files artifact mount dirpaths map...")
+	filesArtifactMountDirpaths := map[string]string{}
+	for filesArtifactId, mountDirpath := range initializer.GetFilesArtifactMountpoints() {
+		globalArtifactId, found := networkCtx.filesArtifactIdToGlobalArtifactIds[filesArtifactId]
+		if !found {
+			return nil, nil, stacktrace.Propagate(
+				err,
+				"Service requested files artifact with ID '%v' to be mounted, but no" +
+					"artifact with that ID was declared as needed in the test configuration",
+				filesArtifactId)
+		}
+		filesArtifactMountDirpaths[globalArtifactId] = mountDirpath
+	}
+	logrus.Tracef("Successfully created files artifact mount dirpaths map")
+
 	logrus.Tracef("Creating start command for service...")
 	startCmdArgs, err := initializer.GetStartCommand(mountFilepaths, ipPlaceholder)
 	if err != nil {
@@ -184,7 +205,8 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		ipPlaceholder,
 		startCmdArgs,
 		make(map[string]string),
-		initializer.GetTestVolumeMountpoint())
+		initializer.GetTestVolumeMountpoint(),
+		filesArtifactMountDirpaths)
 	if err != nil {
 		return nil, nil, stacktrace.Propagate(err, "Could not add service for Docker image %v", dockerImage)
 	}

@@ -21,6 +21,9 @@ const (
 	nginxStaticFilesDirpath = "/static"
 )
 
+/*
+An Nginx service that serves files mounted in the /static directory
+ */
 type NginxStaticService struct {
 	serviceId services.ServiceID
 	ipAddr    string

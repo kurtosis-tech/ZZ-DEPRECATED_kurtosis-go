@@ -21,7 +21,7 @@ func TestDisallowingSameIds(t *testing.T) {
 		t.Fatalf("An error occurred creating the temporary directory to represent the suite execution volume: %v", err)
 	}
 
-	networkCtx := NewNetworkContext(kurtosisService, tempDirpath, "/")
+	networkCtx := NewNetworkContext(kurtosisService, tempDirpath, "/", map[services.FilesArtifactID]string{})
 	_, _, err = networkCtx.AddService(duplicatedId, services.NewMockDockerContainerInitializer())
 	if err != nil {
 		t.Fatalf("Expected first service to get added successfully but an error occurred: %v", err)

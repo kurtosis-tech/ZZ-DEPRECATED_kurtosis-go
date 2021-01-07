@@ -39,7 +39,8 @@ type KurtosisService interface {
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, err error)
+		testVolumeMountLocation string,
+		filesArtifactMountDirpaths map[string]string) (ipAddr string, err error)
 
 	RemoveService(serviceId string, containerStopTimeoutSeconds int) error
 
@@ -67,7 +68,8 @@ func (service DefaultKurtosisService) AddService(
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, err error) {
+		testVolumeMountLocation string,
+		filesArtifactMountDirpaths map[string]string) (ipAddr string, err error) {
 	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
 	defer client.Close()
 
@@ -76,14 +78,15 @@ func (service DefaultKurtosisService) AddService(
 		usedPortsList = append(usedPortsList, portSpecification)
 	}
 	args := method_types.AddServiceArgs{
-		ServiceID: serviceId,
-		PartitionID: partitionId,
+		DockerEnvironmentVars:   envVariables,
+		FilesArtifactMountDirpaths: filesArtifactMountDirpaths,
 		IPPlaceholder: ipPlaceholder,
 		ImageName:               dockerImage,
-		UsedPorts:               usedPortsList,
+		PartitionID: partitionId,
+		ServiceID: serviceId,
 		StartCmd:                startCmdArgs,
-		DockerEnvironmentVars:   envVariables,
 		TestVolumeMountDirpath: testVolumeMountLocation,
+		UsedPorts:               usedPortsList,
 	}
 	var reply method_types.AddServiceResponse
 	if err := client.Call(addServiceMethod, args, &reply); err != nil {

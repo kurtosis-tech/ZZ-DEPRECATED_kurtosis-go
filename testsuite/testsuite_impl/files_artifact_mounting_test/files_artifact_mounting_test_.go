@@ -20,7 +20,8 @@ const (
 	waitForStartupTimeBetweenPolls = 1 * time.Second
 	waitForStartupMaxRetries = 5
 
-	filesArtifactUrl = "https://kurtosis-public-access.s3.us-east-1.amazonaws.com/test-artifacts/static-fileserver-files.tgz"
+	testFilesArtifactId  services.FilesArtifactID = "test-files-artifact"
+	testFilesArtifactUrl                          = "https://kurtosis-public-access.s3.us-east-1.amazonaws.com/test-artifacts/static-fileserver-files.tgz"
 
 	// Filenames & contents for the files stored in the files artifact
 	file1Filename = "file1.txt"
@@ -30,15 +31,18 @@ const (
 	expectedFile2Contents = "file2"
 )
 
-type FilesArtifactMountingTest struct {
-}
+type FilesArtifactMountingTest struct {}
 
 func (f FilesArtifactMountingTest) GetTestConfiguration() testsuite.TestConfiguration {
-	panic("implement me")
+	return testsuite.TestConfiguration{
+		FilesArtifactUrls: map[services.FilesArtifactID]string{
+			testFilesArtifactId: testFilesArtifactUrl,
+		},
+	}
 }
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	nginxStaticInitializer := nginx_static.NewNginxStaticContainerInitializer(filesArtifactUrl)
+	nginxStaticInitializer := nginx_static.NewNginxStaticContainerInitializer(testFilesArtifactId)
 	_, availabilityChecker, err := networkCtx.AddService(fileServerServiceId, nginxStaticInitializer)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
@@ -90,9 +94,9 @@ func (f FilesArtifactMountingTest) Run(network networks.Network, testCtx testsui
 }
 
 func (f FilesArtifactMountingTest) GetExecutionTimeout() time.Duration {
-	panic("implement me")
+	return 60 * time.Second
 }
 
 func (f FilesArtifactMountingTest) GetSetupTeardownBuffer() time.Duration {
-	panic("implement me")
+	return 30 * time.Second
 }

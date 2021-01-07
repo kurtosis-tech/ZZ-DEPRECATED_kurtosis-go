@@ -11,12 +11,16 @@ import (
 	"strconv"
 )
 
+/*
+A DockerContainerInitializer to launch an NginxStaticService pre-initialized with the contents of
+	the given files artifact
+ */
 type NginxStaticContainerInitializer struct {
-	artifactUrl string
+	filesArtifactId services.FilesArtifactID
 }
 
-func NewNginxStaticContainerInitializer(artifactUrl string) *NginxStaticContainerInitializer {
-	return &NginxStaticContainerInitializer{artifactUrl: artifactUrl}
+func NewNginxStaticContainerInitializer(filesArtifactId services.FilesArtifactID) *NginxStaticContainerInitializer {
+	return &NginxStaticContainerInitializer{filesArtifactId: filesArtifactId}
 }
 
 func (s NginxStaticContainerInitializer) GetDockerImage() string {
@@ -44,6 +48,12 @@ func (s NginxStaticContainerInitializer) GetFilesToMount() map[string]bool {
 func (s NginxStaticContainerInitializer) InitializeMountedFiles(mountedFiles map[string]*os.File) error {
 	// No generated files to initialize
 	return nil
+}
+
+func (s NginxStaticContainerInitializer) GetFilesArtifactMountpoints() map[services.FilesArtifactID]string {
+	return map[services.FilesArtifactID]string{
+		s.filesArtifactId: nginxStaticFilesDirpath,
+	}
 }
 
 func (s NginxStaticContainerInitializer) GetTestVolumeMountpoint() string {

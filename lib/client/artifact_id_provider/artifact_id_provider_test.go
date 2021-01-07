@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package client
+package artifact_id_provider
 
 import (
 	"github.com/palantir/stacktrace"
@@ -11,9 +11,10 @@ import (
 	"testing"
 )
 
-func TestArtifactUrlHash(t *testing.T) {
+func TestGetArtifactId(t *testing.T) {
 	input := "https://www.google.com"
-	hexEncodedHashStr, err := hashArtifactUrl(input)
+	artifactProvider := NewDefaultArtifactIdProvider()
+	hexEncodedHashStr, err := artifactProvider.GetArtifactId(input)
 	if err != nil {
 		t.Fatal(stacktrace.Propagate(err, "Received an error when hashing artifact URL"))
 	}
