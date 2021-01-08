@@ -9,6 +9,7 @@
     * Made `NetworkContext` thread-safe
 * Add tests for `RepartitionerBuilder` actions
 * Added extra testing inside `NetworkPartitionTest` to ensure that a node that gets added to a partition receives the correct blocking
+* Remove the HTTP client retrying from the JSON RPC client, because it can obscure errors like panics in the Kurtosis API and lead to red herring errors as it replays the call when the problem was the 
 
 ## 1.4.1
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`
