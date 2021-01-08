@@ -16,7 +16,7 @@ set -euo pipefail
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
 
 # TODO TODO TESTING
-KURTOSIS_CORE_TAG="mieubrisse_kill-race-condition"
+KURTOSIS_CORE_TAG="mieubrisse_network-partitioning-mega-branch"
 KURTOSIS_DOCKERHUB_ORG="kurtosistech"
 INITIALIZER_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_initializer:${KURTOSIS_CORE_TAG}"
 API_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_api:${KURTOSIS_CORE_TAG}"
