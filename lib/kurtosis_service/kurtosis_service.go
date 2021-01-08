@@ -7,11 +7,13 @@ package kurtosis_service
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/palantir/stacktrace"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 )
 
 const (
@@ -26,6 +28,10 @@ const (
 	removeServiceMethod = kurtosisServiceStruct + ".RemoveService"
 	repartitionMethod = kurtosisServiceStruct + ".Repartition"
 	registerTestExecutionMethod = kurtosisServiceStruct + ".RegisterTestExecution"
+
+	// When registering a test execution instance, the API container might not be up so we need to retry
+	testRegistrationTimeBetweenRetries = 1 * time.Second
+	testRegistrationRetryMax = 10
 )
 
 // This interface provides tests with an API for performing administrative actions on the testnet, like
@@ -68,7 +74,7 @@ func (service DefaultKurtosisService) AddService(
 		startCmdArgs []string,
 		envVariables map[string]string,
 		testVolumeMountLocation string) (ipAddr string, err error) {
-	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
+	client := getNoRetryJsonRpcClient(service.ipAddr)
 	defer client.Close()
 
 	usedPortsList := []string{}
@@ -97,7 +103,7 @@ func (service DefaultKurtosisService) AddService(
 Stops the container with the given service ID, and removes it from the network.
 */
 func (service DefaultKurtosisService) RemoveService(serviceId string, containerStopTimeoutSeconds int) error {
-	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
+	client := getNoRetryJsonRpcClient(service.ipAddr)
 	defer client.Close()
 
 	logrus.Debugf("Removing service '%v'...", serviceId)
@@ -120,7 +126,7 @@ func (service DefaultKurtosisService) Repartition(
 		partitionServices map[string]map[string]bool,
 		partitionConnections map[string]map[string]method_types.SerializablePartitionConnection,
 		defaultConnection method_types.SerializablePartitionConnection) error {
-	client := getConstantBackoffJsonRpcClient(service.ipAddr, regularOperationRetryDurationSeconds)
+	client := getNoRetryJsonRpcClient(service.ipAddr)
 	defer client.Close()
 
 	logrus.Debugf("Repartitioning test network with the following args:")
@@ -143,7 +149,7 @@ func (service DefaultKurtosisService) Repartition(
 }
 
 func (service DefaultKurtosisService) RegisterTestExecution(testTimeoutSeconds int) error {
-	client := getConstantBackoffJsonRpcClient(service.ipAddr, registrationRetryDurationSeconds)
+	client := getRetryingJsonRpcClient(service.ipAddr, testRegistrationRetryMax, testRegistrationTimeBetweenRetries)
 	defer client.Close()
 
 	logrus.Debugf("Registering a test execution with a timeout of %v seconds...", testTimeoutSeconds)
@@ -161,11 +167,25 @@ func (service DefaultKurtosisService) RegisterTestExecution(testTimeoutSeconds i
 }
 
 // ================================= Private helper function ============================================
-func getConstantBackoffJsonRpcClient(ipAddr string, retryDurationSeconds int) *jsonrpc2.Client {
+// NOTE: This should only be used when registering the test execution! It should not be used for normal method calls
+//  because if an error occurs on the Kurtosis API, a retrying client would silently retry which can cause replay issues.
+//  This can lead to distracting errors like "cannot add service ID X; it already exists!" when the real problem was
+//  with the first call to add the service.
+func getRetryingJsonRpcClient(ipAddr string, maxNumRetries int, timeBetweenRetries time.Duration) *jsonrpc2.Client {
+	client := retryablehttp.NewClient()
+	client.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+		return timeBetweenRetries
+	}
+	client.RetryMax = maxNumRetries
+	return getJsonRpcClient(ipAddr, client.StandardClient())
+}
+
+func getNoRetryJsonRpcClient(ipAddr string) *jsonrpc2.Client {
+	return getJsonRpcClient(ipAddr, &http.Client{})
+}
+
+func getJsonRpcClient(ipAddr string, httpClient *http.Client) *jsonrpc2.Client {
 	kurtosisUrl := fmt.Sprintf("http://%v:%v", ipAddr, kurtosisApiPort)
 
-	// We intentionally don't use a retrying client because if an error occurs on the Kurtosis API, a
-	//  retrying client would silently retry. This can lead to distracting errors like "cannot add
-	//  service ID X; it already exists!" when the real problem was with the first call to add the service.
-	return jsonrpc2.NewCustomHTTPClient(kurtosisUrl, &http.Client{})
+	return jsonrpc2.NewCustomHTTPClient(kurtosisUrl, httpClient)
 }
