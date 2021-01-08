@@ -6,7 +6,6 @@
 package services
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/lib/test_mocks/mock_service"
 	"testing"
 	"time"
 )
@@ -16,7 +15,7 @@ const (
 )
 
 func TestServiceBecomesAvailable(t *testing.T) {
-	service := mock_service.NewMockService("1.2.3.4", 2)
+	service := NewMockService("mock-service", "1.2.3.4", 2)
 	availabilityChecker := NewDefaultAvailabilityChecker(testServiceId, service)
 
 	if err := availabilityChecker.WaitForStartup(200 * time.Millisecond, 3); err != nil {
@@ -25,7 +24,7 @@ func TestServiceBecomesAvailable(t *testing.T) {
 }
 
 func TestTimeoutOnServiceStartup(t *testing.T) {
-	neverAvailableService := mock_service.NewMockService("1.2.3.4", 9999)
+	neverAvailableService := NewMockService("mock-service", "1.2.3.4", 9999)
 	availabilityChecker := NewDefaultAvailabilityChecker(testServiceId, neverAvailableService)
 
 	if err := availabilityChecker.WaitForStartup(200 * time.Millisecond, 3); err == nil {

@@ -5,9 +5,13 @@
 
 package client
 
+type TestMetadata struct {
+	IsPartitioningEnabled bool	`json:"isPartitioningEnabled"`
+}
+
 // Package class, intended to get written to JSON, containing metadata about the test suite
 type TestSuiteMetadata struct {
-	TestNames map[string]bool
+	NetworkWidthBits uint32		`json:"networkWidthBits"`
 
-	NetworkWidthBits uint32
+	TestMetadata map[string]TestMetadata	`json:"testMetadata"`
 }

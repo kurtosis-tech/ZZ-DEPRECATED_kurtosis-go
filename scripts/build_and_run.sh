@@ -68,15 +68,19 @@ docker_tag="$(echo "${git_branch}" | sed 's,[/:],_,g')"
 
 root_dirpath="$(dirname "${script_dirpath}")"
 if "${do_build}"; then
+    if ! [ -f "${root_dirpath}"/.dockerignore ]; then
+        echo "Error: No .dockerignore file found in root; this is required so Docker caching works properly" >&2
+        exit 1
+    fi
+
     echo "Running unit tests..."
 
     # TODO Extract this go-specific logic out into a separate script so we can copy/paste the build_and_run.sh between various languages
     if ! go test "${root_dirpath}/..."; then
         echo "Tests failed!"
         exit 1
-    else
-        echo "Tests succeeded"
     fi
+    echo "Tests succeeded"
 
     echo "Building ${SUITE_IMAGE} Docker image..."
     docker build -t "${SUITE_IMAGE}:${docker_tag}" -f "${root_dirpath}/testsuite/Dockerfile" "${root_dirpath}"

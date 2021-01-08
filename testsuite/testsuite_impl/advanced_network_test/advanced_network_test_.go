@@ -92,6 +92,10 @@ func (test *AdvancedNetworkTest) Run(network networks.Network, testCtx testsuite
 	)
 }
 
+func (test *AdvancedNetworkTest) GetTestConfiguration() testsuite.TestConfiguration {
+	return testsuite.TestConfiguration{}
+}
+
 func (test AdvancedNetworkTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
