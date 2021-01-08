@@ -8,6 +8,7 @@
     * Added `NetworkPartitionTest` to test the new network partitioning functionality
     * Made `NetworkContext` thread-safe
 * Add tests for `RepartitionerBuilder` actions
+* Added extra testing inside `NetworkPartitionTest` to ensure that a node that gets added to a partition receives the correct blocking
 
 ## 1.4.1
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`
