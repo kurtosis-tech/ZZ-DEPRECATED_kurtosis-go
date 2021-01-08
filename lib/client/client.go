@@ -73,12 +73,15 @@ func printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) er
 	}
 	defer fp.Close()
 
-	testNames := map[string]bool{}
-	for testName, _ := range testSuite.GetTests() {
-		testNames[testName] = true
+	testMetadata := map[string]TestMetadata{}
+	for testName, test := range testSuite.GetTests() {
+		testConfig := test.GetTestConfiguration()
+		testMetadata[testName] = TestMetadata{
+			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
+		}
 	}
 	suiteMetadata := TestSuiteMetadata{
-		TestNames:        testNames,
+		TestMetadata:        testMetadata,
 		NetworkWidthBits: testSuite.GetNetworkWidthBits(),
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/advanced_network_test"
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/basic_datastore_and_api_test"
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/basic_datastore_test"
+	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/network_partition_test"
 )
 
 type Testsuite struct {
@@ -29,6 +30,10 @@ func (suite Testsuite) GetTests() map[string]testsuite.Test {
 			suite.apiServiceImage,
 		),
 		"advancedNetworkTest": advanced_network_test.NewAdvancedNetworkTest(
+			suite.datastoreServiceImage,
+			suite.apiServiceImage,
+		),
+		"networkPartitionTest": network_partition_test.NewNetworkPartitionTest(
 			suite.datastoreServiceImage,
 			suite.apiServiceImage,
 		),

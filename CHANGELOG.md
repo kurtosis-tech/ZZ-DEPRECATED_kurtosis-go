@@ -1,5 +1,16 @@
 ## TBD
 * Add a `.dockerignore` file, and a check in `build_and_run.sh` to ensure it exists
+* Add the `Service.GetServiceID` method
+* Renamed `DockerContainerInitializer.GetServiceFromIp` -> `GetService`, and passed in the `ServiceID` as a new first argument
+    * All `Service` implementations should have their constructors modified to store this new argument
+* Implemented the ability to partition test networks! This brought several changes:
+    * Upgraded to Kurtosis Core 1.5
+    * Added a `GetTestConfiguration` function to the `Test` interface, which allows tests to declare certain types of functionality (like network partitioning)
+    * Added `NetworkPartitionTest` to test the new network partitioning functionality
+    * Made `NetworkContext` thread-safe
+    * Add tests for `RepartitionerBuilder` actions
+    * Added extra testing inside `NetworkPartitionTest` to ensure that a node that gets added to a partition receives the correct blocking
+* Remove the HTTP client retrying from the JSON RPC client, because it can obscure errors like panics in the Kurtosis API and lead to red herring errors as it replays the call when the problem was the 
 
 ## 1.4.1
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`

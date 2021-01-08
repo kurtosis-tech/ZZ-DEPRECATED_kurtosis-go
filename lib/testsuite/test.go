@@ -30,6 +30,12 @@ type Test interface {
 	Run(network networks.Network, testCtx TestContext)
 
 	/*
+	Defines the configuration object that controls how the test will be executed. If you want to enable advanced
+		features like network partitioning, you can do so here.
+	 */
+	GetTestConfiguration() TestConfiguration
+
+	/*
 	The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
 		is marked as failed. This does NOT include the time needed to do pre-test setup or post-test teardown,
 		which is handled by `GetSetupTeardownBuffer`. The total amount of time a test (with setup & teardown) is allowed

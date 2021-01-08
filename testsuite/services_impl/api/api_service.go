@@ -8,10 +8,12 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 const (
@@ -19,10 +21,12 @@ const (
 	healthyValue       = "healthy"
 
 	textContentType = "text/plain"
-	keyEndpoint = "key"
 
 	personEndpoint = "person"
 	incrementBooksReadEndpoint = "incrementBooksRead"
+
+	// How long to wait before timing out HTTP requests
+	timeoutSeconds = 3 * time.Second
 )
 
 type Person struct {
@@ -30,17 +34,22 @@ type Person struct {
 }
 
 type ApiService struct {
+	serviceId services.ServiceID
 	ipAddr string
 	port int
 }
 
-func NewApiService(ipAddr string, port int) *ApiService {
-	return &ApiService{ipAddr: ipAddr, port: port}
+func NewApiService(serviceId services.ServiceID, ipAddr string, port int) *ApiService {
+	return &ApiService{serviceId: serviceId, ipAddr: ipAddr, port: port}
 }
 
 // ===========================================================================================
 //                              Service interface methods
 // ===========================================================================================
+func (service ApiService) GetServiceID() services.ServiceID {
+	return service.serviceId
+}
+
 func (service ApiService) GetIPAddress() string {
 	return service.ipAddr
 }
@@ -74,7 +83,7 @@ func (service ApiService) IsAvailable() bool {
 //                         API service-specific methods
 // ===========================================================================================
 func (service ApiService) getPersonUrlForId(id int) string {
-	return fmt.Sprintf("http://%v:%v/person/%v", service.ipAddr, service.port, id)
+	return fmt.Sprintf("http://%v:%v/%v/%v", service.ipAddr, service.port, personEndpoint, id)
 }
 
 func (service ApiService) AddPerson(id int) error {
