@@ -1,4 +1,4 @@
-## TBD
+## 1.5.0
 * Add a `.dockerignore` file, and a check in `build_and_run.sh` to ensure it exists
 * Add the `Service.GetServiceID` method
 * Renamed `DockerContainerInitializer.GetServiceFromIp` -> `GetService`, and passed in the `ServiceID` as a new first argument
