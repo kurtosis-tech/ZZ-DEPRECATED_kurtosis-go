@@ -10,6 +10,7 @@ import (
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/advanced_network_test"
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/basic_datastore_and_api_test"
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/basic_datastore_test"
+	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/files_artifact_mounting_test"
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/network_partition_test"
 )
 
@@ -37,6 +38,7 @@ func (suite Testsuite) GetTests() map[string]testsuite.Test {
 			suite.datastoreServiceImage,
 			suite.apiServiceImage,
 		),
+		"filesArtifactMountingTest": files_artifact_mounting_test.FilesArtifactMountingTest{},
 	}
 }
 

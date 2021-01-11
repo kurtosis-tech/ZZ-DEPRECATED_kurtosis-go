@@ -9,4 +9,5 @@ require (
 	github.com/powerman/rpc-codec v1.2.2
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.6.1
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 )

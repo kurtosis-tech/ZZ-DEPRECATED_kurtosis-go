@@ -47,6 +47,10 @@ func (d DatastoreContainerInitializer) InitializeMountedFiles(mountedFiles map[s
 	return nil
 }
 
+func (d DatastoreContainerInitializer) GetFilesArtifactMountpoints() map[services.FilesArtifactID]string {
+	return map[services.FilesArtifactID]string{}
+}
+
 func (d DatastoreContainerInitializer) GetTestVolumeMountpoint() string {
 	return testVolumeMountpoint
 }

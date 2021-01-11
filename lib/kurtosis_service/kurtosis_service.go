@@ -8,6 +8,7 @@ package kurtosis_service
 import (
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/palantir/stacktrace"
 	"github.com/powerman/rpc-codec/jsonrpc2"
@@ -45,7 +46,8 @@ type KurtosisService interface {
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, err error)
+		testVolumeMountLocation string,
+		filesArtifactMountDirpaths map[artifact_id_provider.ArtifactID]string) (ipAddr string, err error)
 
 	RemoveService(serviceId string, containerStopTimeoutSeconds int) error
 
@@ -73,7 +75,8 @@ func (service DefaultKurtosisService) AddService(
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, err error) {
+		testVolumeMountLocation string,
+		filesArtifactMountDirpaths map[artifact_id_provider.ArtifactID]string) (ipAddr string, err error) {
 	client := getNoRetryJsonRpcClient(service.ipAddr)
 	defer client.Close()
 
@@ -81,15 +84,20 @@ func (service DefaultKurtosisService) AddService(
 	for portSpecification, _ := range usedPorts {
 		usedPortsList = append(usedPortsList, portSpecification)
 	}
+	filesArtifactStrMountDirpaths := map[string]string{}
+	for artifactId, mountDirpath := range filesArtifactMountDirpaths {
+		filesArtifactStrMountDirpaths[string(artifactId)] = mountDirpath
+	}
 	args := method_types.AddServiceArgs{
-		ServiceID: serviceId,
-		PartitionID: partitionId,
+		DockerEnvironmentVars:   envVariables,
+		FilesArtifactMountDirpaths: filesArtifactStrMountDirpaths,
 		IPPlaceholder: ipPlaceholder,
 		ImageName:               dockerImage,
-		UsedPorts:               usedPortsList,
+		PartitionID: partitionId,
+		ServiceID: serviceId,
 		StartCmd:                startCmdArgs,
-		DockerEnvironmentVars:   envVariables,
 		TestVolumeMountDirpath: testVolumeMountLocation,
+		UsedPorts:               usedPortsList,
 	}
 	var reply method_types.AddServiceResponse
 	if err := client.Call(addServiceMethod, args, &reply); err != nil {

@@ -63,7 +63,8 @@ func main() {
 	}
 	logrus.SetLevel(level)
 
+	kurtosisClient := client.NewKurtosisClient()
 	testSuite := testsuite_impl.NewTestsuite(*apiServiceImageArg, *datastoreServiceImageArg)
-	exitCode := client.Run(testSuite, *metadataFilepath, *servicesRelativeDirpathArg, *testArg, *kurtosisApiIpArg)
+	exitCode := kurtosisClient.Run(testSuite, *metadataFilepath, *servicesRelativeDirpathArg, *testArg, *kurtosisApiIpArg)
 	os.Exit(exitCode)
 }

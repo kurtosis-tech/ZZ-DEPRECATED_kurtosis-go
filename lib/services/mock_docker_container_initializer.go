@@ -38,6 +38,10 @@ func (m MockDockerContainerInitializer) InitializeMountedFiles(mountedFiles map[
 	return nil
 }
 
+func (m MockDockerContainerInitializer) GetFilesArtifactMountpoints() map[FilesArtifactID]string {
+	return map[FilesArtifactID]string{}
+}
+
 func (m MockDockerContainerInitializer) GetTestVolumeMountpoint() string {
 	return "/test-volume"
 }
