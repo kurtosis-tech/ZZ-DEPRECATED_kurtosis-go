@@ -8,8 +8,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
 	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
@@ -27,7 +29,17 @@ const (
 	suiteExecutionVolumeMountDirpath = "/suite-execution"
 )
 
-func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativeDirpath string, testName string, kurtosisApiIp string) int {
+type KurtosisClient struct {
+	artifactIdProvider artifact_id_provider.ArtifactIdProvider
+}
+
+func NewKurtosisClient() *KurtosisClient {
+	return &KurtosisClient{
+		artifactIdProvider: artifact_id_provider.NewDefaultArtifactIdProvider(),
+	}
+}
+
+func (client KurtosisClient) Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativeDirpath string, testName string, kurtosisApiIp string) int {
 	// Only one of these should be set; if both are set then it's an error
 	metadataFilepath = strings.TrimSpace(metadataFilepath)
 	testName = strings.TrimSpace(testName)
@@ -39,7 +51,7 @@ func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativ
 	}
 
 	if !isMetadataFilepathEmpty {
-		if err := printSuiteMetadataToFile(testSuite, metadataFilepath); err != nil {
+		if err := client.printSuiteMetadataToFile(testSuite, metadataFilepath); err != nil {
 			logrus.Errorf("An error occurred writing test suite metadata to file '%v':", metadataFilepath)
 			fmt.Fprintln(logrus.StandardLogger().Out, err)
 			return errorExitCode
@@ -55,7 +67,7 @@ func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativ
 			logrus.Error("Kurtosis API container IP argument was empty")
 			return errorExitCode
 		}
-		if err := runTest(servicesRelativeDirpath, testSuite, testName, kurtosisApiIp); err != nil {
+		if err := client.runTest(servicesRelativeDirpath, testSuite, testName, kurtosisApiIp); err != nil {
 			logrus.Errorf("An error occurred running test '%v':", testName)
 			fmt.Fprintln(logrus.StandardLogger().Out, err)
 			return errorExitCode
@@ -65,7 +77,9 @@ func Run(testSuite testsuite.TestSuite, metadataFilepath string, servicesRelativ
 }
 
 // =========================================== Private helper functions ========================================
-func printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) error {
+// TODO Write tests for this by splitting it into metadata-generating function and writing function
+//  then testing the metadata-generating
+func (client KurtosisClient) printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) error {
 	logrus.Debugf("Printing test suite metadata to file '%v'...", filepath)
 	fp, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -73,15 +87,33 @@ func printSuiteMetadataToFile(testSuite testsuite.TestSuite, filepath string) er
 	}
 	defer fp.Close()
 
-	testMetadata := map[string]TestMetadata{}
+	allTestMetadata := map[string]TestMetadata{}
 	for testName, test := range testSuite.GetTests() {
 		testConfig := test.GetTestConfiguration()
-		testMetadata[testName] = TestMetadata{
-			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
+
+		// We create this "set" of used artifact URLs because the user could declare
+		//  multiple artifacts with the same URL
+		usedArtifactUrls := map[string]bool{}
+		for _, artifactUrl := range testConfig.FilesArtifactUrls {
+			usedArtifactUrls[artifactUrl] = true
 		}
+
+		artifactUrlsById := map[artifact_id_provider.ArtifactID]string{}
+		for artifactUrl, _ := range usedArtifactUrls {
+			artifactId, err := client.artifactIdProvider.GetArtifactId(artifactUrl)
+			if err != nil {
+				return stacktrace.Propagate(err, "An error occurred getting the artifact ID for URL '%v'", artifactUrl)
+			}
+			artifactUrlsById[artifactId] = artifactUrl
+		}
+
+		testMetadata := NewTestMetadata(
+			testConfig.IsPartitioningEnabled,
+			artifactUrlsById)
+		allTestMetadata[testName] = *testMetadata
 	}
 	suiteMetadata := TestSuiteMetadata{
-		TestMetadata:        testMetadata,
+		TestMetadata:     allTestMetadata,
 		NetworkWidthBits: testSuite.GetNetworkWidthBits(),
 	}
 
@@ -110,7 +142,7 @@ Returns:
 	setupErr: Indicates an error setting up the test that prevented the test from running
 	testErr: Indicates an error in the test itself, indicating a test failure
 */
-func runTest(servicesRelativeDirpath string, testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
+func (client KurtosisClient) runTest(servicesRelativeDirpath string, testSuite testsuite.TestSuite, testName string, kurtosisApiIp string) error {
 	kurtosisService := kurtosis_service.NewDefaultKurtosisService(kurtosisApiIp)
 
 	tests := testSuite.GetTests()
@@ -126,7 +158,25 @@ func runTest(servicesRelativeDirpath string, testSuite testsuite.TestSuite, test
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
 
-	networkCtx := networks.NewNetworkContext(kurtosisService, suiteExecutionVolumeMountDirpath, servicesRelativeDirpath)
+	testConfig := test.GetTestConfiguration()
+	filesArtifactIdToGlobalArtifactId := map[services.FilesArtifactID]artifact_id_provider.ArtifactID{}
+	for filesArtifactId, url := range testConfig.FilesArtifactUrls {
+		globalArtifactId, err := client.artifactIdProvider.GetArtifactId(url)
+		if err != nil {
+			return stacktrace.Propagate(
+				err,
+				"An error occurred getting the global artifact ID for files artifact '%v' and url '%v'",
+				filesArtifactId,
+				url)
+		}
+		filesArtifactIdToGlobalArtifactId[filesArtifactId] = globalArtifactId
+	}
+
+	networkCtx := networks.NewNetworkContext(
+		kurtosisService,
+		suiteExecutionVolumeMountDirpath,
+		servicesRelativeDirpath,
+		filesArtifactIdToGlobalArtifactId)
 
 	logrus.Info("Setting up the test network...")
 	untypedNetwork, err := test.Setup(networkCtx)

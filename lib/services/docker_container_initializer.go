@@ -5,8 +5,15 @@
 
 package services
 
-import "os"
+import (
+	"os"
+)
 
+// The ID of an artifact containing files that should be mounted into a service container
+type FilesArtifactID string
+
+// TODO Create a DockerContainerInitializerBuilder rather than forcing users to update their code with a new
+//  method every time a new feature comes out!
 // GENERIC TOOD: If Go had generics, this would be parameterized with the subtype of Service that this returns
 type DockerContainerInitializer interface {
 	// Gets the Docker image that will be used for instantiating the Docker container
@@ -46,6 +53,7 @@ type DockerContainerInitializer interface {
 			A "set" of user-defined key strings identifying the files that the service will need, which is how files will be
 				identified in `InitializeMountedFiles` and `GetStartCommand`
 	*/
+	// TODO Rename "getFilesToGenerate"
 	GetFilesToMount() map[string]bool
 
 	/*
@@ -56,7 +64,22 @@ type DockerContainerInitializer interface {
 			mountedFiles: A mapping of developer_key -> file_pointer, with developer_key corresponding to the keys declares in
 				`GetFilesToMount`
 	*/
+	// TODO Rename "initializeFilesToGenerate"
 	InitializeMountedFiles(mountedFiles map[string]*os.File) error
+
+	/*
+		Allows the mounting of external files into a service container by mapping files artifacts (defined in your
+		test's configuration) to mountpoints on the service container.
+
+		NOTE: As of 2021-01-06, only GZ-compressed TAR artifacts are supported.
+
+		Returns:
+			A map of filesArtifactId -> serviceContainerMountpoint, where:
+				1) The map key is the ID of the files artifact as defined in your TestConfiguration.
+				2) The map value is the filepath inside of the service container where the
+					contents of the archive file should be mounted after decompression.
+	 */
+	GetFilesArtifactMountpoints() map[FilesArtifactID]string
 
 	/*
 		Kurtosis mounts the files that the developer requested in `GetFilesToMount` via a Docker volume, but Kurtosis doesn't

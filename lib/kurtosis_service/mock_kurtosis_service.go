@@ -5,7 +5,10 @@
 
 package kurtosis_service
 
-import "github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
+import (
+	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
+	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
+)
 
 // =============== Mock Kurtosis service =====================
 type MockKurtosisService struct {}
@@ -22,7 +25,8 @@ func (m MockKurtosisService) AddService(
 		ipPlaceholder string,
 		startCmdArgs []string,
 		envVariables map[string]string,
-		testVolumeMountLocation string) (ipAddr string, err error) {
+		testVolumeMountLocation string,
+		filesArtifactMountDirpaths map[artifact_id_provider.ArtifactID]string) (ipAddr string, err error) {
 	return "1.2.3.4", nil
 }
 

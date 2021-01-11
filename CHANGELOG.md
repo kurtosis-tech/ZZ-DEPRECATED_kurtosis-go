@@ -1,3 +1,11 @@
+## TBD
+* Use Kurtosis Core v1.6.0
+* Implement API changes to allow users to mount external artifacts inside Kurtosis service containers
+    * The Kurtosis client now must be instantiated with `NewKurtosisClient`
+    * Added `FilesArtifactUrls` property to `TestConfiguration` to declare files artifacts
+    * Added `GetFilesArtifactMountpoints` to `DockerContainerInitializer` to use files artifacts in a service
+* Added `FilesArtifactMountingTest` to test the new external artifact-mounting functionality
+
 ## 1.5.0
 * Add a `.dockerignore` file, and a check in `build_and_run.sh` to ensure it exists
 * Add the `Service.GetServiceID` method
@@ -11,6 +19,10 @@
     * Add tests for `RepartitionerBuilder` actions
     * Added extra testing inside `NetworkPartitionTest` to ensure that a node that gets added to a partition receives the correct blocking
 * Remove the HTTP client retrying from the JSON RPC client, because it can obscure errors like panics in the Kurtosis API and lead to red herring errors as it replays the call when the problem was the 
+* Added the ability to mount external files into a service container:
+    * Added a new property, `FilesArtifactUrsl`, to `TestConfiguration` for defining files artifact URLs
+    * Add a new method, `GetFilesArtifactMountpoints`, to `DockerContainerInitializer` for defining where to mount external files artifacts
+    * Add `FilesArtifactTest` to test pulling down a files artifact, mounting it inside a service, and using those files
 
 ## 1.4.1
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`

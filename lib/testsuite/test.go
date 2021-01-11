@@ -14,6 +14,12 @@ import (
 An interface encapsulating a test to run against a test network.
  */
 type Test interface {
+	/*
+		Defines the configuration object that controls how the test will be executed. If you want to enable advanced
+			features like network partitioning, you can do so here.
+	*/
+	GetTestConfiguration() TestConfiguration
+
 	// Initializes the network to the desired state before test execution
 	Setup(networkCtx *networks.NetworkContext) (networks.Network, error)
 
@@ -28,12 +34,6 @@ type Test interface {
 		context: The test context, which is the user's tool for making test assertions.
 	 */
 	Run(network networks.Network, testCtx TestContext)
-
-	/*
-	Defines the configuration object that controls how the test will be executed. If you want to enable advanced
-		features like network partitioning, you can do so here.
-	 */
-	GetTestConfiguration() TestConfiguration
 
 	/*
 	The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
