@@ -1,3 +1,10 @@
+## TBD
+* Implement API changes to allow users to mount external artifacts inside Kurtosis service containers
+    * The Kurtosis client now must be instantiated with `NewKurtosisClient`
+    * Added `FilesArtifactUrls` property to `TestConfiguration` to declare files artifacts
+    * Added `GetFilesArtifactMountpoints` to `DockerContainerInitializer` to use files artifacts in a service
+* Added `FilesArtifactMountingTest` to test the new external artifact-mounting functionality
+
 ## 1.5.0
 * Add a `.dockerignore` file, and a check in `build_and_run.sh` to ensure it exists
 * Add the `Service.GetServiceID` method
