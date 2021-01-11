@@ -98,7 +98,7 @@ func (client KurtosisClient) printSuiteMetadataToFile(testSuite testsuite.TestSu
 			usedArtifactUrls[artifactUrl] = true
 		}
 
-		artifactUrlsById := map[string]string{}
+		artifactUrlsById := map[artifact_id_provider.ArtifactID]string{}
 		for artifactUrl, _ := range usedArtifactUrls {
 			artifactId, err := client.artifactIdProvider.GetArtifactId(artifactUrl)
 			if err != nil {
@@ -159,7 +159,7 @@ func (client KurtosisClient) runTest(servicesRelativeDirpath string, testSuite t
 	}
 
 	testConfig := test.GetTestConfiguration()
-	filesArtifactIdToGlobalArtifactId := map[services.FilesArtifactID]string{}
+	filesArtifactIdToGlobalArtifactId := map[services.FilesArtifactID]artifact_id_provider.ArtifactID{}
 	for filesArtifactId, url := range testConfig.FilesArtifactUrls {
 		globalArtifactId, err := client.artifactIdProvider.GetArtifactId(url)
 		if err != nil {

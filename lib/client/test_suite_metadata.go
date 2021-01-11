@@ -5,6 +5,8 @@
 
 package client
 
+import "github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
+
 // ------------------------------------------------------------------------------------------------------
 // NOTE: The fields of these classes need to be public for serialization to work, but we add constructors
 //  anyways to try and reduce the oops-I-forgot-to-initialize-this-field errors that always exist because
@@ -22,7 +24,11 @@ type TestMetadata struct {
 	UsedArtifacts map[string]string `json:"usedArtifacts"`
 }
 
-func NewTestMetadata(isPartitioningEnabled bool, usedArtifacts map[string]string) *TestMetadata {
+func NewTestMetadata(isPartitioningEnabled bool, artifactUrlsById map[artifact_id_provider.ArtifactID]string) *TestMetadata {
+	var usedArtifacts = map[string]string{}
+	for artifactId, url := range artifactUrlsById {
+		usedArtifacts[string(artifactId)] = url
+	}
 	return &TestMetadata{
 		IsPartitioningEnabled: isPartitioningEnabled,
 		UsedArtifacts:         usedArtifacts,

@@ -19,8 +19,10 @@ const (
 	defaultHashFunction = crypto.SHA3_256
 )
 
+type ArtifactID string
+
 type ArtifactIdProvider interface {
-	GetArtifactId(artifactUrl string) (id string, resultErr error)
+	GetArtifactId(artifactUrl string) (ArtifactID, error)
 }
 
 type DefaultArtifactIdProvider struct {
@@ -32,12 +34,12 @@ func NewDefaultArtifactIdProvider() *DefaultArtifactIdProvider {
 }
 
 // Gets a unique ID for an artifact as identified by its URL
-func (defaultProvider DefaultArtifactIdProvider) GetArtifactId(artifactUrl string) (id string, resultErr error) {
+func (defaultProvider DefaultArtifactIdProvider) GetArtifactId(artifactUrl string) (ArtifactID, error) {
 	hasher := defaultHashFunction.New()
 	artifactUrlBytes := []byte(artifactUrl)
 	if _, err := hasher.Write(artifactUrlBytes); err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred writing the artifact URL to the hash function")
 	}
 	hexEncodedHash := hex.EncodeToString(hasher.Sum(nil))
-	return hexEncodedHash, nil
+	return ArtifactID(hexEncodedHash), nil
 }

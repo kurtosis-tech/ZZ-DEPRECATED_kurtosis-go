@@ -19,5 +19,5 @@ func TestGetArtifactId(t *testing.T) {
 		t.Fatal(stacktrace.Propagate(err, "Received an error when hashing artifact URL"))
 	}
 	expected := "23ac8f7b65bce49bdd0a9a24bebeb4d347a839153315c01cbc8a7bf6f0c8f083"
-	assert.Equal(t, expected, hexEncodedHashStr)
+	assert.Equal(t, expected, string(hexEncodedHashStr))
 }

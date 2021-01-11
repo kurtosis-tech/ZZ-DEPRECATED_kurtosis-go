@@ -8,6 +8,7 @@ package networks
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
 	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
@@ -30,7 +31,7 @@ type NetworkContext struct {
 	// Mutex, to make this thread-safe
 	mutex *sync.Mutex
 
-	filesArtifactIdToGlobalArtifactIds map[services.FilesArtifactID]string
+	filesArtifactIdToGlobalArtifactIds map[services.FilesArtifactID]artifact_id_provider.ArtifactID
 
 	kurtosisService kurtosis_service.KurtosisService
 
@@ -61,7 +62,7 @@ func NewNetworkContext(
 		kurtosisService kurtosis_service.KurtosisService,
 		suiteExecutionVolumeDirpath string,
 		servicesRelativeDirpath string,
-		filesArtifactIdToGlobalArtifactId map[services.FilesArtifactID]string) *NetworkContext {
+		filesArtifactIdToGlobalArtifactId map[services.FilesArtifactID]artifact_id_provider.ArtifactID) *NetworkContext {
 	return &NetworkContext{
 		mutex: &sync.Mutex{},
 		filesArtifactIdToGlobalArtifactIds: filesArtifactIdToGlobalArtifactId,
@@ -174,7 +175,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully initialized files needed for service")
 
 	logrus.Tracef("Creating files artifact mount dirpaths map...")
-	filesArtifactMountDirpaths := map[string]string{}
+	filesArtifactMountDirpaths := map[artifact_id_provider.ArtifactID]string{}
 	for filesArtifactId, mountDirpath := range initializer.GetFilesArtifactMountpoints() {
 		globalArtifactId, found := networkCtx.filesArtifactIdToGlobalArtifactIds[filesArtifactId]
 		if !found {
