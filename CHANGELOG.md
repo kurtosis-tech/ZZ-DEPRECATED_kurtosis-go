@@ -1,4 +1,5 @@
 ## TBD
+* Use Kurtosis Core v1.6.0
 * Implement API changes to allow users to mount external artifacts inside Kurtosis service containers
     * The Kurtosis client now must be instantiated with `NewKurtosisClient`
     * Added `FilesArtifactUrls` property to `TestConfiguration` to declare files artifacts

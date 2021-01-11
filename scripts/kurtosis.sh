@@ -15,8 +15,7 @@ set -euo pipefail
 # Can make this configurable if needed
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
 
-# TODO TODO TESTING
-KURTOSIS_CORE_TAG="mieubrisse_mounting-docker-volumes"
+KURTOSIS_CORE_TAG="1.6"
 KURTOSIS_DOCKERHUB_ORG="kurtosistech"
 INITIALIZER_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_initializer:${KURTOSIS_CORE_TAG}"
 API_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_api:${KURTOSIS_CORE_TAG}"
@@ -42,7 +41,7 @@ function print_help_and_exit() {
     echo "   --tests test_names                            List of test names to run, separated by ',' (default or empty: run all tests)"
     echo "   --test-suite-log-level test_suite_log_level   A string that will be passed as-is to the test suite container to indicate what log level the test suite container should output at; this string should be meaningful to the test suite container because Kurtosis won't know what logging framework the testsuite uses (default: info)"
     echo "   test_suite_image                              The Docker image containing the testsuite to execute"
-
+    
     echo ""
     exit 1  # Exit with an error code, so that if it gets accidentally called in parent scripts/CI it fails loudly
 }
@@ -69,68 +68,68 @@ POSITIONAL=()
 while [ ${#} -gt 0 ]; do
     key="${1}"
     case "${key}" in
-
+        
         --custom-env-vars)
-
+            
             custom_env_vars_json="${2}"
             shift   # Shift to clear out the flag
             shift   # Shift again to clear out the value
             ;;
-
+        
         --client-id)
-
+            
             client_id="${2}"
             shift   # Shift to clear out the flag
             shift   # Shift again to clear out the value
             ;;
-
+        
         --client-secret)
-
+            
             client_secret="${2}"
             shift   # Shift to clear out the flag
             shift   # Shift again to clear out the value
             ;;
-
+        
         --help)
             show_help="true"
             shift   # Shift to clear out the flag
-
+            
             ;;
-
+        
         --kurtosis-log-level)
-
+            
             kurtosis_log_level="${2}"
             shift   # Shift to clear out the flag
             shift   # Shift again to clear out the value
             ;;
-
+        
         --list)
             do_list="true"
             shift   # Shift to clear out the flag
-
+            
             ;;
-
+        
         --parallelism)
-
+            
             parallelism="${2}"
             shift   # Shift to clear out the flag
             shift   # Shift again to clear out the value
             ;;
-
+        
         --tests)
-
+            
             test_names="${2}"
             shift   # Shift to clear out the flag
             shift   # Shift again to clear out the value
             ;;
-
+        
         --test-suite-log-level)
-
+            
             test_suite_log_level="${2}"
             shift   # Shift to clear out the flag
             shift   # Shift again to clear out the value
             ;;
-
+        
         -*)
             echo "Error: Unrecognized flag '${key}'" >&2
             exit 1
