@@ -1,3 +1,6 @@
+## TBD
+* Upgrade to `kurtosis.sh` script that will pull the latest Docker Kurtosis Core images automatically
+
 ## 1.6.0
 * Use Kurtosis Core v1.6.0
 * Implement API changes to allow users to mount external artifacts inside Kurtosis service containers
