@@ -1,5 +1,6 @@
 ## TBD
 * Upgrade to `kurtosis.sh` script that will pull the latest Docker Kurtosis Core images automatically
+* Fail CI if we detect the string `ERRO`, to catch problems that don't get propagated to the exit code (e.g. not printing the testsuite container logs)
 
 ## 1.6.0
 * Use Kurtosis Core v1.6.0
