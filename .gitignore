@@ -1,2 +1,4 @@
 .idea/*.xml
 .idea/*.iml
+
+api_client/types
