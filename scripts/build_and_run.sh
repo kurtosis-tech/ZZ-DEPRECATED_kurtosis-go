@@ -73,8 +73,18 @@ if "${do_build}"; then
         exit 1
     fi
 
-    echo "Running unit tests..."
+    echo "Generating API client protobuf files..."
+    # TODO clean this thing up
+    if ! protoc -I="${root_dirpath}/api_client" \
+            --go_out="${root_dirpath}/api_client/types" \
+            --go_opt=module=github.com/kurtosis-tech/kurtosis-go/api_client/types \
+            "${root_dirpath}/api_client/api.proto"; then
+        echo "Error: An error occurred generating API client protobuf files" >&2
+        exit 1
+    fi
+    echo "Successfully generated API client protobuf files"
 
+    echo "Running unit tests..."
     # TODO Extract this go-specific logic out into a separate script so we can copy/paste the build_and_run.sh between various languages
     if ! go test "${root_dirpath}/..."; then
         echo "Tests failed!"

@@ -8,8 +8,8 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/kurtosis-tech/kurtosis-go/api_client/kurtosis_service"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
-	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
 	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"

@@ -1,0 +1,25 @@
+syntax = "proto3";
+package api_client;
+
+import "google/protobuf/empty.proto";
+
+// TODO change this
+option go_package = "github.com/kurtosis-tech/kurtosis-go/api_client/types";
+
+service SuiteMetadataSerializingService {
+  rpc SerializeSuiteMetadata() returns (google.protobuf.Empty) {}
+}
+
+message TestSuiteMetadata {
+  string metadata_filepath =  1;
+  uint32 network_width_bits = 2;
+  map<string, TestMetadata> test_metadata = 3;
+}
+
+message TestMetadata {
+  bool is_partitioning_enabled = 1;
+
+  // A map of all the artifacts that the test wants, in the form of:
+  //       user-generated artifact ID -> artifact URL
+  map<string, string> used_artifact_urls = 2;
+}

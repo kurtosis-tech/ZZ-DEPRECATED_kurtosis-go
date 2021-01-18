@@ -8,8 +8,8 @@ package kurtosis_service
 import (
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/kurtosis-tech/kurtosis-go/api_client/kurtosis_service/method_types"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
-	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/palantir/stacktrace"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/sirupsen/logrus"

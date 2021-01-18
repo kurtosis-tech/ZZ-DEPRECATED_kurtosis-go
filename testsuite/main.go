@@ -21,6 +21,8 @@ func main() {
 	})
 
 	// ------------------- Kurtosis-internal params -------------------------------
+	// TODO with the exception of the suite log level, consolidate these into a single JSON string, so users don't need to change
+	//  their main.go or Dockerfile when we push updates
 	metadataFilepath := flag.String(
 		"metadata-filepath",
 		"",

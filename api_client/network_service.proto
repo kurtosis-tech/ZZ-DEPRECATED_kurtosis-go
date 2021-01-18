@@ -1,0 +1,32 @@
+syntax = "proto3";
+package api_client;
+
+import "google/protobuf/empty.proto";
+
+// TODO change this
+option go_package = "github.com/kurtosis-tech/kurtosis-go/api_client/types";
+
+service NetworkService {
+  rpc GetSize(google.protobuf.Empty) returns (GetSizeResponse) {}
+
+  rpc GenerateFiles(GenerateFilesArgs) returns (GenerateFilesResponse) {}
+}
+
+// ================================ GetSize ====================================
+message GetSizeResponse {
+  uint64 size = 1;
+}
+
+// ============================== GenerateFiles ====================================
+message GenerateFilesArgs {
+  // Mapping of user-defined key identifying each file to generate -> options for generating
+  //  the file
+  map<string, FileGenerationOptions> files = 1;
+}
+
+message FileGenerationOptions {}
+
+message GenerateFilesResponse {
+  // Mapping of user-defined key identifying each file -> filepath where the file was generated
+  map<string, string> filepaths = 1;
+}
