@@ -3,7 +3,6 @@ package api_client;
 
 import "google/protobuf/empty.proto";
 
-// TODO change this
 option go_package = "github.com/kurtosis-tech/kurtosis-go/lib_core/api/generated";
 
 service NetworkService {
