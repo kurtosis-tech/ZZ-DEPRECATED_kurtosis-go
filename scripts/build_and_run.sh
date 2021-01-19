@@ -7,6 +7,10 @@ script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 KURTOSIS_DOCKERHUB_ORG="kurtosistech"
 SUITE_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-go-example"
 
+GO_MODULE="github.com/kurtosis-tech/kurtosis-go"
+LIB_CORE_API_RELATIVE_DIRPATH="lib_core/api"
+LIB_CORE_API_GENERATED_CODE_DIRNAME="generated"
+
 BUILD_ACTION="build"
 RUN_ACTION="run"
 BOTH_ACTION="all"
@@ -74,14 +78,22 @@ if "${do_build}"; then
     fi
 
     echo "Generating lib core files from protobuf files..."
-    lib_core_dirpath="${root_dirpath}/lib_core"
-    for protobuf_file in ${lib_core_dirpath}/*.proto; do
+    lib_core_api_dirpath="${root_dirpath}/${LIB_CORE_API_RELATIVE_DIRPATH}"
+    generated_api_code_dirpath="${lib_core_api_dirpath}/${LIB_CORE_API_GENERATED_CODE_DIRNAME}"
+    if [ "${generated_api_code_dirpath}/" != "/" ]; then
+        if ! find ${generated_api_code_dirpath} -name '*.go' -delete; then
+            echo "Error: An error occurred removing the protobuf-generated files" >&2
+            exit 1
+        fi
+    else
+        echo "Error: lib core generated API code dirpath must not be empty!" >&2
+        exit 1
+    fi
+    for protobuf_file in ${lib_core_api_dirpath}/*.proto; do
         # TODO clean this thing up
-        if ! protoc -I="${lib_core_dirpath}" \
-                --go_out="${lib_core_dirpath}/generated" \
-                --go_opt=module=github.com/kurtosis-tech/kurtosis-go/lib_core/generated \
-                --go-grpc_out="${lib_core_dirpath}/generated" \
-                --go-grpc_opt=module=github.com/kurtosis-tech/kurtosis-go/lib_core/generated \
+        if ! protoc -I="${lib_core_api_dirpath}" \
+                --go_out=plugins=grpc:"${generated_api_code_dirpath}" \
+                --go_opt=module=${GO_MODULE}/${LIB_CORE_API_RELATIVE_DIRPATH}/${LIB_CORE_API_GENERATED_CODE_DIRNAME} \
                 "${protobuf_file}"; then
             echo "Error: An error occurred generating lib core files from protobuf file: ${protobuf_file}" >&2
             exit 1

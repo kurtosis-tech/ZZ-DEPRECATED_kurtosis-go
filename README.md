@@ -2,6 +2,8 @@ Kurtosis Go Client
 ==================
 This repo contains:
 
+TODO TODO TODO Instructions on installing `protobuf`, `protoc-gen-go`, and `protoc-gen-go-grpc` on Mac
+
 1. The Kurtosis Go client for using the Kurtosis platform with Golang
 2. [An example implementation of the Go client](./testsuite), to demonstrate how to use the client
 3. A generator for building new Kurtosis Go testsuites
