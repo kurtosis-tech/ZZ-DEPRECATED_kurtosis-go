@@ -20,6 +20,10 @@ func main() {
 		FullTimestamp: true,
 	})
 
+	// TODO Parse both custom flags-JSON and Kurtosis flags-JSON
+
+	// TODO Call Kurtosis.Run(customFlags, kurtosisFlags)
+
 	// ------------------- Kurtosis-internal params -------------------------------
 	// TODO with the exception of the suite log level, consolidate these into a single JSON string, so users don't need to change
 	//  their main.go or Dockerfile when we push updates
@@ -54,7 +58,6 @@ func main() {
 		"datastore-service-image",
 		"",
 		"Name of datastore example microservice Docker image that will be used to launch service containers")
-
 
 	flag.Parse()
 

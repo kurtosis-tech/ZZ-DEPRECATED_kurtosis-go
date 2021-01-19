@@ -6,7 +6,7 @@
 package kurtosis_service
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/api_client/kurtosis_service/method_types"
+	"github.com/kurtosis-tech/kurtosis-go/lib_core/kurtosis_service/method_types"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
 )
 

@@ -8,8 +8,8 @@ package networks
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/kurtosis-tech/kurtosis-go/api_client/kurtosis_service"
-	"github.com/kurtosis-tech/kurtosis-go/api_client/kurtosis_service/method_types"
+	"github.com/kurtosis-tech/kurtosis-go/lib_core/kurtosis_service"
+	"github.com/kurtosis-tech/kurtosis-go/lib_core/kurtosis_service/method_types"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/palantir/stacktrace"

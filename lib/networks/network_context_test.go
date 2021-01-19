@@ -6,7 +6,7 @@
 package networks
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/api_client/kurtosis_service"
+	"github.com/kurtosis-tech/kurtosis-go/lib_core/kurtosis_service"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"io/ioutil"

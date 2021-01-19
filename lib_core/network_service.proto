@@ -4,7 +4,7 @@ package api_client;
 import "google/protobuf/empty.proto";
 
 // TODO change this
-option go_package = "github.com/kurtosis-tech/kurtosis-go/api_client/types";
+option go_package = "github.com/kurtosis-tech/kurtosis-go/lib_core/generated";
 
 service NetworkService {
   rpc GetSize(google.protobuf.Empty) returns (GetSizeResponse) {}
