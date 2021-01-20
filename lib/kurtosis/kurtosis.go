@@ -36,7 +36,6 @@ type KurtosisExecutor struct {
 // Runs Kurtosis
 // Intended to be a simple call that just consumes the arguments passed in to main
 func (executor KurtosisExecutor) Execute(
-		libCoreParamsJson string,
 		suiteParamsJson string,
 		suiteLogLevel string) error {
 	ctx := context.Background()
@@ -50,26 +49,6 @@ func (executor KurtosisExecutor) Execute(
 	}
 
 	// Launch the core lib as a separate process, communicable via gRPC
-	libCoreBinaryFilepath := executor.suiteContainerConfig.GetLibCoreBinaryFilepath()
-	libCoreLaunchingCmd := exec.Command(
-		libCoreBinaryFilepath,
-		"-" + lib_core_process_consts.PortFlag,
-		strconv.Itoa(libCoreListenPort),
-		"-" + lib_core_process_consts.ParamsJsonFlag,
-		libCoreParamsJson)
-	libCoreLaunchingCmd.Stdout = os.Stdout
-	libCoreLaunchingCmd.Stderr = os.Stderr
-	if err := libCoreLaunchingCmd.Start(); err != nil {
-		return stacktrace.Propagate(err, "An error occurred starting the lib core coprocess")
-	}
-
-	libCoreListenStr := fmt.Sprintf("%v:%v", libCoreListenInterface, libCoreListenPort)
-	conn, err := grpc.Dial(libCoreListenStr)
-	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred dialing the lib core process on '%v'", libCoreListenStr)
-	}
-	defer conn.Close()
-
 	wrapperExecutionPathClient := generated.NewWrapperExecutionPathServiceClient(conn)
 	getPathResp, err := wrapperExecutionPathClient.GetPath(ctx, nil)
 	if err != nil {
