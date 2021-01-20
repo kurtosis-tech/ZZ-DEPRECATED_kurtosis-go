@@ -7,10 +7,4 @@ This repo contains:
 3. A generator for building new Kurtosis Go testsuites
 
 ### Quickstart
-To get started building your own Kurtosis testsuite in Go:
-
-1. Clone this repo
-2. Run `bootstrap/bootstrap.sh`
-3. Follow the instructions in the new `README.md`
-
-For detailed information about the Kurtosis platform, visit [the Kurtosis docs](http://docs.kurtosistech.com/)
+To get started building your own Kurtosis testsuite in Go, see [the Quickstart docs](https://docs.kurtosistech.com/quickstart.html).
