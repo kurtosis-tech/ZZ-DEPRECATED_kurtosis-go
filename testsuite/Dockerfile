@@ -19,6 +19,7 @@ WORKDIR /run
 # Copy the code into the container
 COPY --from=builder /build/testsuite.bin .
 
+# TODO Switch to exec command form, wrapping arguments with double-quote
 CMD ./testsuite.bin \
     `# ------------- Custom variable particular to this test suite -----------------` \
     --api-service-image=${API_SERVICE_IMAGE} \
