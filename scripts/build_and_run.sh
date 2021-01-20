@@ -7,6 +7,10 @@ script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 KURTOSIS_DOCKERHUB_ORG="kurtosistech"
 SUITE_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-go-example"
 
+# When enabled, additional tests are run that are used to verify Kurtosis Core functionality
+# If using the free trial, this should be false else the test number limit will be hit
+IS_KURTOSIS_CORE_DEV_MODE="true"
+
 BUILD_ACTION="build"
 RUN_ACTION="run"
 BOTH_ACTION="all"
@@ -94,9 +98,12 @@ if "${do_run}"; then
     # Docker only allows you to have spaces in the variable if you escape them or use a Docker env file
     custom_env_vars_json='{
         "API_SERVICE_IMAGE": "'${api_service_image}'",
-        "DATASTORE_SERVICE_IMAGE": "'${datastore_service_image}'"
+        "DATASTORE_SERVICE_IMAGE": "'${datastore_service_image}'",
+        "IS_KURTOSIS_CORE_DEV_MODE": "'${IS_KURTOSIS_CORE_DEV_MODE}'"
     }'
     # ====================================== End custom Docker environment variables =====================================================
-
-    bash "${script_dirpath}/kurtosis.sh" --custom-env-vars "${custom_env_vars_json}" "${@}" "${SUITE_IMAGE}:${docker_tag}"
+    # The funky ${1+"${@}"} incantation is how you you feed arguments exactly as-is to a child script in Bash
+    # ${*} loses quoting and ${@} trips set -e if no arguments are passed, so this incantation says, "if and only if 
+    #  ${1} exists, evaluate ${@}"
+    bash "${script_dirpath}/kurtosis.sh" --custom-env-vars "${custom_env_vars_json}" ${1+"${@}"} "${SUITE_IMAGE}:${docker_tag}"
 fi
