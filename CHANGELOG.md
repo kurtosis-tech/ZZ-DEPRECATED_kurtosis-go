@@ -1,3 +1,12 @@
+## 1.6.1
+* Upgrade to `kurtosis.sh` script that will pull the latest Docker Kurtosis Core images automatically
+* Fail CI if we detect the string `ERRO`, to catch problems that don't get propagated to the exit code (e.g. not printing the testsuite container logs)
+* Don't break on empty `${@}` in build_and_run (regression introduced when switching to `kurtosis.sh`)
+* Add a `IS_KURTOSIS_CORE_DEV_MODE` custom param to the testsuite, so that we can:
+    1. Run extra tests when testing Kurtosis Core but
+    2. Disable those extra tests after a user has bootstrapped, since it will exceed their free trial test limit
+* Make sure `.dockerignore` gets created after bootstrapping
+
 ## 1.6.0
 * Use Kurtosis Core v1.6.0
 * Implement API changes to allow users to mount external artifacts inside Kurtosis service containers
