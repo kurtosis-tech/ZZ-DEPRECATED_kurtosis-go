@@ -9,6 +9,7 @@ GO_MOD_FILENAME="go.mod"
 GO_MOD_MODULE_KEYWORD="module "  # The key we'll look for when replacing the module name in go.mod
 BUILDSCRIPT_FILENAME="build_and_run.sh"
 DOCKER_IMAGE_VAR_KEYWORD="SUITE_IMAGE=" # The variable we'll look for in the Docker file for replacing the Docker image name
+IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD="IS_KURTOSIS_CORE_DEV_MODE=" # The variable we'll look for when setting whether Kurtosis core dev mode is enabled
 
 set -euo pipefail
 script_dirpath="$(cd "$(dirname "${0}")" && pwd)"
@@ -24,6 +25,10 @@ if [ "$(grep "${GO_MOD_MODULE_KEYWORD}" "${go_mod_filepath}" | wc -l)" -ne 1 ]; 
 fi
 if [ "$(grep "^${DOCKER_IMAGE_VAR_KEYWORD}" "${buildscript_filepath}" | wc -l)" -ne 1 ]; then
     echo "Validation failed: Could not find exactly one line in ${buildscript_filepath} starting with keyword '${DOCKER_IMAGE_VAR_KEYWORD}' for use when replacing with the user's Docker image name" >&2
+    exit 1
+fi
+if [ "$(grep "^${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}" "${buildscript_filepath}" | wc -l)" -ne 1 ]; then
+    echo "Validation failed: Could not find exactly one line in ${buildscript_filepath} starting with keyword '${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}' for use when setting the Kurtosis Core dev mode to false" >&2
     exit 1
 fi
 
@@ -64,6 +69,9 @@ sed -i '' "s,${existing_module_name}/${TESTSUITE_IMPL_DIRNAME},${new_module_name
 
 # Replace Docker image name in buildscript
 sed -i '' "s,^${DOCKER_IMAGE_VAR_KEYWORD}.*,${DOCKER_IMAGE_VAR_KEYWORD}\"${docker_image_name}\"," "${buildscript_filepath}"
+
+# Set Kurtosis Core dev mode to false in buildscript
+sed -i '' "s,^${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}.*,${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}\"false\"," "${buildscript_filepath}"
 
 rm -rf "${script_dirpath}"
 echo "Bootstrap complete; view the README.md in ${root_dirpath} for next steps"

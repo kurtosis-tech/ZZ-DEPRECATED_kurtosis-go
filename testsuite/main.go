@@ -52,6 +52,10 @@ func main() {
 		"datastore-service-image",
 		"",
 		"Name of datastore example microservice Docker image that will be used to launch service containers")
+	isKurtosisCoreDevModeArg := flag.Bool(
+		"is-kurtosis-core-dev-mode",
+		false,
+		"Indicates that this testsuite is being run as part of CI testing in Kurtosis Core")
 
 
 	flag.Parse()
@@ -64,7 +68,7 @@ func main() {
 	logrus.SetLevel(level)
 
 	kurtosisClient := client.NewKurtosisClient()
-	testSuite := testsuite_impl.NewTestsuite(*apiServiceImageArg, *datastoreServiceImageArg)
+	testSuite := testsuite_impl.NewTestsuite(*apiServiceImageArg, *datastoreServiceImageArg, *isKurtosisCoreDevModeArg)
 	exitCode := kurtosisClient.Run(testSuite, *metadataFilepath, *servicesRelativeDirpathArg, *testArg, *kurtosisApiIpArg)
 	os.Exit(exitCode)
 }

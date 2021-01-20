@@ -17,14 +17,15 @@ import (
 type Testsuite struct {
 	apiServiceImage string
 	datastoreServiceImage string
+	isKurtosisCoreDevMode bool
 }
 
-func NewTestsuite(apiServiceImage string, datastoreServiceImage string) *Testsuite {
-	return &Testsuite{apiServiceImage: apiServiceImage, datastoreServiceImage: datastoreServiceImage}
+func NewTestsuite(apiServiceImage string, datastoreServiceImage string, isKurtosisCoreDevMode bool) *Testsuite {
+	return &Testsuite{apiServiceImage: apiServiceImage, datastoreServiceImage: datastoreServiceImage, isKurtosisCoreDevMode: isKurtosisCoreDevMode}
 }
 
 func (suite Testsuite) GetTests() map[string]testsuite.Test {
-	return map[string]testsuite.Test{
+	tests := map[string]testsuite.Test{
 		"basicDatastoreTest": basic_datastore_test.NewBasicDatastoreTest(suite.datastoreServiceImage),
 		"basicDatastoreAndApiTest": basic_datastore_and_api_test.NewBasicDatastoreAndApiTest(
 			suite.datastoreServiceImage,
@@ -34,12 +35,21 @@ func (suite Testsuite) GetTests() map[string]testsuite.Test {
 			suite.datastoreServiceImage,
 			suite.apiServiceImage,
 		),
-		"networkPartitionTest": network_partition_test.NewNetworkPartitionTest(
+	}
+
+	// This example Go testsuite is used internally, when developing on Kurtosis Core, to verify functionality
+	// When this testsuite is being used in this way, some special tests (which likely won't be interesting
+	//  to you) are run
+	// Feel free to delete these tests as you see fit
+	if suite.isKurtosisCoreDevMode {
+		tests["networkPartitionTest"] = network_partition_test.NewNetworkPartitionTest(
 			suite.datastoreServiceImage,
 			suite.apiServiceImage,
-		),
-		"filesArtifactMountingTest": files_artifact_mounting_test.FilesArtifactMountingTest{},
+		)
+		tests["filesArtifactMountingTest"] = files_artifact_mounting_test.FilesArtifactMountingTest{}
 	}
+
+	return tests
 }
 
 func (suite Testsuite) GetNetworkWidthBits() uint32 {
