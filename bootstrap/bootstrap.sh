@@ -2,6 +2,7 @@
 
 TESTSUITE_IMPL_DIRNAME="testsuite"
 README_FILENAME="README.md"
+DOCKERIGNORE_FILENAME=".dockerignore"
 
 # Constants 
 GO_MOD_FILENAME="go.mod"
@@ -52,7 +53,8 @@ find "${root_dirpath}" \
     -maxdepth 1 \
     -exec rm -rf {} \;
 
-cp "${script_dirpath}/README.md" "${root_dirpath}/"
+cp "${script_dirpath}/${README_FILENAME}" "${root_dirpath}/"
+cp "${script_dirpath}/${DOCKERIGNORE_FILENAME}" "${root_dirpath}/"   # build_and_run requires a .dockerignore file, for best practice
 
 # Replace module names in code (we need the "-i '' " argument because Mac sed requires it)
 existing_module_name="$(grep "module" "${go_mod_filepath}" | awk '{print $2}')"
