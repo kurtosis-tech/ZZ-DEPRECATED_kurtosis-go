@@ -97,6 +97,8 @@ if "${do_run}"; then
         "DATASTORE_SERVICE_IMAGE": "'${datastore_service_image}'"
     }'
     # ====================================== End custom Docker environment variables =====================================================
-
-    bash "${script_dirpath}/kurtosis.sh" --custom-env-vars "${custom_env_vars_json}" "${@}" "${SUITE_IMAGE}:${docker_tag}"
+    # The funky ${1+"${@}"} incantation is how you you feed arguments exactly as-is to a child script in Bash
+    # ${*} loses quoting and ${@} trips set -e if no arguments are passed, so this incantation says, "if and only if 
+    #  ${1} exists, evaluate ${@}"
+    bash "${script_dirpath}/kurtosis.sh" --custom-env-vars "${custom_env_vars_json}" ${1+"${@}"} "${SUITE_IMAGE}:${docker_tag}"
 fi
