@@ -1,0 +1,106 @@
+syntax = "proto3";
+package api_container_api;
+
+import "google/protobuf/empty.proto";
+
+service TestExecutionService {
+  rpc RegisterTestExecution(RegisterTestExecutionArgs) returns (google.protobuf.Empty) {};
+
+  // Registers a service but doesn't start the container for it
+  rpc RegisterService(RegisterServiceArgs) returns (RegisterServiceResponse) {};
+
+  // Starts a previously-registered service by creating a Docker container for it
+  rpc StartService(StartServiceArgs) returns (google.protobuf.Empty) {};
+
+  rpc RemoveService(RemoveServiceArgs) returns (google.protobuf.Empty) {};
+
+  rpc Repartition(RepartitionArgs) returns (google.protobuf.Empty) {};
+}
+
+// ==============================================================================================
+//                                  Register Test Execution
+// ==============================================================================================
+message RegisterTestExecutionArgs {
+  // TODO This should actually be unnecessary - we should pass in testsuite metadata at API container startup time,
+  //  so that registration just says "I'm starting" and the API container can look up the timeout
+  uint64 timeout_seconds = 1;
+}
+
+// ==============================================================================================
+//                                     Register Service
+// ==============================================================================================
+message RegisterServiceArgs {
+  // ID that will be used to identify the service going forward
+  string service_id = 1;
+
+  // If emptystring, the default partition ID will be used
+  string partition_id = 2;
+
+  // "Set" of files to generate, identified by a user-created key
+  map<string, bool> files_to_generate = 3;
+}
+
+message RegisterServiceResponse {
+  // Mapping of user-created key in the request -> filepath relative to the suite execution volume root where
+  //  the file was created
+  map<string, string> generated_files_relative_filepaths = 1;
+
+  // The IP address that was allocated for the service
+  string ip_addr = 2;
+}
+
+// ==============================================================================================
+//                                        Start Service
+// ==============================================================================================
+message StartServiceArgs {
+  // ID of the previously-registered service that should be started
+  string service_id = 1;
+
+  string docker_image = 2;
+
+  // "Set" of ports that the running service will listen on
+  // This is a string because it's Docker port specification syntax, e.g. "80" (default TCP) or "80/udp"
+  map<string, bool> used_ports = 3;
+
+  repeated string start_cmd_args = 4;
+
+  map<string, string> docker_env_vars = 5;
+
+  string suite_execution_vol_mnt_dirpath = 6;
+
+  // Mapping of artifact_url -> filepath_on_container_to_mount_artifact_contents
+  map<string, string> files_artifact_mount_dirpaths = 7;
+}
+
+// ==============================================================================================
+//                                        Remove Service
+// ==============================================================================================
+message RemoveServiceArgs {
+  string service_id = 1;
+
+  uint64 container_stop_timeout_seconds = 2;
+}
+
+// ==============================================================================================
+//                                          Repartition
+// ==============================================================================================
+message RepartitionArgs {
+  map<string, PartitionServices> partition_services = 1;
+
+  map<string, PartitionConnections> partition_connections = 2;
+
+  PartitionConnectionInfo default_connection = 3;
+}
+
+message PartitionServices {
+  // "Set" of service IDs in partition
+  map<string, bool> service_id_set = 1;
+}
+
+message PartitionConnections {
+  map<string, PartitionConnectionInfo> connection_info = 1;
+}
+
+message PartitionConnectionInfo {
+  bool is_blocked = 1;
+}

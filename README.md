@@ -8,3 +8,8 @@ This repo contains:
 
 ### Quickstart
 To get started building your own Kurtosis testsuite in Go, see [the Quickstart docs](https://docs.kurtosistech.com/quickstart.html).
+
+### Library Development
+Each library needs to talk with Kurtosis Core, and the Kurtosis Core API is defined via Protobuf. Rather than storing the Protobufs in Git submodules (which add significant complexity), the `.proto` files are simply copied from the relevant version of Kurtosis Core. In the future, we can move to a more productized solution.
+
+To regenerate the bindings corresponding to the Protobuf files, use the `scripts/regenerate-protobuf-output.sh` script.
