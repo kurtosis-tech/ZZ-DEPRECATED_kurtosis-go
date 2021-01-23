@@ -9,6 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/kurtosis-tech/kurtosis-go/lib/client"
+	"github.com/kurtosis-tech/kurtosis-go/lib/execution"
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -19,6 +20,30 @@ func main() {
 		ForceColors:   true,
 		FullTimestamp: true,
 	})
+
+	customParamsJsonArg := flag.String(
+		"custom-params-json",
+		"{}",
+		"JSON string containing custom data that the testsuite will deserialize to modify runtime behaviour",
+	)
+
+	kurtosisApiSocketArg := flag.String(
+		"kurtosis-api-socket",
+		"",
+		"Socket in the form of address:port of the Kurtosis API container",
+	)
+
+	logLevelArg := flag.String(
+		"log-level",
+		"",
+		"Loglevel string that the test suite will output with",
+	)
+
+	flag.Parse()
+
+	configurator := New
+	execution.NewTestSuiteExecutor(*kurtosisApiSocketArg, *logLevelArg, *customParamsJsonArg, )
+
 
 	// ------------------- Kurtosis-internal params -------------------------------
 	metadataFilepath := flag.String(
