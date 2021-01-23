@@ -7,11 +7,19 @@ package execution
 
 import (
 	"context"
+	"fmt"
 	"github.com/kurtosis-tech/kurtosis-go/lib/core_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
 	"github.com/palantir/stacktrace"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"time"
+)
+
+const (
+	maxSuiteRegistrationRetries = 20
+	timeBetweenSuiteRegistrationRetries = 500 * time.Millisecond
 )
 
 type TestSuiteExecutor struct {
@@ -35,7 +43,8 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 		return stacktrace.Propagate(err, "An error occurred parsing the suite params JSON and creating the testsuite")
 	}
 
-	conn, err := grpc.Dial(executor.kurtosisApiSocket)
+	// TODO SECURITY: Use HTTPS to ensure you're conecting with real Kurtosis API servers
+	conn, err := grpc.Dial(executor.kurtosisApiSocket, grpc.WithInsecure())
 	if err != nil {
 		return stacktrace.Propagate(
 			err,
@@ -45,12 +54,29 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 	defer conn.Close()
 
 	suiteRegistrationClient := bindings.NewSuiteRegistrationServiceClient(conn)
-	suiteRegistrationResp, err := suiteRegistrationClient.RegisterSuite(ctx, &emptypb.Empty{})
-	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred registering the suite with the Kurtosis API server")
-	}
-	action := suiteRegistrationResp.SuiteAction
 
+	var suiteRegistrationResp *bindings.SuiteRegistrationResponse
+	suiteRegistrationAttempts := 0
+	for {
+		if suiteRegistrationAttempts >= maxSuiteRegistrationRetries {
+			return stacktrace.NewError(
+				"Failed to register testsuite with API container, even after %v retries spaced %v apart",
+				maxSuiteRegistrationRetries,
+				timeBetweenSuiteRegistrationRetries)
+		}
+
+		resp, err := suiteRegistrationClient.RegisterSuite(ctx, &emptypb.Empty{})
+		if err == nil {
+			suiteRegistrationResp = resp
+			break
+		}
+		logrus.Debugf("The following error occurred registering testsuite with API container; retrying in %v:", timeBetweenSuiteRegistrationRetries)
+		fmt.Fprintln(logrus.StandardLogger().Out, err)
+		time.Sleep(timeBetweenSuiteRegistrationRetries)
+		suiteRegistrationAttempts++
+	}
+
+	action := suiteRegistrationResp.SuiteAction
 	switch action {
 	case bindings.SuiteAction_SERIALIZE_SUITE_METADATA:
 		if err := runSerializeSuiteMetadataFlow(ctx, suite, conn); err != nil {
