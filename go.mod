@@ -3,6 +3,7 @@ module github.com/kurtosis-tech/kurtosis-go
 go 1.13
 
 require (
+	github.com/golang/protobuf v1.4.2
 	github.com/google/uuid v1.1.2
 	github.com/hashicorp/go-retryablehttp v0.6.7
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177

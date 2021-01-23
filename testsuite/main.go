@@ -41,8 +41,9 @@ func main() {
 
 	flag.Parse()
 
-	// REPLACE WITH YOUR OWN CONFIGURATOR
+	// >>>>>>>>>>>>>>>>>>> REPLACE WITH YOUR OWN CONFIGURATOR <<<<<<<<<<<<<<<<<<<<<<<<
 	configurator := execution_impl.NewExampleTestsuiteConfigurator()
+	// >>>>>>>>>>>>>>>>>>> REPLACE WITH YOUR OWN CONFIGURATOR <<<<<<<<<<<<<<<<<<<<<<<<
 
 	suiteExecutor := execution.NewTestSuiteExecutor(*kurtosisApiSocketArg, *logLevelArg, *customParamsJsonArg, configurator)
 	if err := suiteExecutor.Run(context.Background()); err != nil {

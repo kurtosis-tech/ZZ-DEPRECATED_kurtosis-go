@@ -59,7 +59,7 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 		return nil
 	case bindings.SuiteAction_EXECUTE_TEST:
 		// TODO run nserialize suite metadata flow
-		return nil
+		return stacktrace.NewError("NOT IMPLEMENTED YET")
 	default:
 		return stacktrace.NewError("Encountered unrecognized action '%v'; this is a code bug", action)
 	}

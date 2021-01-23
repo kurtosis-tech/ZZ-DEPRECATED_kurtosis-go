@@ -29,13 +29,13 @@ CMD ./testsuite.bin \
 
 
 
-    --api-service-image=${API_SERVICE_IMAGE} \
-    --datastore-service-image=${DATASTORE_SERVICE_IMAGE} \
-    --is-kurtosis-core-dev-mode=${IS_KURTOSIS_CORE_DEV_MODE} \
-    `# ------------------Kurtosis-specific environment variables -------------------` \
-    `# See: http://docs.kurtosistech.com/testsuite-details.html` \
-    --kurtosis-api-ip=${KURTOSIS_API_IP} \
-    --log-level=${LOG_LEVEL} \
-    --metadata-filepath=${METADATA_FILEPATH} \
-    --services-relative-dirpath=${SERVICES_RELATIVE_DIRPATH} \
-    --test=${TEST}
+#    --api-service-image=${API_SERVICE_IMAGE} \
+#    --datastore-service-image=${DATASTORE_SERVICE_IMAGE} \
+#    --is-kurtosis-core-dev-mode=${IS_KURTOSIS_CORE_DEV_MODE} \
+#    `# ------------------Kurtosis-specific environment variables -------------------` \
+#    `# See: http://docs.kurtosistech.com/testsuite-details.html` \
+#    --kurtosis-api-ip=${KURTOSIS_API_IP} \
+#    --log-level=${LOG_LEVEL} \
+#    --metadata-filepath=${METADATA_FILEPATH} \
+#    --services-relative-dirpath=${SERVICES_RELATIVE_DIRPATH} \
+#    --test=${TEST}
