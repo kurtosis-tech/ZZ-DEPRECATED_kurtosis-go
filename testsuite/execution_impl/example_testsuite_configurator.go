@@ -40,7 +40,7 @@ func (t ExampleTestsuiteConfigurator) ParseParamsAndCreateSuite(paramsJsonStr st
 		return nil, stacktrace.Propagate(err, "An error occurred deserializing the testsuite params JSON")
 	}
 
-	if err := validateArgs(args); args != nil {
+	if err := validateArgs(args); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred validating the deserialized testsuite params")
 	}
 
