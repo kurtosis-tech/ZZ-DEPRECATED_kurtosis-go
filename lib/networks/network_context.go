@@ -7,29 +7,16 @@ package networks
 
 import (
 	"context"
-	"fmt"
-	"github.com/google/uuid"
-	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
 	"github.com/kurtosis-tech/kurtosis-go/lib/core_api/bindings"
-	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service"
-	"github.com/kurtosis-tech/kurtosis-go/lib/kurtosis_service/method_types"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/kurtosis-tech/kurtosis-go/lib/test_suite_docker_consts/test_suite_container_mountpoints"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
 	"path"
-	"path/filepath"
-	"sync"
-	"time"
 )
 
 const (
-	// NOTE: This is kinda weird - when we remove a service we can never get it back so having a container
-	//  stop timeout doesn't make much sense. It will make more sense when we can stop/start containers
-	// Independent of adding/removing them from the network
-	removeServiceContainerStopTimeout = 10 * time.Second
-
 	// This will alwyas resolve to the default partition ID (regardless of whether such a partition exists in the network,
 	//  or it was repartitioned away)
 	defaultPartitionId PartitionID = ""
@@ -157,7 +144,6 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully created start command for service")
 
 	logrus.Tracef("Starting new service with Kurtosis API...")
-	dockerImage := initializer.GetDockerImage()
 	startServiceArgs := &bindings.StartServiceArgs{
 		ServiceId:                   string(serviceId),
 		DockerImage:                 initializer.GetDockerImage(),
@@ -184,11 +170,14 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 /*
 Stops the container with the given service ID, and removes it from the network.
 */
-func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, containerStopTimeoutSeconds int) error {
+func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, containerStopTimeoutSeconds uint64) error {
 	logrus.Debugf("Removing service '%v'...", serviceId)
 	args := &bindings.RemoveServiceArgs{
 		ServiceId:                   string(serviceId),
-		ContainerStopTimeoutSeconds: removeServiceContainerStopTimeout,
+		// NOTE: This is kinda weird - when we remove a service we can never get it back so having a container
+		//  stop timeout doesn't make much sense. It will make more sense when we can stop/start containers
+		// Independent of adding/removing them from the network
+		ContainerStopTimeoutSeconds: containerStopTimeoutSeconds,
 	}
 	if _, err := networkCtx.client.RemoveService(context.Background(), args); err != nil {
 		return stacktrace.Propagate(err, "An error occurred removing service '%v' from the network", serviceId)
@@ -222,40 +211,32 @@ func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitione
 			serviceIdStrPseudoSet[serviceIdStr] = true
 		}
 		partitionIdStr := string(partitionId)
-		partitionServices[partitionIdStr] = serviceIdStrPseudoSet
+		partitionServices[partitionIdStr] = &bindings.PartitionServices{
+			ServiceIdSet: serviceIdStrPseudoSet,
+		}
 	}
 
-	serializablePartConns := map[string]map[string]method_types.SerializablePartitionConnection{}
-	for partitionAId, partitionAConns := range repartitioner.partitionConnections {
-		serializablePartAConns := map[string]method_types.SerializablePartitionConnection{}
-		for partitionBId, unserializableConn := range partitionAConns {
+	partitionConns := map[string]*bindings.PartitionConnections{}
+	for partitionAId, partitionAConnsMap := range repartitioner.partitionConnections {
+		partitionAConnsStrMap := map[string]*bindings.PartitionConnectionInfo{}
+		for partitionBId, connInfo := range partitionAConnsMap {
 			partitionBIdStr := string(partitionBId)
-			serializableConn := makePartConnSerializable(unserializableConn)
-			serializablePartAConns[partitionBIdStr] = serializableConn
+			partitionAConnsStrMap[partitionBIdStr] = connInfo
+		}
+		partitionAConns := &bindings.PartitionConnections{
+			ConnectionInfo: partitionAConnsStrMap,
 		}
 		partitionAIdStr := string(partitionAId)
-		serializablePartConns[partitionAIdStr] = serializablePartAConns
+		partitionConns[partitionAIdStr] = partitionAConns
 	}
 
-	serializableDefaultConn := makePartConnSerializable(repartitioner.defaultConnection)
-	
 	repartitionArgs := &bindings.RepartitionArgs{
 		PartitionServices:    partitionServices,
-		PartitionConnections: serializablePartConns,
-		DefaultConnection:    serializableDefaultConn,
+		PartitionConnections: partitionConns,
+		DefaultConnection:    repartitioner.defaultConnection,
 	}
-
-	if err := networkCtx.kurtosisService.Repartition(partitionServices, serializablePartConns, serializableDefaultConn); err != nil {
+	if _, err := networkCtx.client.Repartition(context.Background(), repartitionArgs); err != nil {
 		return stacktrace.Propagate(err, "An error occurred repartitioning the test network")
 	}
 	return nil
-}
-
-// ============================================================================================
-//                                    Private helper methods
-// ============================================================================================
-func makePartConnSerializable(connection PartitionConnection) method_types.SerializablePartitionConnection {
-	return method_types.SerializablePartitionConnection{
-		IsBlocked: connection.IsBlocked,
-	}
 }
