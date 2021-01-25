@@ -46,6 +46,7 @@ func NewNetworkContext(
 		client bindings.TestExecutionServiceClient,
 		filesArtifactUrls map[services.FilesArtifactID]string) *NetworkContext {
 	return &NetworkContext{
+		mutex: &sync.Mutex{},
 		client: client,
 		filesArtifactUrls: filesArtifactUrls,
 		services: map[services.ServiceID]services.Service{},
