@@ -34,9 +34,10 @@ type DockerContainerInitializer interface {
 		should extend Service).
 
 		Args:
+			serviceId: The ID of the service being created
 			ipAddr: The IP address of the Docker container running the service
 	*/
-	GetService(ipAddr string) Service
+	GetService(serviceId ServiceID, ipAddr string) Service
 
 	// GENERICS TOOD: If Go had generics, we could parameterize this entire class with an enum of the types of files this service consumes
 	/*

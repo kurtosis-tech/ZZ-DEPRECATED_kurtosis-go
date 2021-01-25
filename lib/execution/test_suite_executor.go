@@ -85,7 +85,9 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 		}
 		return nil
 	case bindings.SuiteAction_EXECUTE_TEST:
-		// TODO run nserialize suite metadata flow
+		if err := runTestExecutionFlow(ctx, suite, conn); err != nil {
+			return stacktrace.Propagate(err, "An error occurred running the test execution flow")
+		}
 		return stacktrace.NewError("NOT IMPLEMENTED YET")
 	default:
 		return stacktrace.NewError("Encountered unrecognized action '%v'; this is a code bug", action)

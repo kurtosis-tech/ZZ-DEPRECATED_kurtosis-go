@@ -14,6 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"path"
+	"sync"
 )
 
 const (
@@ -26,6 +27,11 @@ type NetworkContext struct {
 	client bindings.TestExecutionServiceClient
 
 	filesArtifactUrls map[services.FilesArtifactID]string
+
+	// Mutex protecting access to the services map
+	mutex *sync.Mutex
+
+	services map[services.ServiceID]services.Service
 }
 
 
@@ -42,6 +48,7 @@ func NewNetworkContext(
 	return &NetworkContext{
 		client: client,
 		filesArtifactUrls: filesArtifactUrls,
+		services: map[services.ServiceID]services.Service{},
 	}
 }
 
@@ -69,6 +76,7 @@ func (networkCtx *NetworkContext) AddService(
 	if err != nil {
 		return nil, nil, stacktrace.Propagate(err, "An error occurred adding service '%v' to the network in the default partition", serviceId)
 	}
+
 	return service, availabilityChecker, nil
 }
 
@@ -90,6 +98,9 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		serviceId services.ServiceID,
 		partitionId PartitionID,
 		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
 	ctx := context.Background()
 
 	logrus.Tracef("Registering new service ID with Kurtosis API...")
@@ -100,7 +111,10 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 	registerServiceResp, err := networkCtx.client.RegisterService(ctx, registerServiceArgs)
 	if err != nil {
-		return nil, nil, stacktrace.Propagate(err, "An error occurred registering service with ID '%v' with the Kurtosis API")
+		return nil, nil, stacktrace.Propagate(
+			err,
+			"An error occurred registering service with ID '%v' with the Kurtosis API",
+			serviceId)
 	}
 	logrus.Tracef("New service successfully registered with Kurtosis API")
 
@@ -158,19 +172,36 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 	logrus.Tracef("Successfully started service with Kurtosis API")
 
-	logrus.Tracef("Getting service from IP...")
-	service := initializer.GetService(serviceIpAddr)
-	logrus.Tracef("Successfully got service from IP")
+	logrus.Tracef("Creating service interface...")
+	service := initializer.GetService(serviceId, serviceIpAddr)
+	logrus.Tracef("Successfully created service interface")
+
+	networkCtx.services[serviceId] = service
 
 	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
 
 	return service, availabilityChecker, nil
 }
 
+func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (services.Service, error) {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
+	service, found := networkCtx.services[serviceId]
+	if !found {
+		return nil, stacktrace.NewError("No service found with ID '%v'", serviceId)
+	}
+
+	return service, nil
+}
+
 /*
 Stops the container with the given service ID, and removes it from the network.
 */
 func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, containerStopTimeoutSeconds uint64) error {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
 	logrus.Debugf("Removing service '%v'...", serviceId)
 	args := &bindings.RemoveServiceArgs{
 		ServiceId:                   string(serviceId),
@@ -182,6 +213,7 @@ func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, co
 	if _, err := networkCtx.client.RemoveService(context.Background(), args); err != nil {
 		return stacktrace.Propagate(err, "An error occurred removing service '%v' from the network", serviceId)
 	}
+	delete(networkCtx.services, serviceId)
 	logrus.Debugf("Successfully removed service ID %v", serviceId)
 	return nil
 }
@@ -203,6 +235,9 @@ Repartitions the network using the given repartitioner. A repartitioner builder 
 	NewRepartitionerBuilder method of this network context object.
  */
 func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitioner) error {
+	networkCtx.mutex.Lock()
+	defer networkCtx.mutex.Unlock()
+
 	partitionServices := map[string]*bindings.PartitionServices{}
 	for partitionId, serviceIdSet := range repartitioner.partitionServices {
 		serviceIdStrPseudoSet := map[string]bool{}
