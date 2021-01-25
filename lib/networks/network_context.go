@@ -119,14 +119,14 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 	logrus.Tracef("New service successfully registered with Kurtosis API")
 
+	suiteExVolMountpointOnService := initializer.GetTestVolumeMountpoint()
 	generatedFilesRelativeFilepaths := registerServiceResp.GeneratedFilesRelativeFilepaths
 	generatedFilesFps := map[string]*os.File{}
-	generatedFilesAbsoluteFilepaths := map[string]string{}
+	generatedFilesAbsoluteFilepathsOnService := map[string]string{}
 	for fileId, relativeFilepath := range generatedFilesRelativeFilepaths {
-		absoluteFilepath := path.Join(test_suite_container_mountpoints.SuiteExVolMountpoint, relativeFilepath)
-		generatedFilesAbsoluteFilepaths[fileId] = absoluteFilepath
-		logrus.Debugf("Opening generated file at '%v' for writing...", absoluteFilepath)
-		fp, err := os.Create(absoluteFilepath)
+		absoluteFilepathOnTestsuite := path.Join(test_suite_container_mountpoints.SuiteExVolMountpoint, relativeFilepath)
+		logrus.Debugf("Opening generated file at '%v' for writing...", absoluteFilepathOnTestsuite)
+		fp, err := os.Create(absoluteFilepathOnTestsuite)
 		if err != nil {
 			return nil, nil, stacktrace.Propagate(
 				err,
@@ -135,6 +135,9 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		}
 		defer fp.Close()
 		generatedFilesFps[fileId] = fp
+
+		absoluteFilepathOnService := path.Join(suiteExVolMountpointOnService, relativeFilepath)
+		generatedFilesAbsoluteFilepathsOnService[fileId] = absoluteFilepathOnService
 	}
 
 	logrus.Trace("Initializing generated files...")
@@ -144,16 +147,24 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Trace("Successfully initialized generated files")
 
 
-	logrus.Tracef("Creating files artifact mount dirpaths map...")
-	filesArtifactMountDirpaths := map[string]string{}
+	logrus.Tracef("Creating files artifact URL -> mount dirpaths map...")
+	artifactUrlToMountDirpath := map[string]string{}
 	for filesArtifactId, mountDirpath := range initializer.GetFilesArtifactMountpoints() {
-		filesArtifactMountDirpaths[string(filesArtifactId)] = mountDirpath
+		artifactUrl, found := networkCtx.filesArtifactUrls[filesArtifactId]
+		if !found {
+			return nil, nil, stacktrace.Propagate(
+				err,
+				"Service requested file artifact '%v', but the network" +
+					"context doesn't have a URL for that file artifact; this is a bug with Kurtosis itself",
+				filesArtifactId)
+		}
+		artifactUrlToMountDirpath[string(artifactUrl)] = mountDirpath
 	}
-	logrus.Tracef("Successfully created files artifact mount dirpaths map")
+	logrus.Tracef("Successfully created files artifact URL -> mount dirpaths map")
 
 	logrus.Tracef("Creating start command for service...")
 	serviceIpAddr := registerServiceResp.IpAddr
-	startCmdArgs, err := initializer.GetStartCommand(generatedFilesAbsoluteFilepaths, serviceIpAddr)
+	startCmdArgs, err := initializer.GetStartCommand(generatedFilesAbsoluteFilepathsOnService, serviceIpAddr)
 	if err != nil {
 		return nil, nil, stacktrace.Propagate(err, "Failed to create start command")
 	}
@@ -167,7 +178,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		StartCmdArgs:                startCmdArgs,
 		DockerEnvVars:               map[string]string{}, // TODO actually support Docker env vars!
 		SuiteExecutionVolMntDirpath: initializer.GetTestVolumeMountpoint(),
-		FilesArtifactMountDirpaths:  filesArtifactMountDirpaths,
+		FilesArtifactMountDirpaths:  artifactUrlToMountDirpath,
 	}
 	if _, err := networkCtx.client.StartService(ctx, startServiceArgs); err != nil {
 		return nil, nil, stacktrace.Propagate(err, "An error occurred starting the service with the Kurtosis API")
