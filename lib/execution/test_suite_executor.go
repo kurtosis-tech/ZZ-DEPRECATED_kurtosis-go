@@ -8,10 +8,8 @@ package execution
 import (
 	"context"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/lib/client/artifact_id_provider"
 	"github.com/kurtosis-tech/kurtosis-go/lib/core_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
@@ -144,7 +142,7 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
 	// TODO this should just be "register test execution started", since the API container already has the metadata
 	hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
-	hardTestTimeoutSeconds := int(hardTestTimeout.Seconds())
+	hardTestTimeoutSeconds := uint64(hardTestTimeout.Seconds())
 	registerTestExecutionMessage := &bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
 	if _, err := executionClient.RegisterTestExecution(ctx, registerTestExecutionMessage); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
