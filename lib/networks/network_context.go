@@ -125,6 +125,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	for fileId, relativeFilepath := range generatedFilesRelativeFilepaths {
 		absoluteFilepath := path.Join(test_suite_container_mountpoints.SuiteExVolMountpoint, relativeFilepath)
 		generatedFilesAbsoluteFilepaths[fileId] = absoluteFilepath
+		logrus.Debugf("Opening generated file at '%v' for writing...", absoluteFilepath)
 		fp, err := os.Create(absoluteFilepath)
 		if err != nil {
 			return nil, nil, stacktrace.Propagate(
