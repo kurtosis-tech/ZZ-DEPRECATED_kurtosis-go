@@ -126,7 +126,7 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 
 func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
 	executionClient := bindings.NewTestExecutionServiceClient(conn)
-	testExecutionInfo, err := executionClient.GetTestExecutionInfo(ctx, nil)
+	testExecutionInfo, err := executionClient.GetTestExecutionInfo(ctx, &emptypb.Empty{})
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the test execution info")
 	}
