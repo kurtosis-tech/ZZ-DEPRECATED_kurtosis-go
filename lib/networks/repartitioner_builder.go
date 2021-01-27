@@ -6,6 +6,7 @@
 package networks
 
 import (
+	"github.com/kurtosis-tech/kurtosis-go/lib/core_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-go/lib/services"
 	"github.com/palantir/stacktrace"
 )
@@ -39,7 +40,7 @@ func (builder *RepartitionerBuilder) WithPartitionConnection(partitionA Partitio
 	action := addPartitionConnectionAction{
 		partitionA: partitionA,
 		partitionB: partitionB,
-		connection: PartitionConnection{
+		connection: &bindings.PartitionConnectionInfo{
 			IsBlocked: isBlocked,
 		},
 	}
@@ -53,8 +54,8 @@ Builds a Repartitioner by applying the transformations specified on the Repartit
 func (builder *RepartitionerBuilder) Build() (*Repartitioner, error) {
 	repartitioner := &Repartitioner{
 		partitionServices: map[PartitionID]*serviceIdSet{},
-		partitionConnections: map[PartitionID]map[PartitionID]PartitionConnection{},
-		defaultConnection: PartitionConnection{
+		partitionConnections: map[PartitionID]map[PartitionID]*bindings.PartitionConnectionInfo{},
+		defaultConnection: &bindings.PartitionConnectionInfo{
 			IsBlocked: builder.isDefaultPartitionConnectionBlocked,
 		},
 	}
