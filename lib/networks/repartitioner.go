@@ -5,14 +5,12 @@
 
 package networks
 
-type PartitionID string
+import "github.com/kurtosis-tech/kurtosis-go/lib/core_api/bindings"
 
-type PartitionConnection struct {
-	IsBlocked bool
-}
+type PartitionID string
 
 type Repartitioner struct {
 	partitionServices map[PartitionID]*serviceIdSet
-	partitionConnections map[PartitionID]map[PartitionID]PartitionConnection
-	defaultConnection PartitionConnection
+	partitionConnections map[PartitionID]map[PartitionID]*bindings.PartitionConnectionInfo
+	defaultConnection *bindings.PartitionConnectionInfo
 }

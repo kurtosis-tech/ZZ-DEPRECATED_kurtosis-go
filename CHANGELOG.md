@@ -1,3 +1,12 @@
+## 1.7.0
+* Make README point to the quickstart docs, rather than duplicating them
+* Upgraded to use the new Protobuf-based APIs of Kurtosis Core 1.7.0
+* Replaced the Kurtosis `Client` with `TestExecutor` and `TestExecutorConfigurator` to allow users to set log level, parse custom params, and initialize their testsuite without needing to modify `main.go` or the `Dockerfile`
+* Switched to receiving custom testsuite params via the `CUSTOM_PARAMS_JSON` Docker environment variable
+* Pushed a large amount of logic from that was in Kurtosis Go (particularly `NetworkContext`) into Kurtosis Core, so that the Go library is just a thing wrapper over Kurtosis Core
+    * Added logic (transparent to the end user) inside TestExecutor for running the test execution or metadata serialization flows
+* Removed a ton of now-unnecessary Docker environment variables:
+
 ## 1.6.1
 * Upgrade to `kurtosis.sh` script that will pull the latest Docker Kurtosis Core images automatically
 * Fail CI if we detect the string `ERRO`, to catch problems that don't get propagated to the exit code (e.g. not printing the testsuite container logs)

@@ -34,6 +34,7 @@ type DockerContainerInitializer interface {
 		should extend Service).
 
 		Args:
+			serviceId: The ID of the service being created
 			ipAddr: The IP address of the Docker container running the service
 	*/
 	GetService(serviceId ServiceID, ipAddr string) Service
@@ -103,14 +104,12 @@ type DockerContainerInitializer interface {
 			mountedFileFilepaths: Mapping of developer_key -> initialized_file_filepath where developer_key corresponds to the keys returned
 				in the `GetFilesToMount` function, and initialized_file_filepath is the path *on the Docker container* of where the
 				file has been mounted. The files will have already been initialized via the `InitializeMountedFiles` function.
-			ipPlaceholder: Because the IP address of the container is an implementation detail, any references to the IP
-				address of the container should use this placeholder string when they want the IP. This will get replaced at
-				service launch time with the actual IP.
+			ipAddr: The IP address of the service being started.
 
 		Returns:
 			The command fragments which will be used to construct the run command which will be used to launch the Docker container
 				running the service. If this is nil, then no explicit command will be specified and whatever command the Dockerfile
 				specifies will be run instead.
 	*/
-	GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string) ([]string, error)
+	GetStartCommand(mountedFileFilepaths map[string]string, ipAddr string) ([]string, error)
 }

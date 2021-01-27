@@ -14,17 +14,17 @@ import (
 	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/network_partition_test"
 )
 
-type Testsuite struct {
+type ExampleTestsuite struct {
 	apiServiceImage string
 	datastoreServiceImage string
 	isKurtosisCoreDevMode bool
 }
 
-func NewTestsuite(apiServiceImage string, datastoreServiceImage string, isKurtosisCoreDevMode bool) *Testsuite {
-	return &Testsuite{apiServiceImage: apiServiceImage, datastoreServiceImage: datastoreServiceImage, isKurtosisCoreDevMode: isKurtosisCoreDevMode}
+func NewExampleTestsuite(apiServiceImage string, datastoreServiceImage string, isKurtosisCoreDevMode bool) *ExampleTestsuite {
+	return &ExampleTestsuite{apiServiceImage: apiServiceImage, datastoreServiceImage: datastoreServiceImage, isKurtosisCoreDevMode: isKurtosisCoreDevMode}
 }
 
-func (suite Testsuite) GetTests() map[string]testsuite.Test {
+func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 	tests := map[string]testsuite.Test{
 		"basicDatastoreTest": basic_datastore_test.NewBasicDatastoreTest(suite.datastoreServiceImage),
 		"basicDatastoreAndApiTest": basic_datastore_and_api_test.NewBasicDatastoreAndApiTest(
@@ -52,7 +52,7 @@ func (suite Testsuite) GetTests() map[string]testsuite.Test {
 	return tests
 }
 
-func (suite Testsuite) GetNetworkWidthBits() uint32 {
+func (suite ExampleTestsuite) GetNetworkWidthBits() uint32 {
 	return 8
 }
 
