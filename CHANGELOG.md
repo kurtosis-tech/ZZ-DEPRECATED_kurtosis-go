@@ -1,4 +1,4 @@
-## TBD
+## 1.7.0
 * Make README point to the quickstart docs, rather than duplicating them
 * Upgraded to use the new Protobuf-based APIs of Kurtosis Core 1.7.0
 * Replaced the Kurtosis `Client` with `TestExecutor` and `TestExecutorConfigurator` to allow users to set log level, parse custom params, and initialize their testsuite without needing to modify `main.go` or the `Dockerfile`
