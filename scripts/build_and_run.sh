@@ -72,12 +72,6 @@ docker_tag="$(echo "${git_branch}" | sed 's,[/:],_,g')"
 
 root_dirpath="$(dirname "${script_dirpath}")"
 if "${do_build}"; then
-    echo "Generating Kurtosis Core API bindings from protobufs..."
-    if ! "${script_dirpath}/regenerate-protobuf-output.sh"; then
-        echo "Error: An error occurred generating Kurtosis Core API bindings from protobufs" >&2
-    fi
-    echo "Successfully generated Kurtosis Core API bindingsfrom protobufs"
-
     echo "Running unit tests..."
     # TODO Extract this go-specific logic out into a separate script so we can copy/paste the build_and_run.sh between various languages
     if ! go test "${root_dirpath}/..."; then

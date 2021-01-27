@@ -1,21 +1,36 @@
+# This script regenerates Go bindings corresponding to the .proto files that define the API container's API
+# It requires the Golang Protobuf extension to the 'protoc' compiler, as well as the Golang gRPC extension
+
 set -euo pipefail
 script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 root_dirpath="$(dirname "${script_dirpath}")"
 
 # ================================ CONSTANTS =======================================================
-GO_MODULE="github.com/kurtosis-tech/kurtosis-go"
+GO_MOD_FILENAME="go.mod"
+GO_MOD_FILE_MODULE_KEYWORD="module"
+
 
 LIB_DIRNAME="lib"
 API_DIRNAME="core_api"
 BINDINGS_DIRNAME="bindings"
-API_BINDINGS_GO_PKG="${GO_MODULE}/${LIB_DIRNAME}/${BINDINGS_DIRNAME}"
 
 # =============================== MAIN LOGIC =======================================================
+go_mod_filepath="${root_dirpath}/${GO_MOD_FILENAME}"
+if ! [ -f "${go_mod_filepath}" ]; then
+    echo "Error: Could not get Go module name; no ${GO_MOD_FILENAME} found in root of repo" >&2
+    exit 1
+fi
+go_module="$(grep "^${GO_MOD_FILE_MODULE_KEYWORD}" "${go_mod_filepath}" | awk '{print $2}')"
+if [ "${go_module}" == "" ]; then
+    echo "Error: Could not extract Go module from ${go_mod_filepath}" >&2
+    exit 1
+fi
+api_bindings_go_pkg="${go_module}/${LIB_DIRNAME}/${BINDINGS_DIRNAME}"
+
 api_dirpath="${root_dirpath}/${LIB_DIRNAME}/${API_DIRNAME}"
 input_dirpath="${api_dirpath}"
 output_dirpath="${api_dirpath}/${BINDINGS_DIRNAME}"
 
-# TODO Upgrade this to remove all generated code
 if [ "${output_dirpath}/" != "/" ]; then
     if ! find ${output_dirpath} -name '*.go' -delete; then
         echo "Error: An error occurred removing the existing protobuf-generated code" >&2
@@ -41,7 +56,7 @@ for protobuf_filepath in $(find "${input_dirpath}" -name "*.proto"); do
             `# Rather than specify the go_package in source code (which means all consumers of these protobufs would get it),` \
             `#  we specify the go_package here per https://developers.google.com/protocol-buffers/docs/reference/go-generated` \
             `# See also: https://github.com/golang/protobuf/issues/1272` \
-            --go_opt="M${protobuf_filename}=${API_BINDINGS_GO_PKG};$(basename "${API_BINDINGS_GO_PKG}")" \
+            --go_opt="M${protobuf_filename}=${api_bindings_go_pkg};$(basename "${api_bindings_go_pkg}")" \
             "${protobuf_filepath}"; then
         echo "Error: An error occurred generating lib core files from protobuf file: ${protobuf_filepath}" >&2
         exit 1
