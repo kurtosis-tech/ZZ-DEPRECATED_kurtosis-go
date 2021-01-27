@@ -67,8 +67,9 @@ case "${action}" in
 esac
 
 # ====================== MAIN LOGIC =======================================================
-git_branch="$(git rev-parse --abbrev-ref HEAD)"
-docker_tag="$(echo "${git_branch}" | sed 's,[/:],_,g')"
+# Captures the first of tag > branch > commit
+git_ref="$(git describe --tags --exact-match 2> /dev/null || git symbolic-ref -q --short HEAD || git rev-parse --short HEAD)"
+docker_tag="$(echo "${git_ref}" | sed 's,[/:],_,g')"
 
 root_dirpath="$(dirname "${script_dirpath}")"
 if "${do_build}"; then
