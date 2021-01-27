@@ -196,6 +196,9 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	return service, availabilityChecker, nil
 }
 
+/*
+Gets the service with the given ID, or returns an error if no service with that ID exists.
+ */
 func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (services.Service, error) {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()

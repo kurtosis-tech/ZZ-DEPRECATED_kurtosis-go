@@ -44,7 +44,7 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 		return stacktrace.Propagate(err, "An error occurred parsing the suite params JSON and creating the testsuite")
 	}
 
-	// TODO SECURITY: Use HTTPS to ensure you're conecting with real Kurtosis API servers
+	// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
 	conn, err := grpc.Dial(executor.kurtosisApiSocket, grpc.WithInsecure())
 	if err != nil {
 		return stacktrace.Propagate(
@@ -90,7 +90,7 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 		}
 		return nil
 	default:
-		return stacktrace.NewError("Encountered unrecognized action '%v'; this is a code bug", action)
+		return stacktrace.NewError("Encountered unrecognized action '%v'; this is a bug in Kurtosis itself", action)
 	}
 }
 
@@ -157,6 +157,8 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 		executionClient,
 		filesArtifactUrls)
 
+	// TODO Also time out the setup with the API container rather than storing this locally
+	//  to reduce complexity inside the lib
 	logrus.Info("Setting up the test network...")
 	untypedNetwork, err := test.Setup(networkCtx)
 	if err != nil {
@@ -171,6 +173,8 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 		testResultChan <- runTestInGoroutine(test, untypedNetwork)
 	}()
 
+	// TODO Switch to registering the timeout with the API container rather than storing this locally
+	//  to reduce complexity inside the lib
 	// Time out the test so a poorly-written test doesn't run forever
 	testTimeout := test.GetExecutionTimeout()
 	var timedOut bool

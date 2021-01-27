@@ -94,15 +94,14 @@ if "${do_run}"; then
     # NOTE: Replace these with whatever custom properties your service needs
     api_service_image="${KURTOSIS_DOCKERHUB_ORG}/example-microservices_api"
     datastore_service_image="${KURTOSIS_DOCKERHUB_ORG}/example-microservices_datastore"
-    # Docker only allows you to have spaces in the variable if you escape them or use a Docker env file
-    custom_env_vars_json='{
-        "API_SERVICE_IMAGE": "'${api_service_image}'",
-        "DATASTORE_SERVICE_IMAGE": "'${datastore_service_image}'",
-        "IS_KURTOSIS_CORE_DEV_MODE": "'${IS_KURTOSIS_CORE_DEV_MODE}'"
+    custom_params_json='{
+        "apiServiceImage" :"'${api_service_image}'",
+        "datastoreServiceImage": "'${datastore_service_image}'",
+        "isKurtosisCoreDevMode": "'${IS_KURTOSIS_CORE_DEV_MODE}'"
     }'
     # ====================================== End custom Docker environment variables =====================================================
     # The funky ${1+"${@}"} incantation is how you you feed arguments exactly as-is to a child script in Bash
     # ${*} loses quoting and ${@} trips set -e if no arguments are passed, so this incantation says, "if and only if 
     #  ${1} exists, evaluate ${@}"
-    bash "${script_dirpath}/kurtosis.sh" --custom-env-vars "${custom_env_vars_json}" ${1+"${@}"} "${SUITE_IMAGE}:${docker_tag}"
+    bash "${script_dirpath}/kurtosis.sh" --custom-params "${custom_params_json}" ${1+"${@}"} "${SUITE_IMAGE}:${docker_tag}"
 fi
