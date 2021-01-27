@@ -97,7 +97,7 @@ if "${do_run}"; then
     custom_params_json='{
         "apiServiceImage" :"'${api_service_image}'",
         "datastoreServiceImage": "'${datastore_service_image}'",
-        "isKurtosisCoreDevMode": "'${IS_KURTOSIS_CORE_DEV_MODE}'"
+        "isKurtosisCoreDevMode": '${IS_KURTOSIS_CORE_DEV_MODE}'
     }'
     # ====================================== End custom Docker environment variables =====================================================
     # The funky ${1+"${@}"} incantation is how you you feed arguments exactly as-is to a child script in Bash
