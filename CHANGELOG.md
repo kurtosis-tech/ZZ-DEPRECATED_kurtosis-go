@@ -1,3 +1,7 @@
+## 1.7.1
+* Do a better job grabbing the name of the current Git ref
+* Remove scary bootstrapping message with a more reasonable verification
+
 ## 1.7.0
 * Make README point to the quickstart docs, rather than duplicating them
 * Upgraded to use the new Protobuf-based APIs of Kurtosis Core 1.7.0
