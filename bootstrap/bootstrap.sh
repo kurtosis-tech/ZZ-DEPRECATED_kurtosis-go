@@ -42,13 +42,13 @@ while [ "${prompt_response}" != "${BOOTSTRAP_VERIFICATION_RESPONSE}" ]; do
 done
 new_module_name=""
 while [ -z "${new_module_name}" ]; do
-    read -p "New Go module name (e.g. github.com/my-org/my-repo): " new_module_name
+    read -p "Name for the Go module that will contain your testsuite project (e.g. github.com/my-org/my-repo): " new_module_name
 done
 docker_image_name=""
 while [ -z "${docker_image_name}" ]; do
     echo "Name for the Docker image that this repo will build, which must conform to the Docker image naming rules:"
     echo "  https://docs.docker.com/engine/reference/commandline/tag/#extended-description"
-    read -p "Image name: " docker_image_name
+    read -p "Image name (e.g. my-dockerhub-org/my-image-name): " docker_image_name
 done
 
 
