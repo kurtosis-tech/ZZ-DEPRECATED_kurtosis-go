@@ -1,5 +1,6 @@
 ## TBD
 * Do a better job grabbing the name of the current Git ref
+* Remove scary bootstrapping message with a more reasonable verification
 
 ## 1.7.0
 * Make README point to the quickstart docs, rather than duplicating them

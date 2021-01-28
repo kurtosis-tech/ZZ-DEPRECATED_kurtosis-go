@@ -11,6 +11,9 @@ BUILDSCRIPT_FILENAME="build_and_run.sh"
 DOCKER_IMAGE_VAR_KEYWORD="SUITE_IMAGE=" # The variable we'll look for in the Docker file for replacing the Docker image name
 IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD="IS_KURTOSIS_CORE_DEV_MODE=" # The variable we'll look for when setting whether Kurtosis core dev mode is enabled
 
+# Response required from the user to do the bootstrapping
+BOOTSTRAP_VERIFICATION_RESPONSE="create new repo"
+
 set -euo pipefail
 script_dirpath="$(cd "$(dirname "${0}")" && pwd)"
 root_dirpath="$(dirname "${script_dirpath}")"
@@ -33,8 +36,10 @@ if [ "$(grep "^${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}" "${buildscript_filepath
 fi
 
 # ============== Inputs & Verification =================================================================
-read -p "VERIFICATION: This will delete nearly all files in ${root_dirpath}, leaving only what's necessary for writing a new Kurtosis Go testsuite! Are you sure you want to proceed? (Ctrl-C to abort, ENTER to continue)"
-read -p "FINAL VERIFICATION: you DO want to delete files like the .git dir to bootstrap a new testsuite, correct? (Ctrl-C to abort, ENTER to continue)"
+prompt_response=""
+while [ "${prompt_response}" != "${BOOTSTRAP_VERIFICATION_RESPONSE}" ]; do
+    read -p "This script should only be run if you're trying to create a new testsuite repo! To verify this is what you want, enter '${BOOTSTRAP_VERIFICATION_RESPONSE}': " prompt_response
+done
 new_module_name=""
 while [ -z "${new_module_name}" ]; do
     read -p "New Go module name (e.g. github.com/my-org/my-repo): " new_module_name
