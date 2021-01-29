@@ -9,13 +9,12 @@ root_dirpath="$(dirname "${script_dirpath}")"
 # Relative to THE ROOT OF THE ENTIRE REPO
 INPUT_RELATIVE_DIRPATH="core-api"
 
-# Lang dirnames
+# -------------------------- Golang ---------------------------
 GOLANG_DIRNAME="golang"
-
 GO_MOD_FILENAME="go.mod"
 GO_MOD_FILE_MODULE_KEYWORD="module"
 # Relative to the root of THE LANG DIR!!!!
-GO_RELATIVE_OUTPUT_DIRNAME="core_api_bindings"
+GO_RELATIVE_OUTPUT_DIRPATH="lib/core_api_bindings"
 
 # =============================== MAIN LOGIC =======================================================
 go_mod_filepath="${root_dirpath}/${GOLANG_DIRNAME}/${GO_MOD_FILENAME}"
@@ -44,14 +43,12 @@ generate_go_protoc_args() {
     echo "--go_opt=M${protobuf_filename}=${go_bindings_pkg};$(basename "${go_bindings_pkg}")"
 }
 
-
-
 # Schema of the "object" that's the value of this map:
 # relativeOutputDirpath|patternMatchingGeneratedFiles|additionalProtocArgsGeneratingFunc
 # NOTE: the protoc args-generating function takes in two args: 1) the input filepath and 2) output dirpath
-generators=(
-    ["golang"]="core_api_bindings|*.go|generate_go_protoc_args"
-)
+declare -A generators
+generators["${GOLANG_DIRNAME}"]="${GO_RELATIVE_OUTPUT_DIRPATH}|*.go|generate_go_protoc_args"
+
 
 input_dirpath="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}"
 for lang in "${!generators[@]}"; do

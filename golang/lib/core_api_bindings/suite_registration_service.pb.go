@@ -4,7 +4,7 @@
 // 	protoc        v3.14.0
 // source: suite_registration_service.proto
 
-package bindings
+package core_api_bindings
 
 import (
 	context "context"
