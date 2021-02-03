@@ -1,3 +1,12 @@
+DEPRECATION NOTICE
+==================
+This repo has been deprecated in favor of [Kurtosis Libs](https://github.com/kurtosis-tech/kurtosis-libs) as of 2021-02-02. This repo will stay around for a while to give time to migrate, but will eventually be archived. In order to migrate your testsuite repo using the old Kurtosis Go module across:
+
+1. From the root of your testsuite repo, run `sed -i '' 's,github.com/kurtosis-tech/kurtosis-go,github.com/kurtosis-tech/kurtosis-libs/golang,g' $(find . -type f -name '*.go')` to swap the old Kurtosis Go module for the new Kurtosis Libs one in all your Go code
+1. Run `go get github.com/kurtosis-tech/kurtosis-libs/golang@THE-VERSION-YOU-WERE-USING` (all version tags have been ported across to Kurtosis Libs, so you can use the same version)
+1. Run `go mod tidy` to get rid of the old Kurtosis Go module import
+
+
 Kurtosis Go Client
 ==================
 This repo contains:
